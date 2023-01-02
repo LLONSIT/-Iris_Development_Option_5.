@@ -1,6 +1,6 @@
 default: all
 
-SRC_DIRS := . src src/libmld src/libp src/libu src/libxmalloc src/uopt src/uopt/debug
+SRC_DIRS := . src src/acpp
 
 AVOID_UB ?= 1
 
