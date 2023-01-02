@@ -1,0 +1,5 @@
+[split]
+#.text            .data             .rodata           .bss              COMMON variables
+
+/src/acpp/error.c
+0040D720-0040DAAC   -                -                    -              indepth-instack #struct?
