@@ -1,6 +1,6 @@
 default: all
 
-SRC_DIRS := . src src/acpp
+SRC_DIRS := . src src/libgen src/libgen/asm
 
 AVOID_UB ?= 1
 
@@ -30,7 +30,7 @@ $(error unsupported arch "$(ARCH)")
 endif
 
 CFLAGS := -I src -I include -Wall $(ARCH_FLAGS) $(OPTIMIZATION)
-LDFLAGS := $(ARCH_FLAGS) $(OPTIMIZATION) -L /usr/mips-linux-gnu/ -lm 
+LDFLAGS := $(ARCH_FLAGS) $(OPTIMIZATION) -L /usr/mips-linux-gnu/ -lm
 
 ifeq ($(AVOID_UB),1)
     CFLAGS += -DAVOID_UB

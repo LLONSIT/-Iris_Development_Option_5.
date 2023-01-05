@@ -2,8 +2,11 @@
 #include <stdlib.h>
 #include <errno.h>
 
-
- int pedantic;
+int dont_repeat_files;
+int pedantic;
+int instack;
+int indepth;
+int savestring;
 
 //should rename error as acpp_error
 
