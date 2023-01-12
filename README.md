@@ -6,5 +6,7 @@ This project aims to decompile and understand the 'Iris Development Option 5.3' 
 
 - For now the only "stable" binary is usplit, which still hasn't been matched its functions (main), but works perfectly with the ido5.3 environment, keep in mind that things like tools/irix (ido7.1) will be changed
 
+- Important thing: you need qemu-irix
+
 - To make it 
   `make ARCH=mips #default`  
