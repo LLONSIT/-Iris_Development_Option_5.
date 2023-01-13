@@ -19,7 +19,7 @@ extern "C" {
  * |         Sunnyvale, California 94088-3650, USA             |
  * |-----------------------------------------------------------|
  */
-/* $Header: /isms/cmplrs.src/v7.4/include/RCS/ar.h,v 7.6 1994/06/23 20:45:46 ho Exp $ */
+/* $Header: /proj/irix5.3/isms/cmplrs/include/RCS/ar.h,v 7.6 1994/06/23 20:45:46 ho Exp $ */
 
 /*	Copyright (c) 1984 AT&T	*/
 /*	  All Rights Reserved  	*/

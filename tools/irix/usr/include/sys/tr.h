@@ -1,8 +1,5 @@
 #ifndef __TR_H
 #define __TR_H
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #ifdef _KERNEL
 #include "net/if.h"
@@ -236,87 +233,87 @@ typedef struct tr_macsv2 {
 
 typedef struct tr_status {
 	/* From RING STATUS interrupts */
-	u_int	signal_loss;		/* # of signal losses */
-	u_int	hard_error;		/* # of hard errors */
-	u_int	soft_error;		/* # of soft errors */
-	u_int	lobe_wire_fault;	/* # of lobe wire fault errors */
-	u_int	auto_removal_err;	/* # of auto removal errors */
-	u_int	remove_rcv;		/* # of remove receive errors */
-	u_int	ring_recovery;		/* # of ring recovery errors */
-	u_int	beacons;		/* # of beacon frames received */
+	u_long	signal_loss;		/* # of signal losses */
+	u_long	hard_error;		/* # of hard errors */
+	u_long	soft_error;		/* # of soft errors */
+	u_long	lobe_wire_fault;	/* # of lobe wire fault errors */
+	u_long	auto_removal_err;	/* # of auto removal errors */
+	u_long	remove_rcv;		/* # of remove receive errors */
+	u_long	ring_recovery;		/* # of ring recovery errors */
+	u_long	beacons;		/* # of beacon frames received */
 
 	/* from error log */
-	u_int	line_err;		/* FCS (CRC) error, etc. */
-	u_int	burst_err;		/* no transition for 5 half bits */
-	u_int	ari_fci_err;		/* upstream neighbor can't set ari */
-	u_int	lost_frame_err;		/* strip whole frame from ring failed */
-	u_int	rcv_cong_err;		/* no space to copy in frame */
-	u_int	frame_copied_err;	/* line hit or duplicate address */
-	u_int	token_err;		/* token error (monitor node only) */
-	u_int	dma_bus_errs;		/* DMA bus errors (up to init limit) */
-	u_int	dma_parity_errs;	/* DMA parity errs (up to init limit)*/
+	u_long	line_err;		/* FCS (CRC) error, etc. */
+	u_long	burst_err;		/* no transition for 5 half bits */
+	u_long	ari_fci_err;		/* upstream neighbor can't set ari */
+	u_long	lost_frame_err;		/* strip whole frame from ring failed */
+	u_long	rcv_cong_err;		/* no space to copy in frame */
+	u_long	frame_copied_err;	/* line hit or duplicate address */
+	u_long	token_err;		/* token error (monitor node only) */
+	u_long	dma_bus_errs;		/* DMA bus errors (up to init limit) */
+	u_long	dma_parity_errs;	/* DMA parity errs (up to init limit)*/
 
 	/* operational */
-	u_int	single_station;		/* # of single station errors */
-	u_int	cmd_rejects;		/* # of cmds rejected by tms380 */
+	u_long	single_station;		/* # of single station errors */
+	u_long	cmd_rejects;		/* # of cmds rejected by tms380 */
 
 	/*  frame xmit err */
-	u_int	xmit_incmplt;		/* incomplete xmit frame */
-	u_int  xmit_suspend;		/* suspended xmit commands */
-	u_int  xmit_list;		/* xmit list error */
-	u_int  xmit_listcnt;		/* data cnt list error */
-	u_int  xmit_frmsiz;		/* frame size error */
-	u_int  xmit_oddaddr;		/* odd fwd ptr */
-	u_int  xmit_framgment;		/* bad start bit */
-	u_int  xmit_priority;		/* bad access pri */
-	u_int  xmit_class;		/* bad MAC class */
-	u_int  xmit_format;		/* bad FC error */
+	u_long	xmit_incmplt;		/* incomplete xmit frame */
+	u_long  xmit_suspend;		/* suspended xmit commands */
+	u_long  xmit_list;		/* xmit list error */
+	u_long  xmit_listcnt;		/* data cnt list error */
+	u_long  xmit_frmsiz;		/* frame size error */
+	u_long  xmit_oddaddr;		/* odd fwd ptr */
+	u_long  xmit_framgment;		/* bad start bit */
+	u_long  xmit_priority;		/* bad access pri */
+	u_long  xmit_class;		/* bad MAC class */
+	u_long  xmit_format;		/* bad FC error */
 
 	/*  frame recv err */
-	u_int	rcv_incmplt;		/* incomplete receives */
-	u_int	rcv_suspend;		/* suspended rcv commands */
+	u_long	rcv_incmplt;		/* incomplete receives */
+	u_long	rcv_suspend;		/* suspended rcv commands */
 
 /*
  * Firmware stat counts
  */
-	u_int	misfrm;			/* R frm dropped due to no input buf */
-	u_int	xmtabt;			/* X frm aborted due to no xmitlist */
-	u_int	frame_ct;		/* R total frame count */
-	u_int	byte_ct;		/* R bytes seen by board */
+	u_long	misfrm;			/* R frm dropped due to no input buf */
+	u_long	xmtabt;			/* X frm aborted due to no xmitlist */
+	u_long	frame_ct;		/* R total frame count */
+	u_long	byte_ct;		/* R bytes seen by board */
 
-	u_int	e;			/* received E bit */
-	u_int	a;			/* received A bit */
-	u_int	c;			/* received C bit */
+	u_long	e;			/* received E bit */
+	u_long	a;			/* received A bit */
+	u_long	c;			/* received C bit */
 
-	u_int	bd_hiwat;		/* R BUSD hiwat */
-	u_int	rq_hiwat;		/* R max lists in use */
-	u_int	xq_hiwat;		/* X max lists in use */
+	u_long	bd_hiwat;		/* R BUSD hiwat */
+	u_long	rq_hiwat;		/* R max lists in use */
+	u_long	xq_hiwat;		/* X max lists in use */
 
-	u_int	xmit_frm_ct;		/* X frame count */
-	u_int	frm_cpy_ct;		/* R copied frame count */
+	u_long	xmit_frm_ct;		/* X frame count */
+	u_long	frm_cpy_ct;		/* R copied frame count */
 
 	/* new */
-	u_int	x_callouts;		/* R callouts */
-	u_int	r_callouts;		/* X callouts */
+	u_long	x_callouts;		/* R callouts */
+	u_long	r_callouts;		/* X callouts */
 
-	u_int	x_cpy_ct;		/* X copied frame count */
-	u_int	x_byte_ct;		/* X bytes sent by board */
+	u_long	x_cpy_ct;		/* X copied frame count */
+	u_long	x_byte_ct;		/* X bytes sent by board */
 
-	u_int	x_bd_hiwat;		/* X BUSD hiwat */
-	u_int	x_maxsize;		/* X max xmit frame size */
-	u_int	r_maxsize;		/* R max recv frame size */
-	u_int	r_maxlists;		/* R max lists per frame */
-	u_int	x_maxlists;		/* X max lists per frame */
-	u_int	x_maxfpc;		/* X max frames per callout */
-	u_int	r_maxfpc;		/* R max frames per callout */
+	u_long	x_bd_hiwat;		/* X BUSD hiwat */
+	u_long	x_maxsize;		/* X max xmit frame size */
+	u_long	r_maxsize;		/* R max recv frame size */
+	u_long	r_maxlists;		/* R max lists per frame */
+	u_long	x_maxlists;		/* X max lists per frame */
+	u_long	x_maxfpc;		/* X max frames per callout */
+	u_long	r_maxfpc;		/* R max frames per callout */
 
-	u_int	isema;			/* Iframe semaphore */
-	u_int	bad_xseq;		/* bad xmit sequence number */
+	u_long	isema;			/* Iframe semaphore */
+	u_long	bad_xseq;		/* bad xmit sequence number */
 
-	u_int	rsv_2;
-	u_int	rsv_3;
-	u_int	rsv_4;
-	u_int	rsv_5;
+	u_long	rsv_2;
+	u_long	rsv_3;
+	u_long	rsv_4;
+	u_long	rsv_5;
 } TR_STATUS;
 
 typedef struct tr_config {
@@ -368,19 +365,11 @@ typedef struct tr_sioc {
 		TR_CONFIG *conf;
 		TR_STATUS *st;
 		void *ptr;
-		u_int alarm;
+		u_long alarm;
 	} tr_ptr_u;
 	uint	len;
 } TR_SIOC;
 
-
-/* used for passing firmware images */
-struct mtr_download {
-	unsigned short      sizeof_fmplus_array;
-	unsigned short      recorded_size_fmplus_array;
-	unsigned char       fmplus_checksum;
-	__uint64_t fmplus_image;
-};
 
 /* special IOCTLs */
 #define SIOC_TR_GETCONF		_IOW('S', 1, TR_SIOC)
@@ -395,36 +384,7 @@ struct mtr_download {
 #define SIOC_TR_ADDFUNC		_IOW('S', 10, TR_FCNADDR)
 #define SIOC_TR_DELFUNC		_IOW('S', 11, TR_FCNADDR)
 #define SIOC_TR_GETLLCSTAT	_IOW('S', 12, TR_SIOC)
-#define SIOC_TR_GETSPEED        _IOR('S', 13, struct ifreq)
-#define SIOC_TR_SETSPEED        _IOW('S', 14, struct ifreq)
-#define SIOC_TR_GETIFSTATS      _IOWR('S', 16, struct ifreq)
-#define SIOC_MTR_GETFUNC        _IOWR('S', 17, struct ifreq)
-#define SIOC_MTR_ADDFUNC        _IOWR('S', 18, struct ifreq)
-#define SIOC_MTR_DELFUNC        _IOWR('S', 19, struct ifreq)
 
-/*	Used for mtrconfig to pass down the paramters 
- *	to restart the adapter.
- */
-typedef struct mtr_cfg_req_s {
-        __uint32_t              cmd;
-        union {
-                __uint32_t      ring_speed;
-                __uint32_t      mtu;
-                uchar_t         macaddr[TR_MAC_ADDR_SIZE];
-        } param;
-} mtr_cfg_req_t;
-
-/*      Values for mtr_cfg_req_t.cmd.   */
-#define MTR_CFG_CMD_NULL                0
-#define MTR_CFG_CMD_SET_SPEED           SIOC_TR_SETSPEED
-#define MTR_CFG_CMD_SET_MTU             SIOCSIFMTU
-
-#define MAX_CFG_PARAMS_PER_REQ          4
-typedef struct mtr_restart_req_s {
-        mtr_cfg_req_t           reqs[MAX_CFG_PARAMS_PER_REQ];
-        struct mtr_download     dlrec;
-} mtr_restart_req_t;
-#define	SIOC_TR_RESTART		_IOWR('S', 15, mtr_restart_req_t)
 
 /* alarm bits to awaken demon */
 #define	TR_ALARM_RNGOP	0x00000001	/* ring died or recovered */
@@ -464,7 +424,4 @@ struct trif {
 #define tiftoifp(tif)	(&(tif)->tif_arpcom.ac_if)
 #endif  /* _KERNEL */
 
-#ifdef __cplusplus
-}
-#endif
 #endif /* __TR_H */

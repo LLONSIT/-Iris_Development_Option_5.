@@ -1,5 +1,8 @@
 #ifndef __LASTLOG_H__
 #define __LASTLOG_H__
+#ifdef __cplusplus
+extern "C" {
+#endif
 /*
 *
 * Copyright 1992, Silicon Graphics, Inc.
@@ -26,7 +29,7 @@
 /*	The copyright notice above does not evidence any   	*/
 /*	actual or intended publication of such source code.	*/
 
-#ident	"$Revision: 1.9 $"
+#ident	"$Revision: 1.8 $"
 
 /*******************************************************************
 
@@ -50,10 +53,6 @@ publication.
 	          All rights reserved.
 ********************************************************************/ 
 
-#include <internal/sgimacros.h>
-
-__SGI_LIBC_BEGIN_EXTERN_C
-
 
 struct lastlog {
 	time_t	ll_time;
@@ -62,5 +61,7 @@ struct lastlog {
 	ulong	ll_level;		/* MAC security level */
 };
 
-__SGI_LIBC_END_EXTERN_C
+#ifdef __cplusplus
+}
+#endif
 #endif /* !__LASTLOG_H__ */

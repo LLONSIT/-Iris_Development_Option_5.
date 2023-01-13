@@ -1,6 +1,9 @@
 #ifndef __DEFLT_H__
 #define __DEFLT_H__
-#ident "$Revision: 1.6 $"
+#ifdef __cplusplus
+extern "C" {
+#endif
+#ident "$Revision: 1.4 $"
 /*
 *
 * Copyright 1992, Silicon Graphics, Inc.
@@ -38,10 +41,6 @@
  *
  */
 
-#include <internal/sgimacros.h>
-
-__SGI_LIBC_BEGIN_EXTERN_C
-
 #define	DEFLT	"/etc/default"
 
 /*
@@ -70,9 +69,19 @@ __SGI_LIBC_BEGIN_EXTERN_C
 #define	DEF_WRITE	0
 #define	DEF_DEL		1
 
+#if defined(_MODERN_C)
+
 extern FILE *defopen(char * );
 extern char *defread(FILE *ptr, char *defname);
 extern int defclose(FILE * );
 
-__SGI_LIBC_END_EXTERN_C
+#else
+extern FILE *defopen();
+extern char *defread();
+extern int defclose();
+
+#endif
+#ifdef __cplusplus
+}
+#endif
 #endif /* !__DEFLT_H__ */

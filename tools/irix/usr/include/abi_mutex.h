@@ -12,22 +12,17 @@
 #ifndef _ABI_MUTEX_
 #define _ABI_MUTEX_
 
-#ident "$Revision: 1.7 $"
+#ident "$Revision: 1.4 $"
 
-#include <internal/sgimacros.h>
-
-__SGI_LIBC_BEGIN_EXTERN_C
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define UNLOCKED 0
 #define LOCKED 1
 
 typedef struct abilock {
-#if (_MIPS_SZLONG == 32)
-	unsigned long abi_lock;
-#endif
-#if (_MIPS_SZLONG == 64)
-	unsigned int abi_lock;
-#endif
+	unsigned long	abi_lock;
 } abilock_t;
 
 /* ABI mutex functions */
@@ -37,6 +32,7 @@ extern int release_lock(abilock_t *);
 extern int stat_lock(abilock_t *);
 extern void spin_lock(abilock_t *);
 
-__SGI_LIBC_END_EXTERN_C
-
+#ifdef __cplusplus
+}
+#endif
 #endif

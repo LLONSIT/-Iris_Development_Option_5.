@@ -11,9 +11,6 @@
  *
  *      @(#)spp_var.h	7.4 (Berkeley) 3/12/88
  */
-#ifdef __cplusplus
-extern "C" {
-#endif
 #ifdef sgi
 # ifdef _KERNEL
 #  define KERNEL
@@ -196,7 +193,4 @@ short xnsCbug;
 #define	SSEQ_LEQ(a,b)	(((short)((a)-(b))) <= 0)
 #define	SSEQ_GT(a,b)	(((short)((a)-(b))) > 0)
 #define	SSEQ_GEQ(a,b)	(((short)((a)-(b))) >= 0)
-#endif
-#ifdef __cplusplus
-}
 #endif

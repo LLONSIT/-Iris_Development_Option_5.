@@ -1,6 +1,9 @@
 #ifndef __PROTOCOLS_BOOTP_H__
 #define __PROTOCOLS_BOOTP_H__
-#ident "$Revision: 1.9 $"
+#ifdef __cplusplus
+extern "C" {
+#endif
+#ident "$Revision: 1.7 $"
 /*
 *
 * Copyright 1992, Silicon Graphics, Inc.
@@ -22,13 +25,9 @@
  * "vendor" data permitted for Stanford boot clients.
  */
 
-#include <internal/sgimacros.h>
-
-__SGI_LIBC_BEGIN_EXTERN_C
-
 struct vend {
 	u_char	v_magic[4];	/* magic number */
-	u_int	v_flags;	/* flags/opcodes, etc. */
+	u_long	v_flags;	/* flags/opcodes, etc. */
 	u_char	v_unused[56];	/* currently unused */
 };
 
@@ -43,7 +42,7 @@ struct bootp {
 	u_char	bp_htype;	/* hardware addr type */
 	u_char	bp_hlen;	/* hardware addr length */
 	u_char	bp_hops;	/* gateway hops */
-	u_int	bp_xid;		/* transaction ID */
+	u_long	bp_xid;		/* transaction ID */
 	u_short	bp_secs;	/* seconds since boot began */	
 	u_short	bp_unused;
 	iaddr_t	bp_ciaddr;	/* client IP address */
@@ -79,6 +78,7 @@ struct bootp {
 #define	VF_GET_IPADDR	3	/* Request for client IP address */
 #define	VF_RET_IPADDR	4	/* Response for client IP address */
 #define	VF_NEW_IPADDR	5	/* Response for client IP address */
-
-__SGI_LIBC_END_EXTERN_C
+#ifdef __cplusplus
+}
+#endif
 #endif /* !__PROTOCOLS_BOOTP_H__ */

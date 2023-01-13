@@ -1,6 +1,9 @@
 #ifndef __ULIMIT_H__
 #define __ULIMIT_H__
-#ident "$Revision: 1.5 $"
+#ifdef __cplusplus
+extern "C" {
+#endif
+#ident "$Revision: 1.3 $"
 /*
 *
 * Copyright 1992, Silicon Graphics, Inc.
@@ -29,11 +32,14 @@
 
 
 #include <sys/ulimit.h>
-#include <internal/sgimacros.h>
 
-__SGI_LIBC_BEGIN_EXTERN_C
-
+#if defined(_MODERN_C)
 extern long ulimit(int, ...);
+#else
+extern long ulimit();
+#endif
 
-__SGI_LIBC_END_EXTERN_C
+#ifdef __cplusplus
+}
+#endif
 #endif /* !__ULIMIT_H__ */

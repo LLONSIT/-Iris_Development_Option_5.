@@ -1,6 +1,9 @@
 #ifndef __CRYPT_H__
 #define __CRYPT_H__
-#ident "$Revision: 1.6 $"
+#ifdef __cplusplus
+extern "C" {
+#endif
+#ident "$Revision: 1.4 $"
 /*
 *
 * Copyright 1992, Silicon Graphics, Inc.
@@ -25,12 +28,10 @@
 /*	The copyright notice above does not evidence any   	*/
 /*	actual or intended publication of such source code.	*/
 
-#include <internal/sgimacros.h>
-
-__SGI_LIBC_BEGIN_EXTERN_C
 
 /* Password and file encryption functions */
 
+#if defined(_MODERN_C)
 
 extern char *crypt(const char *, const char *);
 extern int crypt_close(int *);
@@ -60,6 +61,9 @@ extern void cryptbuf(char *, unsigned int, char *, char *, int);
 #define X_ENIGMA	0100
 #define X_ALGORITHM	0700
 
-__SGI_LIBC_END_EXTERN_C
+#endif 
 
+#ifdef __cplusplus
+}
+#endif
 #endif /* !__CRYPT_H__ */

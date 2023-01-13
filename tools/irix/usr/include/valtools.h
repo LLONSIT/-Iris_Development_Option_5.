@@ -1,6 +1,9 @@
 #ifndef __VALTOOLS_H__
 #define __VALTOOLS_H__
-#ident "$Revision: 1.4 $"
+#ifdef __cplusplus
+extern "C" {
+#endif
+#ident "$Revision: 1.3 $"
 /*
 *
 * Copyright 1992, Silicon Graphics, Inc.
@@ -27,9 +30,6 @@
 /*	The copyright notice above does not evidence any   	*/
 /*	actual or intended publication of such source code.	*/
 
-#include <internal/sgimacros.h>
-
-__SGI_LIBC_BEGIN_EXTERN_C
 
 struct _choice_ {
 	char *token;
@@ -66,5 +66,7 @@ typedef struct _menu_ CKMENU;
 #define CKUNNUM		0x01
 #define CKALPHA		0x02
 #define CKONEFLAG	0x04
-__SGI_LIBC_END_EXTERN_C
+#ifdef __cplusplus
+}
+#endif
 #endif /* !__VALTOOLS_H__ */

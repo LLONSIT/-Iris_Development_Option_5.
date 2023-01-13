@@ -23,49 +23,151 @@
 #ifndef _LIBGEN_H
 #define _LIBGEN_H
 
-#ident "$Revision: 1.10 $"
-#include <standards.h>
-#include <internal/sgimacros.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-__SGI_LIBC_BEGIN_EXTERN_C
+#ident "$Revision: 1.4 $"
 
-/*
- * XPG4-UX functions
- */
-extern char *basename(char *);
-extern char *dirname(char *);
-extern char *regcmp(const char *, ...);
-extern char *regex(const char *, const char *, ...);
-extern char * __loc1;
-
-#if _SGIAPI || _ABIAPI
-__SGI_LIBC_END_EXTERN_C
 #include <sys/types.h>
 #include <stdio.h>
-#include <time.h>
-__SGI_LIBC_BEGIN_EXTERN_C
 
+#ifdef _MODERN_C
+extern char * basename(char *);
+#else
+extern char * basename();
+#endif
+
+#ifdef _MODERN_C
 extern char * bgets(char *, size_t, FILE *, char *);
-extern size_t bufsplit(char *, size_t, char **);
+#else
+extern char * bgets();
+#endif
+
+#ifdef _MODERN_C
+extern size_t bufsplit(char *, size_t, char *);
+#else
+extern size_t bufsplit();
+#endif
+
+#ifdef _MODERN_C
 extern char * copylist(const char *, off_t *);
+#else
+extern char * copylist();
+#endif
+
+#ifdef _MODERN_C
+extern char * dirname(char *);
+#else
+extern char * dirname();
+#endif
+
+#ifdef _MODERN_C
 extern int eaccess(const char *, int);
+#else
+extern int eaccess();
+#endif
 
+#include	<time.h>
+
+#ifdef _MODERN_C
 extern int gmatch(const char *, const char *);
-extern int isencrypt(const char *, size_t);
-extern int mkdirp(const char *, mode_t);
-extern int p2open(const char *, FILE *[2]);
-extern int p2close(FILE *[2]);
-extern char * pathfind(const char *, const char *, const char *);
-extern int rmdirp(char *, char *);
-extern char * strcadd(char *, const char *);
-extern char * strccpy(char *, const char *);
-extern char * streadd(char *, const char *, const char *);
-extern char * strecpy(char *, const char *, const char *);
-extern int strfind(const char *, const char *);
-extern char * strrspn(const char *, const char *);
-extern char * strtrns(const char *, const char *, const char *, char *);
-#endif /* _SGIAPI || _ABIAPI */
+#else
+extern int gmatch();
+#endif
 
-__SGI_LIBC_END_EXTERN_C
+#ifdef _MODERN_C
+extern int isencrypt(const char *, size_t);
+#else
+extern int isencrypt();
+#endif
+
+#ifdef _MODERN_C
+extern int mkdirp(const char *, mode_t);
+#else
+extern int mkdirp();
+#endif
+
+#ifdef _MODERN_C
+extern int p2open(const char *, FILE *[2]);
+#else
+extern int p2open();
+#endif
+
+#ifdef _MODERN_C
+extern int p2close(FILE *[2]);
+#else
+extern int p2close();
+#endif
+
+#ifdef _MODERN_C
+extern char * pathfind(const char *, const char *, const char *);
+#else
+extern char * pathfind();
+#endif
+
+#ifdef _MODERN_C
+extern char * regcmp(const char *, ...);
+#else
+extern char * regcmp();
+#endif
+
+#ifdef _MODERN_C
+extern char * regex(const char *, const char *, ...);
+#else
+extern char * regex();
+#endif
+
+#ifdef _MODERN_C
+extern int rmdirp(char *, char *);
+#else
+extern int rmdirp();
+#endif
+
+#ifdef _MODERN_C
+extern char * strcadd(char *, const char *);
+#else
+extern char * strcadd();
+#endif
+
+#ifdef _MODERN_C
+extern char * strccpy(char *, const char *);
+#else
+extern char * strccpy();
+#endif
+
+#ifdef _MODERN_C
+extern char * streadd(char *, const char *, const char *);
+#else
+extern char * streadd();
+#endif
+
+#ifdef _MODERN_C
+extern char * strecpy(char *, const char *, const char *);
+#else
+extern char * strecpy();
+#endif
+
+#ifdef _MODERN_C
+extern int strfind(const char *, const char *);
+#else
+extern int strfind();
+#endif
+
+#ifdef _MODERN_C
+extern char * strrspn(const char *, const char *);
+#else
+extern char * strrspn();
+#endif
+
+#ifdef _MODERN_C
+extern char * strtrns(const char *, const char *, const char *, char *);
+#else
+extern char * strtrns();
+#endif
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _LIBGEN_H */

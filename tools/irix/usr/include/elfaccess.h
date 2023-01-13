@@ -2,10 +2,10 @@
  * ====================================================================
  *
  * Module: elfaccess.h
- * $Revision: 1.4 $
- * $Date: 1998/01/26 20:53:53 $
- * $Author: mpm $
- * $Source: /isms/cmplrs.src/v7.4/include/RCS/elfaccess.h,v $
+ * $Revision: 1.2 $
+ * $Date: 1994/07/07 00:09:58 $
+ * $Author: davea $
+ * $Source: /proj/irix5.3/isms/cmplrs/commonlib/include/RCS/elfaccess.h,v $
  *
  * Revision history:
  *  03-Jun-93 - Original Version
@@ -61,8 +61,7 @@
 #define     REL32_type(r)	ELF32_R_TYPE((r).r_info)
 #define Set_REL32_type(r,v) \
     ((r).r_info = ((r).r_info & ~REL32_TYPE_MASK) + (v&REL32_TYPE_MASK))
-#define Set_REL32_info(r,s,t) \
-    ((r).r_info = ((s)<<REL32_SYM_SHIFT) | ((t)&REL32_TYPE_MASK))
+#define Set_REL32_info(r,s,t)	(Set_REL32_sym(r,s),Set_REL32_type(r,t))
 
 #define     REL64_sym(r)	((r).r_sym)
 #define Set_REL64_sym(r,v)	(REL64_sym(r)=v)
@@ -98,5 +97,43 @@
 #define Set_REL_info	Set_REL32_info
 
 #endif
+
+
+/* ====================================================================
+ *
+ * .contents Section
+ *
+ * ====================================================================
+ */
+
+/* Field access: */
+#define	      CON32_extn(c)	((c).con_y.con_info & __CON32_EMASK)
+#define	  Set_CON32_extn(c)	((c).con_y.con_info |= __CON32_EMASK)
+#define	      CON64_extn(c)	((c).con_y.con_info & __CON64_EMASK)
+#define	  Set_CON64_extn(c)	((c).con_y.con_info |= __CON64_EMASK)
+
+#define	      CON32_kind(c)	ELF32_CON_KIND(c)
+#define	  Set_CON32_kind(c,v) \
+        ((c).con_y.con_info = ((c).con_y.con_info & ~__CON32_KMASK) | (v<<__CON32_KSHIFT))
+#define	      CON64_kind(c)	ELF64_CON_KIND(c)
+#define	  Set_CON64_kind(c,v) \
+        ((c).con_y.con_info = ((c).con_y.con_info & ~__CON64_KMASK) | (v<<__CON64_KSHIFT))
+
+#define	      CON32_length(c)	ELF32_CON_LENGTH(c)
+#define   Set_CON32_length(c,v) \
+        ((c).con_y.con_info = ((c).con_y.con_info & ~__CON32_LMASK) | (v&__CON32_LMASK))
+#define	      CON64_length(c)	ELF64_CON_LENGTH(c)
+#define   Set_CON64_length(c,v) \
+        ((c).con_y.con_info = ((c).con_y.con_info & ~__CON64_LMASK) | (v&__CON64_LMASK))
+
+#define       CON_start(c)	((c).con_y.con_start)
+#define       CON32_start(c)	CON_start(c)
+#define       CON32_start(c)	CON_start(c)
+
+/* NOTE:  The Set_CONxx_xval macros also set the extension flag. */
+#define	      CON32_xval(c)	ELF32_CON_XVAL(c)
+#define	  Set_CON32_xval(c,v)	((c).con_xval |= (v|__CON32_EMASK))
+#define	      CON64_xval(c)	ELF64_CON_XVAL(c)
+#define	  Set_CON64_xval(c,v)	((c).con_xval |= (v|__CON64_EMASK))
 
 #endif /* elfaccess_INCLUDED */

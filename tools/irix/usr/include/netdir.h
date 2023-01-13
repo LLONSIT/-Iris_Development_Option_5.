@@ -1,6 +1,9 @@
 #ifndef __NETDIR_H__
 #define __NETDIR_H__
-#ident "$Revision: 1.8 $"
+#ifdef __cplusplus
+extern "C" {
+#endif
+#ident "$Revision: 1.5 $"
 /*
 *
 * Copyright 1992, Silicon Graphics, Inc.
@@ -28,10 +31,6 @@
 /*	actual or intended publication of such source code.	*/
 
 #ident	"@(#)head.usr:netdir.h	1.5.5.1"
-
-#include <internal/sgimacros.h>
-
-__SGI_LIBC_BEGIN_EXTERN_C
 
 /*
  * netdir.h
@@ -62,6 +61,7 @@ struct nd_mergearg {
 	char		*m_uaddr;	/* merged universal address */
 };
 
+#ifdef _MODERN_C
 struct netconfig;
 int netdir_options(struct netconfig *, int option, int fd, char *par);
 int netdir_getbyname(struct netconfig *, struct nd_hostserv *, struct nd_addrlist **);
@@ -70,11 +70,30 @@ void netdir_free(void *, int);
 struct netbuf *uaddr2taddr(struct netconfig *, char *);
 char *taddr2uaddr(struct netconfig *, struct netbuf *);
 void netdir_perror(char *);
-char *netdir_sperror(void);
+char *netdir_sperror();
 struct nd_addrlist *_netdir_getbyname(struct netconfig *, struct nd_hostserv *);
 struct nd_hostservlist *_netdir_getbyaddr(struct netconfig *, struct netbuf *);
 struct netbuf *_uaddr2taddr(struct netconfig *, char *);
 char *_taddr2uaddr(struct netconfig *, struct netbuf *);
+
+#else
+
+int netdir_options();
+int netdir_getbyname();
+int netdir_getbyaddr();
+int netdir_mergeaddr();
+void netdir_free();
+struct netbuf *uaddr2taddr();
+void netdir_perror();
+char *netdir_sperror();
+char *taddr2uaddr();
+struct nd_addrlist *_netdir_getbyname();
+struct nd_hostservlist *_netdir_getbyaddr();
+char *_netdir_mergeaddr();
+struct netbuf *_uaddr2taddr();
+char *_taddr2uaddr();
+
+#endif /* ANSI */
 
 /*
  * These are all objects that can be freed by netdir_free
@@ -128,5 +147,7 @@ char *_taddr2uaddr(struct netconfig *, struct netbuf *);
 #define	HOST_ANY	"\\2"
 #define	HOST_BROADCAST	"\\3"
 
-__SGI_LIBC_END_EXTERN_C
+#ifdef __cplusplus
+}
+#endif
 #endif /* !__NETDIR_H__ */

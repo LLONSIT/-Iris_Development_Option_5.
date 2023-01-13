@@ -1,6 +1,9 @@
 #ifndef __STROPTS_H__
 #define __STROPTS_H__
-#ident "$Revision: 1.19 $"
+#ifdef __cplusplus
+extern "C" {
+#endif
+#ident "$Revision: 1.9 $"
 /*
 *
 * Copyright 1992, Silicon Graphics, Inc.
@@ -28,35 +31,29 @@
 /*	actual or intended publication of such source code.	*/
 
 
-#include <standards.h>
-#include <internal/sgimacros.h>
-
 /*
  * Streams user options definitions.
  */
 
 #include <sys/stropts.h>
 
-#if !_SGIAPI && !_XOPEN4UX && !_XOPEN5 && !defined(_KERNEL)
-#include <unistd.h>
-#endif	/* !_SGIAPI && !_XOPEN4UX && !_XOPEN5 && !_KERNEL */
+#if defined(_MODERN_C)
 
-/*
- * These three are defined in XPG4 in stropts.h but are needed
- * in unistd.h.
- */
-
- __SGI_LIBC_BEGIN_EXTERN_C
-extern int fattach(int, const char *);
-extern int fdetach(const char *);
-extern int ioctl(int, int, ...);
-
-extern int isastream(int);
 extern int getmsg(int, struct strbuf *, struct strbuf *, int *);
 extern int putmsg(int, const struct strbuf *, const struct strbuf *, int);
 
 extern int getpmsg(int, struct strbuf *, struct strbuf *, int *, int *);
 extern int putpmsg(int, const struct strbuf *, const struct strbuf *, int, int);
 
-__SGI_LIBC_END_EXTERN_C
+#else
+
+extern int getmsg();
+extern int putmsg();
+extern int getpmsg();
+extern int putpmsg();
+#endif
+
+#ifdef __cplusplus
+}
+#endif
 #endif /* !__STROPTS_H__ */

@@ -1,5 +1,5 @@
 #include "libmld.h"
-#ifdef BLAH
+#if 0
 __asm__(R""(
 .macro glabel label
     .global \label
@@ -9,7 +9,7 @@ __asm__(R""(
 )"");
 #endif
 
-#ifdef BLAH
+#if 0
 .rdata
 RO_1000F430:
     # 00491140 swap_aux
@@ -28,7 +28,7 @@ jtbl_1000F464:
 #endif
 
 
-#ifdef BLAH
+#if 0
 __asm__(R""(
 
 .set noat      # allow manual use of $at
@@ -461,8 +461,8 @@ glabel swap_libscn
 0048D0E0 st_readst
 */
 void swap_hdr(HDRR *phdr, int hostsex) {
-    phdr->magic         = swap_half(phdr->magic);
-    phdr->vstamp        = swap_half(phdr->vstamp);
+    phdr->magic         = swap_half(phdr->magic);        
+    phdr->vstamp        = swap_half(phdr->vstamp);       
     phdr->ilineMax      = swap_word(phdr->ilineMax);
     phdr->cbLine        = swap_word(phdr->cbLine);
     phdr->cbLineOffset  = swap_word(phdr->cbLineOffset);
@@ -546,7 +546,9 @@ void swap_sym(SYMR *psym, int count, int destsex) {
 0048D0E0 st_readst
 */
 void swap_ext(EXTR *pext, int count, int destsex) {
-    for (int i = 0; i < count; i++) {
+  int i;
+
+    for (i = 0; i < count; i++) {
         // swap bitfields
         *((short*)&pext[i]) = swap_half(*((short*)&pext[i]));
         pext[i].ifd = swap_half(pext[i].ifd);
@@ -590,7 +592,7 @@ void swap_dn(DNR *dn, int count, int destsex) {
     }
 }
 
-#ifdef BLAH
+#if 0
 __asm__(R""(
 .set noat      # allow manual use of $at
 .set noreorder # don't insert nops after branches
@@ -710,7 +712,7 @@ glabel swap_rpd
 /* 00490EB4 AC4EFFFC */   sw    $t6, -4($v0)
 .L00490EB8:
 /* 00490EB8 03E00008 */  jr    $ra
-/* 00490EBC 00000000 */   nop
+/* 00490EBC 00000000 */   nop   
     .type swap_rpd, @function
     .size swap_rpd, .-swap_rpd
     .end swap_rpd
@@ -745,12 +747,12 @@ void swap_aux(AUXU *paux, int type, int destsex) {
             break;
     }
 }
-#ifdef BLAH
+#if 0
 glabel swap_aux
     .ent swap_aux
 /* 00491140 3C1C0FB9 */  .cpload $t9
-/* 00491144 279C9150 */
-/* 00491148 0399E021 */
+/* 00491144 279C9150 */  
+/* 00491148 0399E021 */  
 /* 0049114C 27BDFFD0 */  addiu $sp, $sp, -0x30
 /* 00491150 8F9987CC */  lw    $t9, %call16(gethostsex)($gp)
 /* 00491154 AFBF001C */  sw    $ra, 0x1c($sp)
@@ -782,7 +784,7 @@ glabel swap_aux
 /* 004911B8 8C2FF464 */  lw    $t7, %lo(jtbl_1000F464)($at)
 /* 004911BC 01FC7821 */  addu  $t7, $t7, $gp
 /* 004911C0 01E00008 */  jr    $t7
-/* 004911C4 00000000 */   nop
+/* 004911C4 00000000 */   nop   
 .L004911C8:
 /* 004911C8 8C880000 */  lw    $t0, ($a0)
 /* 004911CC 27B8002C */  addiu $t8, $sp, 0x2c
@@ -904,7 +906,7 @@ glabel swap_aux
 /* 0049138C 8FBF001C */  lw    $ra, 0x1c($sp)
 /* 00491390 27BD0030 */  addiu $sp, $sp, 0x30
 /* 00491394 03E00008 */  jr    $ra
-/* 00491398 00000000 */   nop
+/* 00491398 00000000 */   nop   
     .type swap_aux, @function
     .size swap_aux, .-swap_aux
     .end swap_aux
@@ -912,8 +914,8 @@ glabel swap_aux
 glabel swap_reloc
     .ent swap_reloc
 /* 0049139C 3C1C0FB9 */  .cpload $t9
-/* 004913A0 279C8EF4 */
-/* 004913A4 0399E021 */
+/* 004913A0 279C8EF4 */  
+/* 004913A4 0399E021 */  
 /* 004913A8 27BDFFC0 */  addiu $sp, $sp, -0x40
 /* 004913AC 8F9987CC */  lw    $t9, %call16(gethostsex)($gp)
 /* 004913B0 AFBF0024 */  sw    $ra, 0x24($sp)
@@ -1087,7 +1089,7 @@ glabel swap_ranlib
 /* 00491624 AC4BFFFC */   sw    $t3, -4($v0)
 .L00491628:
 /* 00491628 03E00008 */  jr    $ra
-/* 0049162C 00000000 */   nop
+/* 0049162C 00000000 */   nop   
     .type swap_ranlib, @function
     .size swap_ranlib, .-swap_ranlib
     .end swap_ranlib
@@ -1127,7 +1129,7 @@ glabel swap_gpt
 /* 004916A4 AC4BFFFC */   sw    $t3, -4($v0)
 .L004916A8:
 /* 004916A8 03E00008 */  jr    $ra
-/* 004916AC 00000000 */   nop
+/* 004916AC 00000000 */   nop   
     .type swap_gpt, @function
     .size swap_gpt, .-swap_gpt
     .end swap_gpt

@@ -14,15 +14,18 @@
 #ifndef _MLS_DOT_H_
 #define _MLS_DOT_H_
 
-#ident "$Revision: 1.24 $"
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#ident "$Revision: 1.20 $"
 
 #include <sys/types.h>
 #include <sys/mac_label.h>
+#include <sys/capability.h>
 #include <shadow.h>
+#include <capability.h>
 #include <clearance.h>
-#include <internal/sgimacros.h>
-
-__SGI_LIBC_BEGIN_EXTERN_C
 
 /* constant define for mlsfile type */
 #define MAC_LABEL	0	/* labels file */
@@ -53,6 +56,26 @@ __SGI_LIBC_BEGIN_EXTERN_C
 /* binary mls database file path */
 #define LABEL_DB_PATH	"/etc/mac_label"
 #define LABEL_DB	"lbldb_bin"
+
+/*
+ * Return codes from mac_cleared and related functions
+ */
+#define	MAC_CLEARED		  0	/* user is cleared at requested lbl  */
+#define	MAC_NULL_USER_INFO	 -1	/*   uip argument == 0		     */
+#define	MAC_NULL_REQD_LBL	 -2	/* label argument == 0		     */
+#define	MAC_BAD_REQD_LBL	 -3	/* user's requested label is bad     */
+#define	MAC_MSEN_EQUAL  	 -4	/*    nobody can login at msen equal */
+#define	MAC_MINT_EQUAL  	 -5	/* only root can login at mint equal */
+#define	MAC_BAD_USER_INFO	 -6	/* clearance field bad label(s)	     */
+#define	MAC_NULL_CLEARANCE	 -7	/* no clearance field                */
+#define	MAC_LBL_TOO_LOW 	 -8	/* lo_u_lbl > requested user label   */
+#define	MAC_LBL_TOO_HIGH	 -9	/* hi_u_lbl < requested user label   */
+#define	MAC_INCOMPARABLE	-10	/* reqd label incomparable to range  */
+#define	MAC_NO_MEM		-11	/* no memory available               */
+#define	MAC_BAD_RANGE		-12	/* Bad range in clearance field      */
+
+#define	MAC_LAST_CLEARANCE_ERROR	MAC_INCOMPARABLE
+
 
 /* Error returns from mac_label_devs */
 #define MAC_LD_DEVL_FOPEN	-1      /* couldn't open device list file    */
@@ -193,16 +216,49 @@ typedef struct lbldbinfo {
 /*
  * global variables used for Trusted IRIX/B library functions 
  */
+extern const char __mac_type_info[];   /* msen and mint association info */ 
+extern DBENT *__mac_mdblist[];   /* array of pointer to entity database list */
+extern LBLDBLIST *__mac_lbldblist;     /* pointer to labelname db list */
 extern LBLDB_BIN_HDR __mac_lhead;      /* header for labelname binary file */	
 extern DB_BIN_HDR __mac_dhead[];       /* header for entity binary file */	
 extern int __mls_entry_total[];	       /* total entry for each db file */
+extern int __mac_mls_init_inprocess;   /* indicate mls_init is in_process */
 extern int __mac_bad_label_entry;      /* bad label entry in labelnames */
 extern int __mac_db_error;	       /* bad entity entry in mlsfiles */	
 extern DBINFO __mac_db[];	       /* binary entity database */
 extern LBLDBINFO __mac_lbldb;	       /* binary label database */
 
-extern int mac_label_devs (char *, mac_label *, uid_t);
+extern int __dump_maclabel( mac_label * );
 
-__SGI_LIBC_END_EXTERN_C
+extern struct clearance *sgi_getclearancebyname( char * );
+extern int mac_cleared( struct clearance *, char * );
+extern int mac_clearedlbl( struct clearance *, mac_label * );
+extern int mac_label_devs( char *, mac_label *, uid_t  );
+extern char *mac_clearance_error( int );
+
+extern char *sgi_eag_form_attr( char *, int, void *, char * );
+extern int sgi_eag_mount(char *, char *, int, char *, char *, int, char *);
+extern int sgi_eag_getattr(const char *, const char *, void *);
+extern int sgi_eag_setattr(const char *, const void *);
+extern int sgi_eag_getprocattr(const char *, void *);
+extern int sgi_eag_setprocattr(const void *);
+
+extern capability_t *sgi_cap_strtocap( const char * );
+extern cap_eag_t *sgi_cap_strtocap_eag( const char * );
+extern struct user_cap *sgi_getcapabilitybyname( char * );
+extern char *sgi_cap_captostr( const capability_t * );
+extern int sgi_cap_cleared( struct user_cap *, const char * );
+extern int sgi_cap_setproc( const char * );
+extern int sgi_cap_request( capability_t * );
+extern int sgi_cap_surrender( capability_t * );
+extern int sgi_cap_id_isset( cap_id_t , const capability_t * );
+extern void sgi_cap_id_set( cap_id_t , capability_t * );
+
+extern struct acl *sgi_acl_strtoacl(char *);
+extern int sgi_acl_acltostr(struct acl *, char *);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _MLS_DOT_H_ */

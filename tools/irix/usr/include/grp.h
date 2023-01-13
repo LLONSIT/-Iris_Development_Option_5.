@@ -1,6 +1,9 @@
 #ifndef __GRP_H__
 #define __GRP_H__
-#ident "$Revision: 1.35 $"
+#ifdef __cplusplus
+extern "C" {
+#endif
+#ident "$Revision: 1.20 $"
 /*
 *
 * Copyright 1992, Silicon Graphics, Inc.
@@ -27,11 +30,8 @@
 /*	The copyright notice above does not evidence any   	*/
 /*	actual or intended publication of such source code.	*/
 
-#include <standards.h>
-#include <sys/types.h>
-#include <internal/sgimacros.h>
 
-__SGI_LIBC_BEGIN_EXTERN_C
+#include <sys/types.h>
 
 struct	group {	/* see getgrent(3) */
 	char	*gr_name;
@@ -40,36 +40,46 @@ struct	group {	/* see getgrent(3) */
 	char	**gr_mem;
 };
 
+#include <stdio.h>
+
+#if defined(_MODERN_C)
+
 extern struct group *getgrgid(gid_t);
 extern struct group *getgrnam(const char *);
-
-#if _XOPEN4UX || _XOPEN5
-extern struct group *getgrent(void);
+#if !defined(_POSIX_SOURCE) && !defined(_XOPEN_SOURCE)
 extern void endgrent(void);
+extern struct group *fgetgrent(FILE *);
+extern struct group *getgrent(void);
 extern void setgrent(void);
-#endif  /* _XOPEN4UX || _XOPEN5 */
-
-#if _SGIAPI || _ABIAPI
 #ifdef _BSD_COMPAT
 extern int      initgroups(char *, int);
 #else
 extern int      initgroups(const char *, gid_t);
 #endif /* _BSD_COMPAT */
+extern int      BSDinitgroups(char *, int);
+#endif /* !defined(_POSIX_SOURCE) */ 
+
+#if (defined(_SGI_SOURCE) && !defined(_POSIX_SOURCE) && !defined(_XOPEN_SOURCE)) || defined(_SGI_REENTRANT_FUNCTIONS)
+extern struct group *getgruid_r(gid_t, struct group *, char *, int);
+extern struct group *getgrnam_r(const char *, struct group *, char *, int);
 #endif
 
-#if _SGIAPI
-#include <stdio.h>
-extern struct group *fgetgrent(FILE *);
-extern int BSDinitgroups(char *, int);
-extern int getgrmember(const char *, gid_t [], int, int);
-extern struct group *	fgetgrent_r(FILE *, struct group *, char *, size_t);
-extern struct group *	getgrent_r(struct group *, char *, size_t);
-#endif /* _SGIAPI */
+#else
 
-#if _POSIX1C
-extern int getgrgid_r(gid_t, struct group *, char *, size_t, struct group **);
-extern int getgrnam_r(const char *, struct group *, char *, size_t, struct group **);
+extern struct group *getgrgid();
+extern struct group *getgrnam();
+#if !defined(_POSIX_SOURCE) && !defined(_XOPEN_SOURCE)
+extern void endgrent();
+extern struct group *fgetgrent();
+extern struct group *getgrent();
+extern void setgrent();
+extern int initgroups();
+extern int BSDinitgroups();
+#endif /* !defined(_POSIX_SOURCE) */ 
+
+#endif	/* _MODERN_C */
+
+#ifdef __cplusplus
+}
 #endif
-
-__SGI_LIBC_END_EXTERN_C
 #endif /* !__GRP_H__ */

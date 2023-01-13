@@ -116,16 +116,4 @@ struct strtty
 #define	MC_PART_CANON	3	/* tell line discipline to do some canonicalization */
 #define SXTSWTCH	'Z'	/* SXT switch character */
 
-/*
- * Pseudo TTY ioctl command
- */
-#define TIOCGMAXPTY	(('t'<<8)|128)
-
-/*
- * MAXPTY define's
- */
-#define MAX_MAXPTY	2000	/* cannot configure more ptys than this */
-#define NUM_PTY_MAJOR	5	/* number of pty major numbers */
-#define NUM_PTY_PER_MAJOR (MAX_MAXPTY/NUM_PTY_MAJOR)  /* max minors per major */
-
 #endif	/* _SYS_STRTTY_H */

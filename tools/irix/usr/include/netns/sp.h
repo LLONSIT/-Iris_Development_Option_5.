@@ -11,9 +11,6 @@
  *
  *      @(#)sp.h	7.2 (Berkeley) 1/20/88
  */
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 /*
  * Definitions for Xerox NS style sequenced packet protocol
@@ -32,6 +29,3 @@ struct sphdr {
 	u_short	sp_ack;		/* acknowledge number */
 	u_short	sp_alo;		/* allocation number */
 };
-#ifdef __cplusplus
-}
-#endif

@@ -16,7 +16,7 @@
  * |         Sunnyvale, California 94088-3650, USA             |
  * |-----------------------------------------------------------|
  */
-/* $Header: /isms/cmplrs.src/v7.4/include/RCS/disassembler.h,v 7.7 1996/04/25 23:00:55 zaineb Exp $ */
+/* $Header: /proj/irix5.3/isms/cmplrs/commonlib/include/RCS/disassembler.h,v 7.6 1994/07/31 11:38:47 dlai Exp $ */
 
 /* Disassembler package */
 

@@ -1,6 +1,9 @@
 #ifndef __UTMPX_H__
 #define __UTMPX_H__
-#ident "$Revision: 1.16 $"
+#ifdef __cplusplus
+extern "C" {
+#endif
+#ident "$Revision: 1.4 $"
 /*
 *
 * Copyright 1992, Silicon Graphics, Inc.
@@ -51,81 +54,30 @@ publication.
 ********************************************************************/ 
 
 
-#include <standards.h>
 #include <sys/types.h>
-#include <internal/sgimacros.h>
-
-__SGI_LIBC_BEGIN_EXTERN_C
-
-/*
- * from sys/time.h
- */
-#ifndef _TIMEVAL_T
-#define _TIMEVAL_T
-struct timeval {
-#if _MIPS_SZLONG == 64
-	__int32_t :32;
-#endif
-        time_t  tv_sec;         /* seconds */
-        long    tv_usec;        /* and microseconds */
-};
-
-/*
- * Since SVID API explicitly gives timeval struct to contain longs ...
- * Thus need a second timeval struct for 64bit binaries to correctly
- * access specific files (ie. struct utmpx in utmpx.h).
- */
-struct __irix5_timeval {
-        __int32_t    tv_sec;         /* seconds */
-        __int32_t    tv_usec;        /* and microseconds */
-};
-#endif /* _TIMEVAL_T */
-
-#if _NO_XOPEN4 && _NO_XOPEN5
-__SGI_LIBC_END_EXTERN_C
+#include <sys/time.h>
 #include <utmp.h>
-__SGI_LIBC_BEGIN_EXTERN_C
 
 #define	UTMPX_FILE	"/var/adm/utmpx"
 #define	WTMPX_FILE	"/var/adm/wtmpx"
-#endif	/* _NO_XOPEN4 && _NO_XOPEN5 */
 
 #define	ut_name	ut_user
 #define ut_xtime ut_tv.tv_sec
 
-#ifndef _EXIT_STATUS_
-#define _EXIT_STATUS_
-struct __exit_status {
-    short __e_termination ;	/* Process termination status */
-    short __e_exit ;		/* Process exit status */
-};
-#if _NO_XOPEN4 && _NO_XOPEN5
-#define exit_status __exit_status
-#define e_termination __e_termination
-#define e_exit __e_exit
-#endif
-#endif
-
 struct utmpx
   {
-	char		ut_user[32];		/* user login name */
-	char		ut_id[4]; 		/* inittab id */
-	char		ut_line[32];		/* device name (console, lnxx) */
-	pid_t		ut_pid;			/* process id */
-	short		ut_type; 		/* type of entry */
-	struct __exit_status ut_exit;		/* process termination/exit status */
-#if (_MIPS_SZLONG == 64)
-	struct __irix5_timeval 	ut_tv;		/* time entry was made */
-	__int32_t	ut_session;		/* session ID, used for windowing */
-	__int32_t	ut_pad[5];		/* reserved for future use */
-#else
-	struct timeval 	ut_tv;			/* time entry was made */
-	long		ut_session;		/* session ID, used for windowing */
-	long		ut_pad[5];		/* reserved for future use */
-#endif
-	short		ut_syslen;		/* significant length of ut_host */
-						/*   including terminating null */
-	char		ut_host[257];		/* remote host name */
+	char	ut_user[32];		/* user login name */
+	char	ut_id[4]; 		/* inittab id */
+	char	ut_line[32];		/* device name (console, lnxx) */
+	pid_t	ut_pid;			/* process id */
+	short	ut_type; 		/* type of entry */
+	struct exit_status ut_exit;     /* process termination/exit status */
+	struct timeval ut_tv;		/* time entry was made */
+	long	ut_session;		/* session ID, used for windowing */
+	long	pad[5];			/* reserved for future use */
+	short	ut_syslen;		/* significant length of ut_host */
+					/*   including terminating null */
+	char	ut_host[257];		/* remote host name */
   } ;
 
 /*	Definitions for ut_type						*/
@@ -139,12 +91,10 @@ struct utmpx
 #define	LOGIN_PROCESS	6	/* A "getty" process waiting for login */
 #define	USER_PROCESS	7	/* A user process */
 #define	DEAD_PROCESS	8
-#if _ABIAPI || _SGIAPI
 #define	ACCOUNTING	9
-#define	UTMAXTYPE	ACCOUNTING	/* Largest legal value of ut_type */
-#endif /* _ABIAPI || _SGIAPI */
 
-#if _NO_XOPEN4 && _NO_XOPEN5
+#define	UTMAXTYPE	ACCOUNTING	/* Largest legal value of ut_type */
+
 /*	Special strings or formats used in the "ut_line" field when	*/
 /*	accounting for something other than a process.			*/
 /*	No string for the ut_line field can be more than 		*/
@@ -155,17 +105,14 @@ struct utmpx
 #define	OTIME_MSG	"old time"
 #define	NTIME_MSG	"new time"
 #define MOD_WIN		10
-#endif	/* _NO_XOPEN4 && _NO_XOPEN5 */
 
+#if defined(_MODERN_C)
 extern void endutxent(void);
 extern struct utmpx *getutxent(void);
 extern struct utmpx *getutxid(const struct utmpx *);
 extern struct utmpx *getutxline(const struct utmpx *);
 extern struct utmpx *pututxline(const struct utmpx *); 
 extern void setutxent(void);
-
-#if _NO_XOPEN4 && _NO_XOPEN5
-
 extern int utmpxname(const char *);
 extern struct utmpx *makeutx(const struct utmpx *);
 extern struct utmpx *modutx(const struct utmpx *);
@@ -173,8 +120,23 @@ extern void getutmp(const struct utmpx *, struct utmp *);
 extern void getutmpx(const struct utmp *, struct utmpx *);
 extern void updwtmp(const char *, struct utmp *);
 extern void updwtmpx(const char *, struct utmpx *);
+#else
+extern void endutxent();
+extern struct utmpx *getutxent();
+extern struct utmpx *getutxid();
+extern struct utmpx *getutxline();
+extern struct utmpx *pututxline(); 
+extern void setutxent();
+extern int utmpxname();
+extern struct utmpx *makeutx();
+extern struct utmpx *modutx();
+extern void getutmp();
+extern void getutmpx();
+extern void updwtmp();
+extern void updwtmpx();
+#endif
 
-#endif	/* _NO_XOPEN4 && _NO_XOPEN5 */
-
-__SGI_LIBC_END_EXTERN_C
+#ifdef __cplusplus
+}
+#endif
 #endif /* !__UTMPX_H__ */

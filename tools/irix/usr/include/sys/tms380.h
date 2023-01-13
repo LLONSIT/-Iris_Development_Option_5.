@@ -4,10 +4,7 @@
  *   Copyright 1991 Silicon Graphics, Inc.  All rights reserved.
  */
 
-#ident "$Revision: 1.6 $"
-#ifdef __cplusplus
-extern "C" {
-#endif
+#ident "$Revision: 1.3 $"
 
 /*----------------------------------------------------------------------*
  *	Number of data buffers						*
@@ -289,7 +286,7 @@ typedef struct {
 	    	u_short	ssb_prm1;		/* second parameter */
 	    	u_short ssb_prm2;		/* third parameter */
 	    	} ssb_1;
-	    u_int      ssb_wd1;		/* view as 32 bits */
+	    u_long      ssb_wd1;		/* view as 32 bits */
 	    } xx;
 } SSB;
 #define ssb_parm1	xx.ssb_1.ssb_prm1
@@ -802,6 +799,3 @@ typedef struct tr_llc_stat_data {
 #define	TR_XMITL_I_FRAME_NOTRDY	0xfe	/* I frame - TMS380 not ready */
 #define	TR_XMITL_I_FRAME_READY	0xff	/* I frame - TMS380 ready */
 
-#ifdef __cplusplus
-}
-#endif

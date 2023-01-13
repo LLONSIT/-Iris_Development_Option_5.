@@ -11,9 +11,6 @@
  *
  *      @(#)ns.h	7.3 (Berkeley) 1/20/88
  */
-#ifdef __cplusplus
-extern "C" {
-#endif
 #ifdef sgi
 # ifdef _KERNEL
 #  define KERNEL
@@ -125,7 +122,4 @@ union ns_host ns_broadhost;
 union ns_net ns_zeronet;
 union ns_net ns_broadnet;
 u_short ns_cksum();
-#endif
-#ifdef __cplusplus
-}
 #endif

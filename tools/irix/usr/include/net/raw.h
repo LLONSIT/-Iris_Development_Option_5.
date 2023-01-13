@@ -1,12 +1,9 @@
 #ifndef __net_raw__
 #define __net_raw__
-#ifdef __cplusplus
-extern "C" { 
-#endif
 /*
  * Constants and structures for the raw protocol family.
  *
- * $Revision: 1.46 $
+ * $Revision: 1.30 $
  *
  * Copyright 1988, 1990, Silicon Graphics, Inc. 
  * All Rights Reserved.
@@ -33,7 +30,6 @@ extern "C" {
 struct mbuf;
 struct socket;
 struct rawcb;
-struct ifnet;
 
 /*
  * There are two protocols, snoop and drain.
@@ -72,12 +68,7 @@ struct ifnet;
 #define	RAW_IFNAMSIZ	(RAW_MAXADDRLEN - sizeof(u_short))
 
 struct sockaddr_raw {
-#ifdef _HAVE_SA_LEN
-	u_char		sr_len;
-	u_char		sr_family;			/* AF_RAW */
-#else
 	u_short		sr_family;			/* AF_RAW */
-#endif
 	union {
 	    struct {
 		u_short srl_port;			/* socket id */
@@ -140,8 +131,8 @@ struct sockaddr_raw {
 #define	SNOOP_MAXPORT		4
 
 struct snoopfilter {
-	__uint32_t	sf_mask[SNOOP_FILTERLEN];	/* which header bits to match */
-	__uint32_t	sf_match[SNOOP_FILTERLEN];	/* and the matching values */
+	u_long	sf_mask[SNOOP_FILTERLEN];	/* which header bits to match */
+	u_long	sf_match[SNOOP_FILTERLEN];	/* and the matching values */
 	u_short	sf_allocated:1,			/* whether filter is in use */
 		sf_active:1,			/* whether filter is "on" */
 		sf_promisc:1,			/* is filter promiscuous? */
@@ -158,20 +149,16 @@ struct snoopfilter {
  * a reception timestamp.
  */
 struct snoopheader {
-	__uint32_t	snoop_seq;		/* sequence number per ifnet */
+	u_long		snoop_seq;		/* sequence number per ifnet */
 	u_short		snoop_flags;		/* packet flags - see below */
 	u_short		snoop_packetlen;	/* packet length on wire */
-#if (_MIPS_SZLONG == 64)
-	struct irix5_timeval snoop_timestamp;	/* time of receive interrupt */
-#else
 	struct timeval	snoop_timestamp;	/* time of receive interrupt */
-#endif /* _MIPS_SZLONG == 64 */
 };
 
 /* snoop header flags */
 #define	SN_PROMISC	0x8000	/* pkt not destined for this interface */
 #define	SN_ERROR	0x4000	/* receive error specified by SNERR_* flags */
-#define	SN_MORETOCOME	0x1000	/* indicate a batch of packets */
+#define	SN_TRAILER	0x2000	/* network-layer protocol trailer prepended */
 #define	SNERR_FRAME	0x0001	/* pkt received, but with framing error */
 #define	SNERR_CHECKSUM	0x0002	/* pkt received, but with CRC error */
 #define	SNERR_TOOBIG	0x0004	/* pkt received, truncated to fit buffer */
@@ -211,13 +198,13 @@ struct drainmap {
  */
 struct rawstats {
 	struct snoopstats {
-		__uint32_t	ss_seq;		/* current sequence number */
-		__uint32_t	ss_ifdrops;	/* drops at/below interface queue */
-		__uint32_t	ss_sbdrops;	/* drops at socket buffer */
+		u_long	ss_seq;		/* current sequence number */
+		u_long	ss_ifdrops;	/* drops at/below interface queue */
+		u_long	ss_sbdrops;	/* drops at socket buffer */
 	} rs_snoop;
 	struct drainstats {
-		__uint32_t	ds_ifdrops;	/* drops at/below interface queue */
-		__uint32_t	ds_sbdrops;	/* drops at socket buffer */
+		u_long	ds_ifdrops;	/* drops at/below interface queue */
+		u_long	ds_sbdrops;	/* drops at socket buffer */
 	} rs_drain;
 };
 
@@ -270,18 +257,20 @@ struct rawif {
 	struct drainmap		rif_drainmap;	/* drain port mapping */
 };
 
+#ifdef CIPSO
+/* Trusted IRIX - added two arguments. */
 extern int raw_input(struct mbuf *m0, struct sockproto *proto,
-		     struct sockaddr *src, struct sockaddr *dst,
-		     struct ifnet *);
-extern void raw_ctlinput(int, struct sockaddr *, void *);
-extern int raw_usrreq(struct socket*, int, struct mbuf*,
-		      struct mbuf*, struct mbuf*);
-extern void raw_init(void);
+		    struct sockaddr *src, struct sockaddr *dst,
+		    struct mac_label * dlbl, uid_t duid);
+#else
+extern int raw_input(struct mbuf *m0, struct sockproto *proto,
+		    struct sockaddr *src, struct sockaddr *dst);
+#endif
 
 /*
  * Macros to access private data pointers and blocks appropriately.
  */
-#define	rptorawsa(rp)	((struct sockaddr_raw *) (rp)->rcb_laddr)
+#define	rptorawsa(rp)	((struct sockaddr_raw *) &(rp)->rcb_laddr)
 #define	sotorawsa(so)	rptorawsa(sotorawcb(so))
 #define	rptorawif(rp)	((struct rawif *) (rp)->rcb_pcb)
 #define	sotorawif(so)	rptorawif(sotorawcb(so))
@@ -314,7 +303,7 @@ extern void raw_init(void);
  */
 void	rawif_attach(struct rawif *, struct ifnet *, caddr_t, caddr_t, int,
 		     int, int, int);
-int	rawioctl(struct socket *, __psint_t, caddr_t);
+int	rawioctl(struct socket *, int, caddr_t);
 int	rawopen(struct rawcb *, struct sockaddr_raw *);
 void	rawclose(struct rawcb *);
 void	rawsbdrop(struct rawcb *);
@@ -368,12 +357,9 @@ struct snoopflagmap {
  * enqueue the packet on the raw input queue; otherwise it returns 1.
  */
 int	snoop_mapflags(struct snoopflagmap *, int);
-struct snoopfilter *snoop_match(struct rawif *, caddr_t, int);
+int	snoop_match(struct rawif *, caddr_t, int);
 int	snoop_input(struct rawif *, int, caddr_t, struct mbuf *, int);
-int     snoop_input2(struct rawif *, int, caddr_t, struct mbuf *, int,
-		     struct snoopfilter *);
 void	snoop_drop(struct rawif *, int, caddr_t, int);
-void 	snoop_drop2(struct rawif *, int, caddr_t, int, struct snoopfilter *);
 
 
 /*
@@ -394,20 +380,26 @@ void 	snoop_drop2(struct rawif *, int, caddr_t, int, struct snoopfilter *);
 int	drain_input(struct rawif *, u_int, caddr_t, struct mbuf *);
 void	drain_drop(struct rawif *, u_int);
 
-extern mrlock_t rawcblist_lock;
+#ifdef _MP_NETLOCKS
+extern mrsplock_t rawcblist_lock;
+extern lock_t rawrefcnt_lock;
+#define RAWCBLIST_SPINCNT	10
 #define RAW_INITLOCKS() { \
-		mrlock_init(&rawcblist_lock, MRLOCK_BARRIER, "rawcb_lock", 0); \
+                IFQ_INITLOCK(&rawintrq); \
+		initnlock(&rawrefcnt_lock, "rawref");	\
+		mrinit_splock(&rawcblist_lock, "rawcb_lock", RAWCBLIST_SPINCNT); \
 }
-#define RAWCBLIST_MRRLOCK()	mraccess(&rawcblist_lock)
-#define RAWCBLIST_MRWLOCK()	mrupdate(&rawcblist_lock)
-#define RAWCBLIST_MRUNLOCK()	mrunlock(&rawcblist_lock)
-#define RAWCBLIST_ISMRLOCKED(type) ismrlocked(&rawcblist_lock, type)
-
-extern  int raw_attach(struct socket *, __psint_t);
-extern  void raw_detach(struct rawcb *);
-extern  int raw_bind(struct socket *, struct mbuf *);
-extern  void raw_disconnect(struct rawcb *);
-extern	int sfmatch(struct snoopfilter *sf, __uint32_t *hp, int cnt);
+#define RAWCBLIST_MRRLOCK()	mrsplock(&rawcblist_lock, MR_ACCESS)
+#define RAWCBLIST_MRWLOCK()	mrsplock(&rawcblist_lock, MR_UPDATE)
+#define RAWCBLIST_MRUNLOCK()	mrspunlock(&rawcblist_lock)
+#define RAWCBLIST_ISMRLOCKED(type) ismrsplocked(&rawcblist_lock, type)
+#else
+#define RAW_INITLOCKS()
+#define RAWCBLIST_MRRLOCK()
+#define RAWCBLIST_MRWLOCK()
+#define RAWCBLIST_MRUNLOCK()
+#define RAWCBLIST_ISMRLOCKED(type)	(1)
+#endif
 
 #endif	/* _KERNEL */
 
@@ -421,7 +413,4 @@ struct sockaddr_sdl {
 	u_char  ssdl_addr[32];
 };
 
-#ifdef __cplusplus
-}
-#endif 
 #endif	/* !__net_raw__ */

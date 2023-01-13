@@ -38,6 +38,8 @@ extern "C" {
 #define LOCORDREL	0x0200	/* local end has orderly released */
 #define REMORDREL	0x0400	/* remote end had orderly released */
 #define NAMEPROC	0x0800	/* processing a NAME ioctl */
+#define SENDZERO	0x1000	/* provider supports 0-length msg */
+#define EXPINLINE	0x2000	/* provider wants expedited data inline */
 
 /* Internal buffer size (in bytes) pre-allocated for address fields */
 #define PRADDRSZ	128
@@ -71,7 +73,7 @@ extern "C" {
 /* TI interface user level structure - one per open file */
 
 struct _ti_user {
-	ushort_t	ti_flags;	/* flags              */
+	ushort	ti_flags;	/* flags              */
 	int	ti_rcvsize;	/* rcv buffer size    */
 	char   *ti_rcvbuf;	/* rcv buffer         */
 	int	ti_ctlsize;	/* ctl buffer size    */
@@ -85,16 +87,12 @@ struct _ti_user {
 	int     ti_lookflg;	/* buffered look flag */
 	int	ti_state;	/* user level state   */
 	int	ti_ocnt;	/* # outstanding connect indications */
-#ifdef _BUILDING_LIBXNET
-	int	ti_qlen;	/* connect indication queue size */
-	int	ti_tsdu;	/* the amount of TSDU supported by provider */
-#endif
 };
 
 /* Old TI interface user level structure - needed for compatibility */
 
 struct _oldti_user {
-	ushort_t	ti_flags;	/* flags              */
+	ushort	ti_flags;	/* flags              */
 	int	ti_rcvsize;	/* rcv buffer size    */
 	char   *ti_rcvbuf;	/* rcv buffer         */
 	int	ti_ctlsize;	/* ctl buffer size    */
@@ -109,17 +107,16 @@ struct _oldti_user {
 };
 
 
-#ifndef _KERNEL
 /* This should be replaced */
-#include <ulimit.h>
 #define OPENFILES     ulimit(4, 0)
-#endif
+
+extern long ulimit();
 
 /*
  * Routine to be used by transport providers to process
  * TI_GETMYNAME and TI_GETPEERNAME ioctls.
  */
-extern int	ti_doname(queue_t *, mblk_t *, void *, uint_t, void *, uint_t);
+extern int	ti_doname(queue_t *, mblk_t *, void *, uint, void *, uint);
 
 /*
  * Return values for ti_doname.

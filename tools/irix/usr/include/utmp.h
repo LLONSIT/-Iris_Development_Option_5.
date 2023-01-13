@@ -1,6 +1,9 @@
 #ifndef __UTMP_H__
 #define __UTMP_H__
-#ident "$Revision: 1.17 $"
+#ifdef __cplusplus
+extern "C" {
+#endif
+#ident "$Revision: 1.13 $"
 /*
 *
 * Copyright 1992, Silicon Graphics, Inc.
@@ -29,9 +32,6 @@
 
 
 #include <sys/types.h>
-#include <internal/sgimacros.h>
-
-__SGI_LIBC_BEGIN_EXTERN_C
 
 #define	UTMP_FILE	"/var/adm/utmp"
 #define	WTMP_FILE	"/var/adm/wtmp"
@@ -40,16 +40,11 @@ __SGI_LIBC_BEGIN_EXTERN_C
 /*
  * Pulled out of struct utmp
  */
-#ifndef _EXIT_STATUS_
-#define _EXIT_STATUS_
-struct __exit_status {
-    short __e_termination ;	/* Process termination status */
-    short __e_exit ;		/* Process exit status */
-};
-#define exit_status	__exit_status
-#define e_termination __e_termination
-#define e_exit __e_exit
-#endif
+struct exit_status
+  {
+    short e_termination ;	/* Process termination status */
+    short e_exit ;		/* Process exit status */
+  } ;
 
 struct utmp
   {
@@ -58,7 +53,7 @@ struct utmp
 	char ut_line[12] ;		/* device name (console, lnxx) */
 	short ut_pid ;			/* leave short for compatiblity - process id */
 	short ut_type ; 		/* type of entry */
-	struct __exit_status ut_exit ;	/* The exit status of a process
+	struct exit_status ut_exit ;	/* The exit status of a process
 					 * marked as DEAD_PROCESS.
 					 */
 	time_t ut_time ;		/* time entry was made */
@@ -89,6 +84,7 @@ struct utmp
 #define	OTIME_MSG	"old time"
 #define	NTIME_MSG	"new time"
 
+#if defined(_MODERN_C)
 extern void endutent(void);
 extern struct utmp *getutent(void);
 extern struct utmp *getutid(const struct utmp *);
@@ -96,6 +92,17 @@ extern struct utmp *getutline(const struct utmp *);
 extern struct utmp *pututline(const struct utmp *); 
 extern void setutent(void);
 extern int utmpname(const char *);
+#else
+extern void endutent();
+extern struct utmp *getutent();
+extern struct utmp *getutid();
+extern struct utmp *getutline();
+extern struct utmp *pututline(); 
+extern void setutent();
+extern int utmpname();
+#endif
 
-__SGI_LIBC_END_EXTERN_C
+#ifdef __cplusplus
+}
+#endif
 #endif /* !__UTMP_H__ */

@@ -1,6 +1,9 @@
 #ifndef __SHADOW_H__
 #define __SHADOW_H__
-#ident "$Revision: 1.8 $"
+#ifdef __cplusplus
+extern "C" {
+#endif
+#ident "$Revision: 1.4 $"
 /*
 *
 * Copyright 1992, Silicon Graphics, Inc.
@@ -25,9 +28,6 @@
 /*	The copyright notice above does not evidence any   	*/
 /*	actual or intended publication of such source code.	*/
 
-#include <internal/sgimacros.h>
-
-__SGI_LIBC_BEGIN_EXTERN_C
 
 #define PASSWD 		"/etc/passwd"
 #define SHADOW		"/etc/shadow"
@@ -58,6 +58,7 @@ struct spwd {
 	unsigned long  sp_flag; /* currently not being used */
 } ;
 
+#if defined(_MODERN_C)
 
 #ifndef _STDIO_H
 #include <stdio.h>
@@ -66,14 +67,20 @@ struct spwd {
 /* Declare all shadow password functions */
 
 extern void	setspent(void), endspent(void);
-extern	struct	spwd	*getspent(void), *fgetspent(FILE *), *getspnam(const char *), *getspnam_r(const char *, struct spwd *, char *, int);
+extern	struct	spwd	*getspent(void), *fgetspent(FILE *), *getspnam(const char *);
 extern	int	putspent(const struct spwd *, FILE *), lckpwdf(void), ulckpwdf(void);
 
-/* SGI specific */
-extern struct spwd *fgetspent_r(FILE *, struct spwd *, char *, int);
-extern struct spwd *fgetspent(FILE *);
-extern struct spwd *getspent_r(struct spwd *, char *, int);
-extern struct spwd *getspnam_r(const char *, struct spwd *, char *, int);
+#else
 
-__SGI_LIBC_END_EXTERN_C
+/* Declare all shadow password functions */
+
+void 		setspent(), endspent() ;
+struct spwd 	*getspent(), *fgetspent(), *getspnam() ;
+int 		putspent(), lckpwdf(), ulckpwdf() ;
+
+#endif
+
+#ifdef __cplusplus
+}
+#endif
 #endif /* !__SHADOW_H__ */

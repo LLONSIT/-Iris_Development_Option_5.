@@ -11,9 +11,6 @@
  *
  *	@(#)spp_timer.h	7.1 (Berkeley) 3/12/88
  */
-#ifdef __cplusplus
-extern "C" {
-#endif
 #ifdef sgi
 # ifdef _KERNEL
 #  define KERNEL
@@ -106,7 +103,4 @@ char *spptimers[] =
 
 #ifdef KERNEL
 extern int spp_backoff[];
-#endif
-#ifdef __cplusplus
-}
 #endif

@@ -1,6 +1,9 @@
 #ifndef __CS_H__
 #define __CS_H__
-#ident "$Revision: 1.4 $"
+#ifdef __cplusplus
+extern "C" {
+#endif
+#ident "$Revision: 1.3 $"
 /*
 *
 * Copyright 1992, Silicon Graphics, Inc.
@@ -29,10 +32,6 @@
 
 #ident	"@(#)head.usr:cs.h	1.1.1.1"
 
-#include <internal/sgimacros.h>
-
-__SGI_LIBC_BEGIN_EXTERN_C
-
 struct csopts {
       struct netconfig *nc_p;
       int nd_opt;
@@ -44,7 +43,7 @@ cs_connect(char *, char *, struct csopts *, int *);
 
 void
 cs_perror(char *, int);
-
-__SGI_LIBC_END_EXTERN_C
-
+#ifdef __cplusplus
+}
+#endif
 #endif /* !__CS_H__ */

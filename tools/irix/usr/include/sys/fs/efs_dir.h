@@ -3,8 +3,8 @@
 /*
  * Long-name directory structure for the efs.
  *
- * $Revision: 3.11 $
- * $Date: 1996/09/30 19:39:45 $
+ * $Revision: 3.5 $
+ * $Date: 1993/03/18 18:21:29 $
  */
 
 /*
@@ -175,7 +175,7 @@ struct	efs_dirblk {
  */
 struct entry {
 	struct ncfastdata e_fastdata;	/* name cache lookup results */
-	efs_ino_t	e_inum;		/* inumber of sought entry */
+	ino_t		e_inum;		/* inumber of sought entry */
 	struct inode	*e_ip;		/* inode when not just looking up */
 };
 #define	e_name		e_fastdata.name
@@ -186,6 +186,7 @@ struct entry {
 /* efs_dirlookup how-to flags */
 #define DLF_IGET	0x01	/* get entry inode if name lookup succeeds */
 #define	DLF_MUSTHAVE	0x02	/* if entry does not exist return ENOENT */
+#define DLF_SCAN	0x04	/* use and update directory lookup rotor */
 #define DLF_ENTER	0x08	/* lookup in order to make an entry */
 #define DLF_REMOVE	0x10	/* lookup in order to remove an entry */
 #define DLF_EXCL	0x20	/* lookup to make an exclusive entry */
@@ -222,7 +223,7 @@ extern int efs_direnter(struct inode *, struct inode *, struct entry *,
 extern int efs_dirrewrite(struct inode *, struct inode *, struct entry *,
 			  struct cred *);
 extern int efs_dirremove(struct inode *, struct entry *, struct cred *);
-extern int efs_dirinit(struct inode *, efs_ino_t, struct cred *);
+extern int efs_dirinit(struct inode *, ino_t, struct cred *);
 extern int efs_dirisempty(struct inode *, int *, struct cred *);
 extern int efs_notancestor(struct inode *, struct inode *, struct cred *);
 
@@ -232,7 +233,7 @@ extern int efs_notancestor(struct inode *, struct inode *, struct cred *);
 struct uio;
 struct vnode;
 
-extern int efs_readdir(bhv_desc_t *, struct uio *, struct cred *, int *);
+extern int efs_readdir(struct vnode *, struct uio *, struct cred *, int *);
 
 #endif	/* _KERNEL */
 #endif	/* __efs_dir_ */

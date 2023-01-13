@@ -1,6 +1,9 @@
 #ifndef __DIAL_H__
 #define __DIAL_H__
-#ident "$Revision: 1.6 $"
+#ifdef __cplusplus
+extern "C" {
+#endif
+#ident "$Revision: 1.4 $"
 /*
 *
 * Copyright 1992, Silicon Graphics, Inc.
@@ -46,13 +49,10 @@
 
 #ident	"@(#)head.usr:dial.h	1.2.4.1"
 
-#include <internal/sgimacros.h>
 
 #ifndef  _SYS_TERMIO_H
 #include <sys/termio.h>
 #endif
-
-__SGI_LIBC_BEGIN_EXTERN_C
 
 /* uucico routines need these */
 /*#define DIAL */
@@ -104,9 +104,19 @@ typedef struct {
 	int	dev_len;	/* unused */
 } CALL;
 
+#if defined(_MODERN_C)
+
 extern int dial(CALL);
 extern void undial(int);
 
-__SGI_LIBC_END_EXTERN_C
+#else
 
+extern int dial();
+extern void undial();
+
+#endif
+
+#ifdef __cplusplus
+}
+#endif
 #endif /* !__DIAL_H__ */

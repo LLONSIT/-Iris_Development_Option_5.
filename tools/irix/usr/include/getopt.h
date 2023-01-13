@@ -1,6 +1,9 @@
 #ifndef __GETOPT_H__
 #define __GETOPT_H__
-#ident "$Revision: 1.13 $"
+#ident "$Revision: 1.8 $"
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*
  * Declarations for getopt(3C).
@@ -20,42 +23,6 @@
  * successor clauses in the FAR, DOD or NASA FAR Supplement. Unpublished - 
  * rights reserved under the Copyright Laws of the United States.
  */
-
-#include <standards.h>
-#include <internal/sgimacros.h>
-
-__SGI_LIBC_BEGIN_EXTERN_C
-
-extern int	getopt(int, char *const *, const char *);
-
-extern char	*optarg;
-extern int	opterr;
-extern int	optind;
-extern int	optopt;
-
-/*
- * workaround for weak symbols in non-shared code
- * _PIC is not defined for non-shared code.
- * Check for optarg being #defined to  _optarg for libc builds
- */
-#ifndef _PIC 
-#if _MIPS_SIM !=_ABIO32
-#if !defined optarg
-#pragma section_non_gp (optarg)
-#pragma section_non_gp (opterr)
-#pragma section_non_gp (optind)
-#pragma section_non_gp (optopt)
-#else /* optarg */
-#pragma section_non_gp (_optarg)
-#pragma section_non_gp (_opterr)
-#pragma section_non_gp (_optind)
-#pragma section_non_gp (_optopt)
-#endif /* optarg */
-#endif /* _MIPS_SIM != ABIO32 */
-#endif /* _PIC */
-
-
-#if _SGIAPI
 #define	GETOPTDONE	(-1)
 
 /*
@@ -64,10 +31,16 @@ extern int	optopt;
  */
 #define	GETOPTHUH	'?'
 
+extern int	getopt(int, char *const *, const char *);
 extern int	getsubopt(char **, char *const *, char **);
-extern void	getoptreset(void);
-#endif
 
-__SGI_LIBC_END_EXTERN_C
+extern char	*optarg;
+extern int	opterr;
+extern int	optind;
+extern int	optopt;
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* !__GETOPT_H__ */

@@ -11,9 +11,6 @@
  *
  *      @(#)idp_var.h	7.2 (Berkeley) 1/20/88
  */
-#ifdef __cplusplus
-extern "C" {
-#endif
 #ifdef sgi
 # ifdef _KERNEL
 #  define KERNEL
@@ -33,7 +30,4 @@ struct	idpstat {
 
 #ifdef KERNEL
 struct	idpstat	idpstat;
-#endif
-#ifdef __cplusplus
-}
 #endif

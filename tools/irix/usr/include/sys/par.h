@@ -12,7 +12,7 @@
 #ifndef __SYS_PAR_H__
 #define __SYS_PAR_H__
 
-#ident "$Revision: 1.72 $"
+#ident "$Revision: 1.32 $"
 
 #ifdef __cplusplus
 extern "C" {
@@ -20,30 +20,40 @@ extern "C" {
 
 #include "sys/syscall.h"
 
-/*
- * /dev/par ioctl() commands:
- *
- * NOTE: /dev/par and /dev/prf share the same major device number.  Since they
- *       share absolutely no code in common this is really annoying and simply
- *       leads to potential problems when one piece of code or another is
- *       changed.  To cover this, we use ioctl() codes 0-63 (0x0-0x3f) for
- *       /dev/prf and 64-1023 (0x40-0x3ff) for /dev/par.
- */
-					/* 0x0040-0x0064 unused */
-#define PAR_OLDSYSCALLINH	0x0065	/* old trace syscalls for family */
-					/* 0x0066 unused */
-#define PAR_OLDSYSCALL		0x0067	/* old trace system calls  */
-					/* 0x0068-0x006c unused */
-#define PAR_SETMAXIND		0x006d	/* set maximum # of indirect bytes */
-#define PAR_DISABLE		0x006e	/* disable tracing on process/family */
-#define PAR_DISALLOW		0x006f	/* disallow tracing on process */
-#define PAR_ALLOW		0x0070	/* allow tracing on process */
-					/* 0x0071-0x007f unused */
+/* par operation types values given to /dev/par(ioctl) */
 
-/* the following three are always used in bit-or combination with each other */
-#define PAR_SYSCALL		0x0080	/* trace system calls */
-#define PAR_SWTCH		0x0100	/* trace context switches */
-#define PAR_INHERIT		0x0200	/* inherit tracing */
+#define PAR_START	100	/* par start */
+#define PAR_SYSCALLINH	101	/* trace syscalls for family */
+#define PAR_READ	102	/* read par buffer */
+#define PAR_SYSCALL	103	/* trace system calls  */
+#define PAR_RESCHED	104	/* trace scheduler  */
+#define PAR_NETSCHED	105	/* trace network scheduling */
+#define PAR_NETFLOW	106	/* trace network data flow */
+#define PAR_VMFAULT	107	/* trace VM faults */
+#define PAR_VMFAULT_SET 108	/* select VM fault tracing set */
+#define PAR_SETMAXIND	109	/* setr maximum # of indirect bytes */
+
+/* storage format tokens for fawlty */
+#define OLDPROCTKN	3	/* resched -- old process token */
+#define NEWPROCTKN	4	/* resched -- new process token */
+#define IDLEPROCTKN	5	/* resched -- idle process token */
+#define USTRINGTKN	6	/* user string token */
+#define SYSCALLTKN	8	/* system call token */
+#define SYSRETTKN	9	/* system call return code token */
+#define RUNQTKN		11	/* resched -- runq  token */
+#define OFLOWTKN	13	/* overflow count */
+#define NAMETKN		14	/* process name token */
+#define RMPROCTKN	15	/* remove died process token */
+#define NETEVENTKN	16	/* net new event inited */
+#define NETSLEEPTKN	17	/* net sleeps */
+#define NETWAKEUPTKN	18	/* net waken up */
+#define NETWAKINGTKN	19	/* net waking up */
+#define NETFLOWTKN	20	/* net data flow */
+#define NETDROPTKN	21	/* net data drop */
+#define NETEVENTDONETKN	22	/* net event done */
+#define SENDSIGTKN	23	/* process is sending (delivering) signal */
+#define RCVSIGTKN	24	/* process is receiving (processing) signal */
+#define VMFAULTTKN	25	/* VM fault token */
 
 /* reasons for idle */
 #define NO_STACK	0x1	/* kernel stack is used on another processor */
@@ -53,23 +63,17 @@ extern "C" {
 #define NO_GFX		0x10	/* graphics lock held by another process */
 #define EMPTY		0x20	/* run queue empty */
 #define NO_DISC		0x40	/* cpu doesn't run right sched disciplines */
+#define IN_SINGLE	0x80	/* wrong proc when in single proc mode */
+#define NO_GANG		0x100	/* proc member of gang that can't schedule */
+#define GANG_PREEMPTED	0x200	/* gang is queued but better ndpri guy */
 
-/* reasons for reshedule */
-#define MUSTRUNCPU	0x0001	/* must run on other cpu */
-#define SEMAWAIT	0x0002	/* wait for semaphore */
-#define RESCHED_P	0x0004	/* rescheduled due to user-mode preempt */
-#define RESCHED_Y	0x0008	/* rescheduled due to yield */
-#define RESCHED_S	0x0010	/* rescheduled due to stopped by signal */
-#define RESCHED_D	0x0020	/* rescheduled due to process died */
-#define MUTEXWAIT	0x0040	/* wait for mutex */
-#define SVWAIT		0x0080	/* wait for synchronization variable */
-#define RESCHED_KP	0x0100	/* rescheduled due to kernel preemption */
-#define GANGWAIT	0x0200	/* waiting for gang members to be ready */
-#define MRWAIT		0x0400	/* waiting for mrlock */
-
-/* rescheduling due to blocking on locks and ``volunatry'' yeild */
-#define RESCHED_LOCK	(SEMAWAIT|MUTEXWAIT|SVWAIT|MRWAIT)
-#define RESCHED_VOL	(RESCHED_Y|RESCHED_LOCK)
+/* reasons for resheduled */
+#define MUSTRUNCPU	0x01	/* must run on other cpu */
+#define SEMAWAIT	0x02	/* wait for semaphore */
+#define RESCHED_P	0x04	/* rescheduled due to preempt */
+#define RESCHED_Y	0x08	/* rescheduled due to yield */
+#define RESCHED_S	0x10	/* rescheduled due to stopped by signal */
+#define RESCHED_D	0x20	/* rescheduled due to process died */
 
 /* reasons for netevents */
 #define NETRES_NULL	0x00	/* null reason */
@@ -140,40 +144,244 @@ extern "C" {
 #define NETEVENT_RPCDOWN	0x11
 #define NETEVENT_DDNUP		0x12
 #define NETEVENT_DDNDOWN	0x13
-#define NETEVENT_STPUP		0x14
-#define NETEVENT_STPDOWN	0x15
 
 /* misc for netevent */
 #define NETCNT_NULL	((char)-99)
 #define NETPID_NULL	((char)-98)
 
+/* VM fault subtoken */
+#define VMEVENT_VFAULT_FILE 0
+#define VMEVENT_VFAULT_SWAP 1
+#define VMEVENT_VFAULT_CACHE 2
+#define VMEVENT_VFAULT_ZERO 3
+#define VMEVENT_VFAULT_FAIL 4
+#define VMEVENT_PFAULT_MOD 5
+#define VMEVENT_PFAULT_COPY 6
+#define VMEVENT_PFAULT_STEAL 7
+#define VMEVENT_PFAULT_FAIL 8
+#define VMEVENT_SWAPCHUNK_WAIT 9
+#define VMEVENT_SWAPCHUNK_START 10
+#define VMEVENT_SWAP_PAGE_START 11
+#define VMEVENT_SWAP_PAGE_DONE 12
+#define VMEVENT_SWAPCHUNK_GROUP 13
+#define VMEVENT_VFAULT_FILE_START 14
+#define VMEVENT_VFAULT_SWAP_START 15
+#define VMEVENT_DISK_QUEUED 16
+#define VMEVENT_DISK_START 17
+#define VMEVENT_DISK_DONE 18
+#define VMEVENT_WS_SWAPOUT_START 19
+#define VMEVENT_WS_SWAPOUT_DONE 20
+#define VMEVENT_WS_SWAPIN_START 21
+#define VMEVENT_WS_SWAPIN_DONE 22
+#define VMEVENT_WS_SWAPOUT_SCHED 23
+#define VMEVENT_WS_SWAPIN_SCHED 24
+
+#define VMEVENT_FLAG(vc) (1 << (vc))
+
+#define VMEVENT_DEFAULT_SET (VMEVENT_FLAG(VMEVENT_VFAULT_FILE) | \
+			     VMEVENT_FLAG(VMEVENT_VFAULT_SWAP) | \
+			     VMEVENT_FLAG(VMEVENT_VFAULT_CACHE) | \
+			     VMEVENT_FLAG(VMEVENT_VFAULT_ZERO) | \
+			     VMEVENT_FLAG(VMEVENT_VFAULT_FAIL) | \
+			     VMEVENT_FLAG(VMEVENT_PFAULT_MOD) | \
+			     VMEVENT_FLAG(VMEVENT_PFAULT_COPY) | \
+			     VMEVENT_FLAG(VMEVENT_PFAULT_STEAL) | \
+			     VMEVENT_FLAG(VMEVENT_PFAULT_FAIL) | \
+			     VMEVENT_FLAG(VMEVENT_SWAPCHUNK_WAIT) | \
+			     VMEVENT_FLAG(VMEVENT_SWAPCHUNK_START) | \
+			     VMEVENT_FLAG(VMEVENT_SWAP_PAGE_START) | \
+			     VMEVENT_FLAG(VMEVENT_SWAP_PAGE_DONE) | \
+			     VMEVENT_FLAG(VMEVENT_SWAPCHUNK_GROUP) | \
+			     VMEVENT_FLAG(VMEVENT_VFAULT_FILE_START) | \
+			     VMEVENT_FLAG(VMEVENT_VFAULT_SWAP_START) | \
+			     VMEVENT_FLAG(VMEVENT_DISK_QUEUED) | \
+			     VMEVENT_FLAG(VMEVENT_DISK_START) | \
+			     VMEVENT_FLAG(VMEVENT_DISK_DONE) | \
+			     VMEVENT_FLAG(VMEVENT_WS_SWAPOUT_START) | \
+			     VMEVENT_FLAG(VMEVENT_WS_SWAPOUT_DONE) | \
+			     VMEVENT_FLAG(VMEVENT_WS_SWAPIN_START) | \
+			     VMEVENT_FLAG(VMEVENT_WS_SWAPIN_DONE) | \
+			     VMEVENT_FLAG(VMEVENT_WS_SWAPOUT_SCHED) | \
+			     VMEVENT_FLAG(VMEVENT_WS_SWAPIN_SCHED))
+
+#define VMEVENT_WS_SCHED_NORUN		0x0001
+#define VMEVENT_WS_SCHED_LOTSOFMEM	0x0002
+#define VMEVENT_WS_SCHED_OLD		0x0004
+#define VMEVENT_WS_SCHED_SLOAD		0x0008
+#define VMEVENT_WS_SCHED_SXBRK		0x0010
+
 #ifdef _KERNEL
+struct proc;
 struct sysent;
-extern void fawlty_exec(const char*);
-extern void fawlty_fork(int64_t, int64_t, const char*);
-extern void fawlty_sys(short, struct sysent *, sysarg_t *);
-extern void fawlty_sysend(short, struct sysent *, sysarg_t *, __int64_t, __int64_t, int);
-struct kthread;
-extern void fawlty_resched(struct kthread*, int);
+extern int trflags;
+extern void fawlty_exit(void);
+extern void fawlty_fork(void);
+extern void fawlty_rcvsig(int);
+extern void fawlty_rename(void);
+extern void fawlty_sendsig(int, pid_t);
+extern void fawltyidle(char, int);
+extern void fawltynetevent(char, pid_t, char, int, char);
+extern void fawltysched(char, struct proc *, char, char, int);
+extern void fawltysys(short, struct sysent *, sysarg_t *);
+extern void fawltysysend(short, struct sysent *, sysarg_t *, long, long, int);
 
 #ifdef NET_DEBUG
-#define NETPAR(f,t,p,s,l,r)						\
-    LOG_TSTAMP_EVENT(f, t, (p), RTMON_PACKNET(s,r), (l), NULL)
+#define NETPAR(f,t,p,s,l,r) {if (trflags&(f)) fawltynetevent(t, p, s, l, r);}
 #else
 #define NETPAR(f,t,p,s,l,r)
 #endif /* NET_DEBUG */
 
-struct buf;
-extern void fawlty_disk(int,struct buf *);
-#define DISKSTATE(evt,bp) {		/* NB: bp is used twice */	\
-    if (IS_TSTAMP_EVENT_ACTIVE(RTMON_DISK) && bp)			\
-	fawlty_disk(evt,(bp));						\
-}
+#ifdef _VMFAULT_TRACING
+#ifdef _KERNEL
+#include <sys/vnode.h>
+#include <sys/buf.h>
+extern void fawltyvmfault(pid_t,char,caddr_t,caddr_t,struct vnode *,pgno_t);
+extern void fawltyvmdisk(pid_t,char,struct buf *);
+extern int vmfaultflags;
+#endif /* _KERNEL */
+#define VMFAULTTRACE(sc,va,epc,vp,offset) \
+			     {if ((trflags & VMFAULTHIST) && \
+				  (vmfaultflags & VMEVENT_FLAG(sc))) \
+					  fawltyvmfault(u.u_procp->p_pid,\
+							(sc),(va),(caddr_t) (epc),\
+							(vp),(offset));}
+#define VMSWAPTRACE(pid,sc,va,epc,vp,offset) \
+			     {if ((trflags & VMFAULTHIST) && \
+				  (vmfaultflags & VMEVENT_FLAG(sc))) \
+					  fawltyvmfault((pid), \
+							(sc),(va),(caddr_t) (epc),\
+							(vp),(offset));}
+#define VMSWAPSTATE(sc) \
+		     {if ((trflags & VMFAULTHIST) && \
+			  (vmfaultflags & VMEVENT_FLAG(sc))) \
+				  fawltyvmfault(0, \
+						(sc),NULL,NULL,NULL,0);}
+#define VMDISKSTATE(sc,bp) \
+		     {if ((trflags & VMFAULTHIST) && \
+			  (vmfaultflags & VMEVENT_FLAG(sc))) \
+				  fawltyvmdisk(0, (sc),(bp));}
+
+#ifdef _VM_WS_SWAPPING
+#define VM_WS_SWAP_TRACE(sc,pp,count) \
+	     {if ((trflags & VMFAULTHIST) && \
+		  (vmfaultflags & VMEVENT_FLAG(sc))) \
+			  fawltyvmfault((pp)->p_pid,\
+				(sc), \
+				(caddr_t) ((pp)->p_size + \
+					    ((pp)->p_shaddr != NULL \
+					     ? (pp)->p_shaddr->s_totpregsize \
+					     : 0)), \
+				(caddr_t) ((pp)->p_rss),\
+				NULL,(count));}
+#endif /* _VM_WS_SWAPPING */
+#else
+#define VMFAULTTRACE(sc,va,epc,vp,offset) { 0; }
+#define VMSWAPTRACE(pid,sc,va,epc,vp,offset) { 0; }
+#define VMSWAPSTATE(sc) { 0; }
+#define VMDISKSTATE(sc,bp) { 0; }
+#ifdef _VM_WS_SWAPPING
+#define VM_WS_SWAP_TRACE(sc,pp,count) { 0; }
+#endif /* _VM_WS_SWAPPING */
+#endif
+
+/* fault trace flags - kept in trflags */
+#define SYSCALLINH	0x02	/* inherit syscall trace on fork */
+#define SYSCALLHIST	0x04	/* trace system calls */
+#define RESCHEDHIST	0x08	/* trace rescheds */
+#define ALLPROCSHIST	0x20	/* track all processes */
+#define NETSCHED	0x40	/* trace network scheduling */
+#define NETFLOW		0x80	/* trace network data flow */
+#define VMFAULTHIST	0x100	/* trace vfault and pfault activity */
+
 #endif /* _KERNEL */
 
 /*
- * Vestiges of old par stuff that belong in rtmon.h.
+ * Fawlty record definitions kernel -> padc
  */
+
+/*
+ * Fawlty trace buffer structure
+ * We work in units of fitem_t's for simplicity ...
+ */
+typedef uint fitem_t;
+
+/* # of units in a 16K buffer */
+#define FAWLTMAX	(((16*1024) / sizeof(fitem_t)) - 2)
+struct fawltybuf {
+	fitem_t	stat;		/* current status of this buffer */
+	fitem_t	len;		/* length of current contents in ints */
+	fitem_t	buf[FAWLTMAX];	/* buffer contents */
+};
+
+#define TOKENSIZ	8	/* each fawlty rec contains 8 bit token field */
+
+/*
+ * Net event record: used by NETEVENTKN, NETSLEEPTKN, NETWAKEUPTKN, 
+ * NETWAKINGTKN, NETFLOWTKN, NETDROPTKN, and NETEVENTDONETKN tokens.
+ */
+struct neteventrec {
+	short	pid;
+	unchar	subtkn;
+	unchar	token;
+	uint	counts;
+	ushort 	pad;
+	unchar	reasons;
+	unchar 	cpu;
+	uint	tick;
+};
+typedef struct neteventrec neteventrec_t;
+
+/*
+ * VM fault event record: used by VMFAULTTKN
+ */
+struct vmfaultrec {
+	short	pid;
+	unchar	subtkn;
+	unchar	token;
+	caddr_t	vaddr;
+	caddr_t	epc;
+	uint	tick;
+	unchar	cpu;
+	unchar	pad1;
+	ushort	pad2;
+	dev_t	dev;
+	ino_t	ino;
+	pgno_t	offset;
+};
+typedef struct vmfaultrec vmfaultrec_t;
+
+/*
+ * Schedule record: used by OLDPROCTKN, NEWPROCTKN, and RUNQTKN tokens.
+ */
+struct schedrec {
+	short	pid;
+	unchar	pri;
+	unchar	token;
+	uint	reasons;
+	ushort	pad;
+	unchar	rtpri;
+	unchar	cpu;
+	void	*event;
+	void	*event2;
+	uint	tick;
+};
+typedef struct schedrec schedrec_t;
+
+/*
+ * Idle record: used by IDLEPROCTKN token.
+ */
+struct idlerec {
+	short	cpu;
+	unchar	reasons;
+	unchar	token;
+	uint	tick;
+};
+typedef struct idlerec idlerec_t;
+
+/*
+ * System call record: used by SYSCALLTKN/SYSRETTKN token.
+ */
+
 #define FAWLTY_MAX_PARAMS	8
 /*
  * NOTE: kernel and padc code depends upon the fact that the size of the
@@ -196,6 +404,70 @@ extern void fawlty_disk(int,struct buf *);
  */
 #define PAR_DEFINDBYTES	32
 #define PAR_MAXINDBYTES	4096
+struct callrec {
+	short	pid;
+	unchar	numparams;
+	unchar	token;
+	ushort	callno;
+	unchar	cpu;
+	unchar	abi;
+	uint	tick;
+	unchar	numiparams;		/* number of indirect params */
+	usysarg_t	params[1];	/* more of these ... */
+};
+typedef struct callrec callrec_t;
+
+/*
+ * Process-name record: used by NAMETKN.
+ */
+struct namerec {
+	short pid;
+	unchar pad;
+	unchar token;
+	unchar name[16];
+};
+typedef struct namerec namerec_t;
+
+/*
+ * Remove-process record: used by RMPROCTKN.
+ */
+struct rmprocrec {
+	short	pid;
+	ushort	token;
+};
+typedef struct rmprocrec rmprocrec_t;
+
+/*
+ * Signal record: used by SENDSIGTKN and RCVSIGTKN.
+ */
+struct sigrec {
+	short	rcvpid;
+	unchar	cpu;
+	unchar	token;
+	ushort	signo;
+	uint	tick;
+};
+typedef struct sigrec sigrec_t;
+
+/*
+ * User supplied string record
+ */
+typedef struct ustringrec {
+	short	pid;
+	unchar	pad;
+	unchar	token;
+	char	string[64];
+	uint	tick;
+} ustringrec_t;
+
+/*
+ * an overflow record
+ */
+typedef struct {
+	short	pad;
+	unchar	pad2;
+	unchar	token;
+} overflowrec_t;
 
 #ifdef __cplusplus
 }

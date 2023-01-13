@@ -7,14 +7,14 @@
 /*	The copyright notice above does not evidence any   	*/
 /*	actual or intended publication of such source code.	*/
 
-#ident	"$Revision: 1.12 $"
+#ident	"$Revision: 1.11 $"
 
 #ifndef _IA_DOT_H_
 #define _IA_DOT_H_
 
-#include <internal/sgimacros.h>
-
-__SGI_LIBC_BEGIN_EXTERN_C
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* structure for the master */
 
@@ -63,7 +63,9 @@ extern	void	ia_get_loginact(uinfo_t, long *);
 extern	void	ia_get_logexpire(uinfo_t, long *);
 extern	void	ia_get_logflag(uinfo_t, long *);
 
-__SGI_LIBC_END_EXTERN_C
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _IA_DOT_H_ */
 

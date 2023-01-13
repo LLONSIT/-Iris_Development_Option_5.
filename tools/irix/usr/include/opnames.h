@@ -1,5 +1,5 @@
 /* Copyright (C) 1989 Silicon Graphics, Inc. All rights reserved.  */
-/* $Header: /isms/cmplrs.src/v7.4/include/RCS/opnames.h,v 7.9 2001/11/21 23:49:26 mpruett Exp $ */
+/* $Header: /proj/irix5.3/isms/cmplrs/commonlib/include/RCS/opnames.h,v 7.8 1994/07/31 11:40:26 dlai Exp $ */
 
 #ifndef __OPNAMES_H__
 #define __OPNAMES_H__
@@ -10,7 +10,6 @@ extern "C" {
 
 extern char *op_name[64];
 extern char *spec_name[64];
-extern char *spec2_name[64];
 extern char *bcond_name[32];
 extern char *cop1func_name[64];
 extern char *bc_name[32];

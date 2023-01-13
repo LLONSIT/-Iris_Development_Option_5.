@@ -3,7 +3,7 @@
 #include <string.h>
 #include "libmld.h"
 
-#ifdef BLAH
+#if 0
 __asm__(R""(
 .macro glabel label
     .global \label
@@ -136,7 +136,7 @@ void st_free(void) {
     }
 }
 
-#ifdef BLAH
+#if 0
 __asm__(R""(
 .set noat
 .set noreorder

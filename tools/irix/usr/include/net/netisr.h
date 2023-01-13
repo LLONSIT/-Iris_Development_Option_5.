@@ -16,42 +16,56 @@
  *
  *	@(#)netisr.h	7.4 (Berkeley) 6/27/88
  */
-#ident "$Revision: 3.29 $"
-
-#ifdef __cplusplus
-extern "C" { 
-#endif
+#ident "$Revision: 3.15 $"
 
 /*
- * This is the eternal interface to network input.
- * At initialization, call network_input_setup for each
- * address family, and then network_input on each packet.
+ * The networking code runs off software interrupts.
+ *
+ * You can switch into the network by doing splnet() and return by splx().
+ * The software interrupt level for the network is higher than the software
+ * level for the clock (so you can enter the network in routines called
+ * at timeout time).
  */
+
+/*
+ * Each ``address family'' input queue has a bit in a ``netisr'' status
+ * word which is used to de-multiplex a single software
+ * interrupt used for scheduling the network code to calls
+ * on the lowest level routine of each protocol.
+ */
+#define	NETISR_IP	0		/* same as AF_INET */
+#define	NETISR_RAW	1		/* same as AF_UNSPEC */
+#define NETISR_RUNNING	31		/* network code is running */
+					/* same as unused AF_IMPLINK */
 
 #ifdef _KERNEL
-extern void netisr_init(void);
-struct ifnet;
-struct route;
-typedef void (network_input_t)(struct mbuf*, struct route *);
+#ifdef _MP_NETLOCKS
+extern lock_t netisr_lock;
+#define NETISR_LOCK()		spsema(netisr_lock)
+#define NETISR_UNLOCK()		svsema(netisr_lock)
+#define NETISR_ISLOCKED()	(ownlock(netisr_lock))
 
-#define NETPROC_MORETOCOME 0x1000 /* hint for batching */
+#else
 
-extern void network_drop(struct mbuf *m);
-extern int network_input(struct mbuf *m, int af, int flags);
-extern void network_input_setup(int af, network_input_t func);
-extern int network_callout(void (*)(void *), void *);
+#define NETISR_LOCK()
+#define NETISR_UNLOCK()
+#define NETISR_ISLOCKED()	(1)
+#endif /* _MP_NETLOCKS */
 
-void init_max_netprocs(void);
-
-/*
- * For backward source compatibility of drivers
- */
-#define NETISR_IP	0	/* for AF_INET */
-#define NETISR_RAW	1	/* for AF_UNSPEC */
+#define SCHEDBIT(anisr)		(1<<(anisr))
 
 extern void schednetisr(int anisr);
 
+extern u_int	netisr;			/* scheduling bits for network */
+extern int	netproc_mode;		/* if set, one packet per ipintr call */
+
+typedef struct {
+	int (*func)(void);
+} netisr_tab_t;
+
+extern netisr_tab_t netisr_tab[];
+
+int  register_isr(int (*)(void));
+void unregister_isr(int);
+
 #endif /* _KERNEL */
-#ifdef __cplusplus
-}
-#endif 

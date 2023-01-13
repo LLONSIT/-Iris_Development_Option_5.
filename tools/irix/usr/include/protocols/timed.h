@@ -1,6 +1,9 @@
 #ifndef __PROTOCOLS_TIMED_H__
 #define __PROTOCOLS_TIMED_H__
-#ident "$Revision: 1.8 $"
+#ifdef __cplusplus
+extern "C" {
+#endif
+#ident "$Revision: 1.7 $"
 /*
 *
 * Copyright 1992, Silicon Graphics, Inc.
@@ -38,10 +41,6 @@
  *
  *	@(#)timed.h	1.9 (Berkeley) 6/1/90
  */
-
-#include <internal/sgimacros.h>
-
-__SGI_LIBC_BEGIN_EXTERN_C
 
 /*
  * Time Synchronization Protocol
@@ -102,6 +101,7 @@ char *tsptype[TSPTYPENUMBER] =
   "DATE", "DATEREQ", "DATEACK", "TRACEON", "TRACEOFF", "MSITE", "MSITEREQ",
   "TEST", "SETDATE", "SETDATEREQ", "LOOP" };
 #endif
-
-__SGI_LIBC_END_EXTERN_C
+#ifdef __cplusplus
+}
+#endif
 #endif /* !__PROTOCOLS_TIMED_H__ */

@@ -1,6 +1,9 @@
 #ifndef __ASM_H__
 #define __ASM_H__
-#ident "$Revision: 1.6 $"
+#ifdef __cplusplus
+extern "C" {
+#endif
+#ident "$Revision: 1.5 $"
 /*
 *
 * Copyright 1992, Silicon Graphics, Inc.
@@ -28,4 +31,7 @@
 /*  asm.h 1.1 */
 
 #include "sys/asm.h"
+#ifdef __cplusplus
+}
+#endif
 #endif /* !__ASM_H__ */

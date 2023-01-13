@@ -41,12 +41,13 @@
  * these routines.
  */
 
-#ident "$Revision: 1.11 $"
+#ident "$Revision: 1.8 $"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include <sys/invent.h>
-#include <internal/sgimacros.h>
-
-__SGI_LIBC_BEGIN_EXTERN_C
 
 int		setinvent(void);
 inventory_t	*getinvent(void);
@@ -65,24 +66,7 @@ int		setinvent_r(inv_state_t **);
 inventory_t	*getinvent_r(inv_state_t *);
 void		endinvent_r(inv_state_t *);
 
-/*
- * Interfaces for dealing with device names via /hw for hwgraph devices.
- * dev_to_devname tries to convert from a dev_t to a canonical device name.
- * fdes_to_devname tries to convert from a special file file descriptor
- * to a device name.  filename_to_devname tries to convert from the
- * name of a special file to the device name that it represents.
- */
-char * dev_to_devname(dev_t dev, char *buf, int *length);
-char * fdes_to_devname(int fdes, char *buf, int *length);
-char * filename_to_devname(char *filename, char *buf, int *length);
-
-/*
- * Interfaces for dealing with device driver names (prefixes) for
- * a given special file.
- */
-char * dev_to_drivername(dev_t dev, char *buf, int *length);
-char * fdes_to_drivername(int fdes, char *buf, int *length);
-char * filename_to_drivername(char *filename, char *buf, int *length);
-
-__SGI_LIBC_END_EXTERN_C
+#ifdef __cplusplus
+}
+#endif
 #endif /* !__INVENT_H__ */

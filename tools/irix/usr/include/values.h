@@ -15,7 +15,7 @@
  * |-----------------------------------------------------------|
  */
 
-/* $Header: /isms/cmplrs.src/v7.4/include/RCS/values.h,v 7.9 1994/07/31 11:41:45 dlai Exp $ */
+/* $Header: /proj/irix5.3/isms/cmplrs/commonlib/include/RCS/values.h,v 7.9 1994/07/31 11:41:45 dlai Exp $ */
 
 /*	Copyright (c) 1984 AT&T	*/
 /*	  All Rights Reserved  	*/

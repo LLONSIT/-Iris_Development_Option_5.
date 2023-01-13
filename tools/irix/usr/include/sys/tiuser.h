@@ -9,14 +9,9 @@
 
 #ifndef _SYS_TIUSER_H	/* wrapper symbol for kernel use */
 #define _SYS_TIUSER_H	/* subject to change without notice */
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#include <standards.h>
-#include <sys/types.h>
 
 #ident	"@(#)uts-3b2:net/transport/tiuser.h	1.5"
+
 
 /*
  * The following are the error codes needed by both the kernel
@@ -43,23 +38,6 @@ extern "C" {
 #define TNOTSUPPORT	       18       /* primitive not supported   */
 #define TSTATECHNG	       19	/* state is in process of changing */
 
-/*
- * The following are the error codes needed by both the kernel
- * level transport providers and the user level library.
- */
-
-#define TNOSTRUCTYPE	20	/* unsupported struct-type requested */
-#define TBADNAME	21	/* invalid transport provider name */
-#define TBADQLEN	22	/* qlen is zero */
-#define TADDRBUSY	23	/* address in use */
-#define TINDOUT		24	/* outstanding connection indications */
-#define TPROVMISMATCH   25	/* transport provider mismatch */
-#define TRESQLEN        26	/* resfd specified to accept w/qlen >0 */
-#define TRESADDR        27	/* resfd not bound to same addr as fd */
-#define TQFULL  	28	/* incoming connection queue full */
-#define TPROTO  	29	/* XTI protocol error */
-
-
 /* 
  * The following are the events returned by t_look
  */
@@ -85,55 +63,20 @@ extern "C" {
 #define T_DEFAULT	0x010		/* get default opts */
 #define T_SUCCESS	0x020		/* successful       */
 #define T_FAILURE	0x040		/* failure          */
-#define	T_CURRENT	0x080		/* get current options */
-#define	T_PARTSUCCESS	0x100		/* partial success */
-#define	T_READONLY	0x200		/* read-only */
-#define	T_NOTSUPPORT	0x400		/* not supported */
 
-/*
- * iov maximum
- */
-#define T_IOV_MAX	16	/* maximum number of scatter/gather buffers */
-				/* value is not mandatory.              */
-				/* Value must be at least 16.           */
-
-#if _NO_XOPEN4 && _NO_XOPEN5 && !defined(_BUILDING_LIBXNET)
 /*
  * protocol specific service limits
  */
 
 struct t_info {
-	xtiscalar_t addr;	/* size of protocol address                */
-	xtiscalar_t options;	/* size of protocol options                */
-	xtiscalar_t tsdu;	/* size of max transport service data unit */
-	xtiscalar_t etsdu;	/* size of max expedited tsdu              */
-	xtiscalar_t connect;	/* max data for connection primitives      */
-	xtiscalar_t discon;	/* max data for disconnect primitives      */
-	xtiscalar_t servtype;	/* provider service type		   */
+	long addr;	/* size of protocol address                */
+	long options;	/* size of protocol options                */
+	long tsdu;	/* size of max transport service data unit */
+	long etsdu;	/* size of max expedited tsdu              */
+	long connect;	/* max data for connection primitives      */
+	long discon;	/* max data for disconnect primitives      */
+	long servtype;	/* provider service type		   */
 };
-
-#else
-
-#ifndef _SYS_XTI_INET_H
-/*
- * Protocol-specific service limits.
- */
-struct t_info {
-	xtiscalar_t addr;	/* max size of transport protocol address */
-	xtiscalar_t options;	/* max num bytes of protocol-specific opts */
-	xtiscalar_t tsdu;	/* max size of a transport service data unit */
-	xtiscalar_t etsdu;	/* max size of expedited transport service */
-				/* data unit */
-	xtiscalar_t connect;	/* max amount of data allowed on connection */
-				/* establishment functions */
-	xtiscalar_t discon;	/* max data allowed on t_snddis & t_rcvdis */
-				/* functions */
-	xtiscalar_t servtype;	/* service type supp by transport provider */
-	xtiscalar_t flags;	/* other info about the transport provider */
-};
-#endif
-
-#endif	/* _NO_XOPEN4 && _NO_XOPEN5 && !_BUILDING_LIBXNET */
 
 /* 
  * Service type defines
@@ -146,31 +89,12 @@ struct t_info {
  * netbuf structure
  */
 
-#ifndef _SYS_XTI_INET_H
-#if _NO_XOPEN5
 struct netbuf {
-	unsigned int	maxlen;
-	unsigned int	len;
-	char		*buf;
-};
-#else
-struct netbuf {
-	unsigned int	maxlen;
-	unsigned int	len;
-	void		*buf;
-};
-#endif /* _NO_XOPEN5 */
-#endif /* _SYS_XTI_INET_H */
-
-#ifdef _KERNEL
-struct irix5_netbuf {
 	unsigned int maxlen;
 	unsigned int len;
-	app32_ptr_t buf;
+	char *buf;
 };
-#endif /* _KERNEL */
 
-#ifndef _SYS_XTI_INET_H
 /*
  * t_bind - format of the addres and options arguments of bind 
  */
@@ -185,7 +109,7 @@ struct t_bind {
  */
 struct t_optmgmt {
 	struct netbuf	opt;
-	xtiscalar_t	flags;
+	long		flags;
 };
 
 /*
@@ -222,9 +146,8 @@ struct t_unitdata {
 struct t_uderr {
 	struct netbuf addr;		/* address		*/
 	struct netbuf opt;		/* options 		*/
-	xtiscalar_t   error;		/* error code		*/
+	long	      error;		/* error code		*/
 };
-#endif
 
 /*
  * The following are structure types used when dynamically
@@ -245,11 +168,7 @@ struct t_uderr {
 #define T_ADDR	0x01			/* address   */
 #define T_OPT	0x02			/* options   */
 #define T_UDATA	0x04			/* user data */
-#if _NO_XOPEN4 && _NO_XOPEN5 && !defined(_BUILDING_LIBXNET)
 #define T_ALL	0x07			/* all the above */
-#else
-#define T_ALL	0xffff			/* all the above - XPG4 */
-#endif	/* _NO_XOPEN4 && _NO_XOPEN5 && !_BUILDING_LIBXNET */
 
 
 /* 
@@ -275,15 +194,8 @@ struct t_uderr {
 
 #define T_NOSTATES 	9
 
-/*
- * Definitions for t_sysconf
- */
-#define _SC_T_IOV_MAX   1
 
-
-#if _NO_XOPEN4 && _NO_XOPEN5
 #define ROUNDUP(X)	((X + 0x03)&~0x03)
-#endif /* _NO_XOPEN4 && _NO_XOPEN5 */
 
 /*
  * The following are TLI user level events which cause
@@ -322,8 +234,6 @@ struct t_uderr {
 
 #define T_NOEVENTS	25
 
-#if _NO_XOPEN4 && _NO_XOPEN5
-/* don't want this pollution in header tests */
 #define nvs 	127 	/* not a valid state change */
 
 extern char tiusr_statetbl[T_NOEVENTS][T_NOSTATES];
@@ -343,95 +253,5 @@ extern char tiusr_statetbl[T_NOEVENTS][T_NOSTATES];
  */
 #define TI_NORMAL	0
 #define TI_EXPEDITED	1
-#endif /* _NO_XOPEN4 && _NO_XOPEN5 */
 
-#if _XOPEN5
-#undef t_iovec
-#undef iov_base
-#undef iov_len
-
-/*
- * struct t_iovec defines
- */
-struct t_iovec {
-	void *iov_base;
-	size_t iov_len;
-};
-#endif
-
-#ifndef _SYS_XTI_INET_H
-#if _NO_XOPEN5
-int	t_accept(int, int, struct t_call *);
-char 	*t_alloc(int, int, int);
-int	t_bind(int, struct t_bind *, struct t_bind *);
-int	t_connect(int, struct t_call *, struct t_call *);
-int	t_free(char *, int);
-int	t_open(char *, int, struct t_info *);
-int	t_optmgmt(int, struct t_optmgmt *, struct t_optmgmt *);
-int	t_rcv(int, char *, unsigned, int *);
-int	t_snd(int, char *, unsigned, int);
-int	t_snddis(int, struct t_call *);
-int	t_sndudata(int, struct t_unitdata *);
-#else
-int	t_accept(int, int, const struct t_call *);
-void 	*t_alloc(int, int, int);
-int	t_bind(int, const struct t_bind *, struct t_bind *);
-int	t_connect(int, const struct t_call *, struct t_call *);
-int	t_free(void *, int);
-int	t_open(const char *, int, struct t_info *);
-int	t_optmgmt(int, const struct t_optmgmt *, struct t_optmgmt *);
-int	t_rcv(int, void *, unsigned, int *);
-int	t_snd(int, void *, unsigned, int);
-int	t_snddis(int, const struct t_call *);
-int	t_sndudata(int, const struct t_unitdata *);
-#endif
-int	t_close(int);
-#if _NO_XOPEN4 && _NO_XOPEN5 && !defined(_BUILDING_LIBXNET)
-void	t_error(char *);
-#else
-int     t_getprotaddr(int, struct t_bind *, struct t_bind *);
-#if _NO_XOPEN5
-int	t_error(char *);
-char    *t_strerror(int);
-#else
-int	t_error(const char *);
-const char    *t_strerror(int);
-#endif
-#endif	/* _NO_XOPEN4 && _NO_XOPEN5 && !_BUILDING_LIBXNET */
-int	t_getinfo(int, struct t_info *);
-int	t_getname(int, struct netbuf *, int);
-int	t_getstate(int);
-int	t_listen(int, struct t_call *);
-int	t_look(int);
-int	t_rcvconnect(int, struct t_call *);
-int	t_rcvdis(int, struct t_discon *);
-int	t_rcvrel(int);
-int	t_rcvreldata(int, struct t_discon *);
-int	t_rcvudata(int, struct t_unitdata *, int *);
-int	t_rcvuderr(int, struct t_uderr *);
-int	t_rcvv(int, struct t_iovec *, unsigned int, int *);
-int	t_rcvvudata(int, struct t_unitdata *, struct t_iovec *, unsigned int, int *);
-int	t_sndrel(int);
-int	t_sndreldata(int, struct t_discon *);
-int	t_sndv(int, const struct t_iovec *, unsigned int, int);
-int	t_sndvudata(int, struct t_unitdata *, struct t_iovec *, unsigned int);
-int	t_sync(int);
-int	t_sysconf(int);
-int	t_unbind(int);
-
-#if !defined(_SGI_COMPILING_LIBNSL)
-#pragma optional t_rcvreldata
-#pragma optional t_rcvv
-#pragma optional t_rcvvudata
-#pragma optional t_sndreldata
-#pragma optional t_sndv
-#pragma optional t_sndvudata
-#pragma optional t_sysconf
-#endif /* _SGI_COMPILING_LIBNSL */
-#endif
-
-
-#ifdef __cplusplus
-}
-#endif
 #endif	/* _SYS_TIUSER_H */

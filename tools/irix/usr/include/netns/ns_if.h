@@ -11,9 +11,6 @@
  *
  *      @(#)ns_if.h	7.2 (Berkeley) 1/20/88
  */
-#ifdef __cplusplus
-extern "C" {
-#endif
 #ifdef sgi
 # ifdef _KERNEL
 #  define KERNEL
@@ -44,6 +41,10 @@ struct ns_ifaddr {
  */
 
 #define	IA_SNS(ia) ((struct sockaddr_ns *)(&((struct ns_ifaddr *)ia)->ia_addr))
+/*
+ * ia_flags
+ */
+#define	IFA_ROUTE	0x01		/* routing entry installed */
 
 /* This is not the right place for this but where is? */
 #define	ETHERTYPE_NS	0x0600
@@ -60,7 +61,4 @@ struct nsip_req {
 struct	ns_ifaddr *ns_ifaddr;
 struct	ns_ifaddr *ns_iaonnetof();
 struct	ifqueue	nsintrq;	/* XNS input packet queue */
-#endif
-#ifdef __cplusplus
-}
 #endif

@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include "libmld.h"
-#ifdef BLAH
+#if 0
 __asm__(R""(
 .macro glabel label
     .global \label
@@ -201,7 +201,7 @@ int st_ifdmax(void) {
     return st_pchdr->cfd;
 }
 
-#ifdef BLAH
+#if 0
 __asm__(R""(
 .set noat
 .set noreorder
@@ -1137,7 +1137,7 @@ AUXU *st_paux_ifd_iaux(int ifd, int iaux) {
     return &st_pchdr->pcfd[ifd].paux[iaux];
 }
 
-#ifdef BLAH
+#if 0
 __asm__(R""(
 .set noat
 .set noreorder

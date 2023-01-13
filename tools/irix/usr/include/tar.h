@@ -1,5 +1,8 @@
 #ifndef __TAR_H__
 #define __TAR_H__
+#ifdef __cplusplus
+extern "C" {
+#endif
 /*
 *
 * Copyright 1992, Silicon Graphics, Inc.
@@ -27,7 +30,7 @@
 /*	actual or intended publication of such source code.	*/
 
 
-#ident	"$Revision: 1.5 $"
+#ident	"$Revision: 1.4 $"
 
 #define TMAGIC		"ustar"
 #define TMAGLEN		6
@@ -63,4 +66,7 @@
 #define TOWRITE		00002
 #define TOEXEC		00001
 
+#ifdef __cplusplus
+}
+#endif
 #endif /* !__TAR_H__ */

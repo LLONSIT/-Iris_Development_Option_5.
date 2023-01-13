@@ -304,18 +304,18 @@ extern "C" {
 #endif
 
 #ifndef	__ldlong
-int ldlong(char *);
+int ldlong();
 #endif	/* __ldlong */
 
 #ifndef _NOFLOAT
 #ifndef	__ldfloat
-double	ldfloat(char *);
+double	ldfloat();
 #endif	/* __ldfloat */
 #ifndef	__lddbl
-double	lddbl(char *);
+double	lddbl();
 #endif	/* __lddbl */
-double ldfltnull(char *, short *);
-double lddblnull(char * , short *);
+double ldfltnull();
+double lddblnull();
 #endif
 
 struct keypart

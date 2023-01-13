@@ -12,10 +12,6 @@
  *      @(#)idp.h	7.2 (Berkeley) 1/20/88
  */
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /*
  * Definitions for NS(tm) Internet Datagram Protocol
  */
@@ -27,6 +23,3 @@ struct idp {
 	struct ns_addr	idp_dna;	/* Destination Network Address */
 	struct ns_addr	idp_sna;	/* Source Network Address */
 };
-#ifdef __cplusplus
-}
-#endif

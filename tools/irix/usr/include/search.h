@@ -1,6 +1,9 @@
 #ifndef __SEARCH_H__
 #define __SEARCH_H__
-#ident "$Revision: 1.23 $"
+#ifdef __cplusplus
+extern "C" {
+#endif
+#ident "$Revision: 1.14 $"
 /*
 *
 * Copyright 1992, Silicon Graphics, Inc.
@@ -27,10 +30,6 @@
 /*	The copyright notice above does not evidence any   	*/
 /*	actual or intended publication of such source code.	*/
 
-#include <standards.h>
-#include <internal/sgimacros.h>
-
-__SGI_LIBC_BEGIN_EXTERN_C
 
 #if !defined(_SIZE_T) && !defined(_SIZE_T_)
 #define _SIZE_T
@@ -42,41 +41,41 @@ typedef unsigned long	size_t;
 #endif
 #endif
 
+/* HSEARCH(3C) */
 typedef enum { FIND, ENTER } ACTION;
-typedef enum { preorder, postorder, endorder, leaf } VISIT;
-typedef struct entry { char *key; void *data; } ENTRY;
 
-extern int hcreate(size_t);
-extern void hdestroy(void);
-extern ENTRY *hsearch(ENTRY, ACTION);
-extern void *tdelete(const void *, void **,
-		int (*)(const void *, const void *)); 
-extern void *tfind(const void *, void *const *,
-		int (*)(const void *, const void *));
-extern void *tsearch(const void *, void **,
-		int (*)(const void *, const void *));
-extern void twalk(const void *, void (*)(const void *, VISIT, int)) ;
-extern void *lfind(const void *, const void *, size_t *, size_t, 
-	    int (*)(const void *, const void *));
-extern void *lsearch(const void *, void *, size_t *, size_t,
-	    int (*)(const void *, const void *));
-
-#if _SGIAPI
 struct qelem {
 	struct qelem	*q_forw;
 	struct qelem	*q_back;
 };
 
+typedef struct entry { char *key; void *data; } ENTRY;
+int hcreate(size_t);
+void hdestroy(void);
+ENTRY *hsearch(ENTRY, ACTION);
+
 void insque(struct qelem *, struct qelem *);
 void remque(struct qelem *);
+
+/* TSEARCH(3C) */
+typedef enum { preorder, postorder, endorder, leaf } VISIT;
+
+void *tdelete(const void *, void **, int (*)(const void *, const void *)); 
+void *tfind(const void *, void *const *, int (*)(const void *, const void *));
+void *tsearch(const void *, void **, int (*)(const void *, const void *));
+void twalk(void *, void (*)(void *, VISIT, int));
+
+/* BSEARCH(3C) */
 void *bsearch(const void *, const void *, size_t, size_t,
 	    int (*)(const void *, const void *));
-#endif	/* _SGIAPI */
 
-#if (!_SGIAPI && (_XOPEN4UX || _XOPEN5))
-void insque(void *, void *);
-void remque(void *);
-#endif	/* (!_SGIAPI && (_XOPEN4UX || _XOPEN5)) */
+/* LSEARCH(3C) */
+void *lfind(const void *, const void *, size_t *, size_t, 
+	    int (*)(const void *, const void *));
+void *lsearch(const void *, void *, size_t *, size_t,
+	    int (*)(const void *, const void *));
 
-__SGI_LIBC_END_EXTERN_C
+#ifdef __cplusplus
+}
+#endif
 #endif /* !__SEARCH_H__ */

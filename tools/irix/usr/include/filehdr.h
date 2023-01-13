@@ -13,7 +13,7 @@
  * |         Sunnyvale, CA 94086                               |
  * |-----------------------------------------------------------|
  */
-#ident "$Revision: 7.13 $"
+#ident "$Revision: 7.11 $"
 #ifndef __FILEHDR_H__
 #define __FILEHDR_H__
 
@@ -162,16 +162,14 @@ type
 #define F_MIPS_SHARABLE     020000
 #define F_MIPS_CALL_SHARED  030000
 #define F_MIPS_NO_REORG     040000        /* may remove nops */
-#define F_MIPS_XGOT	    0100000
-#define F_MIPS_UGEN_ALLOC   F_MIPS_XGOT	/* obsolete flags */
+#define F_MIPS_UGEN_ALLOC   0100000
 #endif
 #ifdef _LANGUAGE_PASCAL
 #define F_MIPS_NO_SHARED    16#01000
 #define F_MIPS_SHARABLE     16#02000
 #define F_MIPS_CALL_SHARED  16#03000
 #define F_MIPS_NO_REORG     16#04000
-#define F_MIPS_XGOT	    16#08000
-#define F_MIPS_UGEN_ALLOC   F_MIPS_XGOT
+#define F_MIPS_UGEN_ALLOC   16#08000
 #endif
 
 /*
@@ -232,28 +230,18 @@ type
 #define  MIPSELMAGIC_3	0x0142
 #define  SMIPSEBMAGIC_3	0x4001
 #define  SMIPSELMAGIC_3	0x4201
-#define  MIPSEBMAGIC_4  0x0144
-#define  MIPSELMAGIC_4  0x0146
-#define  SMIPSEBMAGIC_4 0x4401
-#define  SMIPSELMAGIC_4 0x4601
 #define	 MAGIC_MIPS1	0x0062
 #define	 MAGIC_MIPS2	0x0066
 #define  MAGIC_MIPS3    0x0042
-#define  MAGIC_MIPS4	0x0046
 #endif /* _LANGUAGE_C */
 #ifdef _LANGUAGE_PASCAL
 #define  MIPSEBMAGIC_3	16#0140
 #define  MIPSELMAGIC_3	16#0142
 #define  SMIPSEBMAGIC_3	16#4001
 #define  SMIPSELMAGIC_3	16#4201
-#define  MIPSEBMAGIC_4  16#0144
-#define  MIPSELMAGIC_4  16#0146
-#define  SMIPSEBMAGIC_4 16#4401
-#define  SMIPSELMAGIC_4 16#4601
 #define	 MAGIC_MIPS1	16#0062
 #define	 MAGIC_MIPS2	16#0066
 #define  MAGIC_MIPS3    16#0042
-#define  MAGIC_MIPS4	16#0044
 #endif
 
 #if (defined(_LANGUAGE_C) || defined(_LANGUAGE_C_PLUS_PLUS))

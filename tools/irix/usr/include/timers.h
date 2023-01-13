@@ -1,6 +1,9 @@
 #ifndef __TIMERS_H__
 #define __TIMERS_H__
-#ident "$Revision: 1.4 $"
+#ifdef __cplusplus
+extern "C" {
+#endif
+#ident "$Revision: 1.3 $"
 /*
  * Copyright 1992, Silicon Graphics, Inc. 
  * All Rights Reserved.
@@ -20,4 +23,7 @@
 
 #include <sys/timers.h>
 
+#ifdef __cplusplus
+}
+#endif
 #endif /* !__TIMERS_H__ */

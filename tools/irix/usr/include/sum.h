@@ -1,5 +1,8 @@
 #ifndef __SUM_H__
 #define __SUM_H__
+#ifdef __cplusplus
+extern "C" {
+#endif
 /*
  * sum.h
  *
@@ -20,18 +23,15 @@
  * rights reserved under the Copyright Laws of the United States.
  */
 
-#ident "$Revision: 1.4 $"
-
-#include <internal/sgimacros.h>
-
-__SGI_LIBC_BEGIN_EXTERN_C
-
+#ident "$Revision: 1.3 $"
 /*
- *	$Header: /plroot/eoe/irix6.5f/.RCS/PL/include/RCS/sum.h,v 1.4 2002/05/24 17:57:55 csturtiv Exp $
+ *	$Header: /proj/irix5.3/isms/irix/include/RCS/sum.h,v 1.3 1992/04/22 17:03:59 huy Exp $
  */
 struct suminfo {
 	long	si_nbytes;
 	long	si_sum;
 };
-__SGI_LIBC_END_EXTERN_C
+#ifdef __cplusplus
+}
+#endif
 #endif /* !__SUM_H__ */

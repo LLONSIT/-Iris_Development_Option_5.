@@ -12,12 +12,11 @@
 #ifndef __MUTEX_H__
 #define __MUTEX_H__
 
-#ident "$Revision: 1.4 $"
+#ident "$Revision: 1.2 $"
 
-#include <sgidefs.h>
-#include <internal/sgimacros.h>
-
-__SGI_LIBC_BEGIN_EXTERN_C
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define	test_and_set	(*__test_and_set)
 #define	test_then_and	(*__test_then_and)
@@ -29,17 +28,6 @@ __SGI_LIBC_BEGIN_EXTERN_C
 #define	test_then_add	(*__test_then_add)
 #define	add_then_test	(*__add_then_test)
 #define	atomic_set	(void)(*__test_and_set)
-
-#define	test_and_set32	(*__test_and_set32)
-#define	test_then_and32	(*__test_then_and32)
-#define	test_then_nand32	(*__test_then_nand32)
-#define	test_then_not32	(*__test_then_not32)
-#define	test_then_nor32	(*__test_then_nor32)
-#define	test_then_xor32	(*__test_then_xor32)
-#define	test_then_or32	(*__test_then_or32)
-#define	test_then_add32	(*__test_then_add32)
-#define	add_then_test32	(*__add_then_test32)
-#define	atomic_set32	(void)(*__test_and_set32)
 
 extern unsigned long test_and_set(unsigned long *, unsigned long);
 extern unsigned long test_then_and(unsigned long *, unsigned long);
@@ -53,25 +41,13 @@ extern unsigned long add_then_test(unsigned long *, unsigned long);
 extern unsigned long atomic_op(
 		unsigned long (*)(unsigned long *, unsigned long),
 		unsigned long *, unsigned long);
-
-extern __uint32_t test_and_set32(__uint32_t *, __uint32_t);
-extern __uint32_t test_then_and32(__uint32_t *, __uint32_t);
-extern __uint32_t test_then_nand32(__uint32_t *, __uint32_t);
-extern __uint32_t test_then_not32(__uint32_t *, __uint32_t);
-extern __uint32_t test_then_nor32(__uint32_t *, __uint32_t);
-extern __uint32_t test_then_xor32(__uint32_t *, __uint32_t);
-extern __uint32_t test_then_or32(__uint32_t *, __uint32_t);
-extern __uint32_t test_then_add32(__uint32_t *, __uint32_t);
-extern __uint32_t add_then_test32(__uint32_t *, __uint32_t);
-extern __uint32_t atomic_op32(
-		__uint32_t (*)(__uint32_t *, __uint32_t),
-		__uint32_t *, __uint32_t);
-
 /* ABI version */
 extern int _test_and_set(int *, int);
 
 extern int is_mips2(void);
 
-__SGI_LIBC_END_EXTERN_C
+#ifdef __cplusplus
+}
+#endif
 
 #endif

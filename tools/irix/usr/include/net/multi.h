@@ -1,8 +1,5 @@
 #ifndef __net_multi__
 #define __net_multi__
-#ifdef __cplusplus
-extern "C" { 
-#endif
 /*
  * Generic filter for use by network interfaces whose devices cannot
  * perfectly filter multicast packets.  Such a network interface should
@@ -19,7 +16,7 @@ extern "C" {
  * The interface receive interrupt handler should drop any multicast
  * packets for which mfmatch returns 0.
  *
- * $Revision: 1.16 $
+ * $Revision: 1.14 $
  *
  * Copyright 1988, 1990, Silicon Graphics, Inc. 
  * All Rights Reserved.
@@ -48,8 +45,8 @@ union mkey {
 		u_char	mka_dhost[6];	/* destination multicast address */
 	} mk_addr;
 	struct mkey_hash {
-		u_int	mkh_high;	/* for the hash function */
-		u_int	mkh_low;
+		u_long	mkh_high;	/* for the hash function */
+		u_long	mkh_low;
 	} mk_hash;
 };
 #define	mk_family	mk_addr.mka_family
@@ -117,7 +114,4 @@ void	mfdel(struct mfilter *, union mkey *);
 int	mfhasvalue(struct mfilter *, mval_t);
 
 #endif	/* _KERNEL */
-#ifdef __cplusplus
-}
-#endif 
 #endif	/* !__net_multi__ */

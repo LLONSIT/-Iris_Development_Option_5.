@@ -13,7 +13,7 @@
 #ifndef	__EFS_INO_
 #define	__EFS_INO_
 
-#ident "$Revision: 3.27 $"
+#ident "$Revision: 3.22 $"
 
 /*
  * Definitions for the on-volume version of extent filesystem inodes.
@@ -33,16 +33,6 @@
  * If the (ex_offset, ex_length) tuple overlaps any other extent, then
  * the extent is bad.
  */
-
-/*
- * An efs block number.
- */
-typedef	__int32_t	efs_daddr_t;
-
-/*
- * An efs inode number.
- */
-typedef __uint32_t	efs_ino_t;
 
 /*
  * Layout of an extent, in memory and on disk.
@@ -135,21 +125,11 @@ struct	efs_dinode {
 #define	IFMT		0170000		/* type of file */
 #define	IFIFO		0010000		/* named pipe (fifo) */
 #define	IFCHR		0020000		/* character special */
-#define IFCHRLNK	0030000		/* character special link */
 #define	IFDIR		0040000		/* directory */
 #define	IFBLK		0060000		/* block special */
-#define	IFBLKLNK	0070000		/* block special link */
 #define	IFREG		0100000		/* regular */
 #define	IFLNK		0120000		/* symbolic link */
 #define	IFSOCK		0140000		/* socket */
-
-/* 
- * Convert from EFS mode to standard stat mode's.
- */
-#define EFSTOSTAT(type) (((type)==IFCHRLNK) ? IFCHR : \
-			(((type)==IFBLKLNK) ? IFBLK : (type)))
-
-#define SET_ITYPE(ip, type) ip->i_mode = ((((ip)->i_mode) & ~IFMT) | (type))
 
 /*
  * File execution and access modes.

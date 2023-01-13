@@ -1,6 +1,9 @@
 #ifndef __SIGINFO_H__
 #define __SIGINFO_H__
-#ident "$Revision: 1.6 $"
+#ifdef __cplusplus
+extern "C" {
+#endif
+#ident "$Revision: 1.3 $"
 /*
 *
 * Copyright 1992, Silicon Graphics, Inc.
@@ -30,9 +33,6 @@
 
 #include <sys/types.h>
 #include <sys/siginfo.h>
-#include <internal/sgimacros.h>
-
-__SGI_LIBC_BEGIN_EXTERN_C
 
 struct siginfolist {
 	int nsiginfo;
@@ -47,8 +47,19 @@ extern char * _sys_traplist[];
 extern char * _sys_cldlist[];
 extern struct siginfolist _sys_siginfolist[];
 
+#if defined(_MODERN_C)
+
 extern void psiginfo(siginfo_t *, const char *);
 extern void psignal(int, const char *);
 
-__SGI_LIBC_END_EXTERN_C
+#else
+
+extern void psiginfo();
+extern void psignal();
+
+#endif
+
+#ifdef __cplusplus
+}
+#endif
 #endif /* !__SIGINFO_H__ */

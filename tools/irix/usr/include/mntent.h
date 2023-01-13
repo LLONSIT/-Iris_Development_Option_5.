@@ -1,6 +1,6 @@
 #ifndef __MNTENT_H__
 #define __MNTENT_H__
-#ident "$Revision: 1.55 $"
+#ident "$Revision: 1.27 $"
 /*
 *
 * Copyright 1992, Silicon Graphics, Inc.
@@ -20,16 +20,15 @@
 */
 /*	@(#)mntent.h	1.3 88/05/20 4.0NFSSRC SMI;	from SMI 1.13 99/01/06	*/
 #include <stdio.h>
-#include <internal/sgimacros.h>
 
 /*
  * File system table, see mntent (5)
  *
  * Used by dump, mount, umount, swap, fsck, df, ...
  *
- * EFS quota files are always named "quotas", so if type is "rq",
+ * Quota files are always named "quotas", so if type is "rq",
  * then use concatenation of mnt_dir and "quotas" to locate
- * quota file. This doesn't apply to XFS.
+ * quota file.
  */
 
 #define	MNTTAB		"/etc/fstab"
@@ -41,29 +40,26 @@
 
 #define MNTTYPE_EFS	FSID_EFS	/* extent filesystem */
 #define MNTTYPE_NFS	FSID_NFS	/* network file system */
-#define MNTTYPE_NFS2	FSID_NFS2	/* network file system V2 */
 #define MNTTYPE_NFS3	FSID_NFS3	/* network file system V3.0 */
 #define MNTTYPE_SOCKET	FSID_SOCKET	/* socket pseudo-filesystem */
 #define MNTTYPE_DBG	FSID_DBG	/* debug (proc) pseudo-filesystem */
 #define MNTTYPE_PROC	FSID_PROCFS	/* proc file system */
 #define MNTTYPE_PIPE	FSID_COM	/* pipe pseudo-filesystem */
 #define MNTTYPE_CACHEFS	FSID_CACHEFS	/* cache file system */
-#define MNTTYPE_XFS	FSID_XFS	/* SGI XFS file system */
-#define MNTTYPE_HWGFS	FSID_HWGFS	/* Hardware graph file system */
+#define MNTTYPE_XFS	FSID_XFS	/* SGI xFS file system */
 #define MNTTYPE_MFS	"mfs"	 	/* mfs filesystem - ClearCase */
 #define	MNTTYPE_PC	"pc"		/* IBM PC (MSDOS) file system */
 #define	MNTTYPE_SWAP	"swap"		/* swap file system */
 #define	MNTTYPE_IGNORE	"ignore" 	/* No type specified; ignore entry */
-#define MNTTYPE_AUTOFS  FSID_AUTOFS    	/* automount file system */
-#define MNTTYPE_LOFS    FSID_LOFS    	/* loopback file system */
+#define MNTTYPE_LO      "lo"    	/* Loop back File system */
 #define	MNTTYPE_DOS	"dos"		/* MS-DOS file system (SGI) */
 #define MNTTYPE_FD	FSID_FD		/* /dev/fd file system */
 #define MNTTYPE_AFS	"afs"		/* Andrew File System */
-#define MNTTYPE_RAWDATA "rawdata"       /* raw partition used for data */
-#define MNTTYPE_UDF	FSID_UDF	/* Universal Disk Format (UDF) filesystem */
 
 #define	MNTOPT_RO	"ro"		/* read only */
 #define	MNTOPT_RW	"rw"		/* read/write */
+#define	MNTOPT_QUOTA	"quota"		/* quotas */
+#define	MNTOPT_NOQUOTA	"noquota"	/* no quotas */
 #define	MNTOPT_NOSUID	"nosuid"	/* disallow setuid program execution */
 #define MNTOPT_NODEV	"nodev"		/* disallow access to device files */
 #define	MNTOPT_NOAUTO	"noauto"	/* hide entry from mount -a */
@@ -74,7 +70,7 @@
 #define MNTOPT_NOFSCK	"nofsck"	/* do not fsck */
 #define	MNTOPT_SOFT	"soft"		/* soft mount */
 #define	MNTOPT_HARD	"hard"		/* hard mount */
-#define	MNTOPT_NOINTR	"nointr"	/* disallow interrupts on hard mount */
+#define	MNTOPT_INTR	"intr"		/* allow interrupts on hard mount */
 #define	MNTOPT_NOAC	"noac"		/* don't cache nfs attributes */
 #define MNTOPT_PORT	"port"		/* server IP port number */
 #define MNTOPT_RETRANS	"retrans"	/* set number of request retries */
@@ -87,7 +83,6 @@
 #define MNTOPT_ACDIRMIN	"acdirmin"	/* min ac timeout for dirs (sec) */
 #define MNTOPT_ACDIRMAX	"acdirmax"	/* max ac timeout for dirs (sec) */
 #define MNTOPT_PRIVATE	"private"	/* mount nfs single-client tree */
-#define MNTOPT_SHORTUID	"shortuid"	/* don't allow writes by uids>0xffff */
 #define MNTOPT_SYMTTL	"symttl"	/* symlink cache time-to-live */
 #define MNTOPT_SWPLO	"swplo"		/* first block(512 byte) to use */
 #define MNTOPT_LENGTH	"length"	/* # 512 byte blocks */
@@ -96,63 +91,9 @@
 #define MNTOPT_PRI	"pri"		/* priority of device */
 #define MNTOPT_EAG	"eag"		/* extended attributes (plan G) */
 #define MNTOPT_NOMTAB	"nomtab"	/* do not make an entry into mtab */
-#define	MNTOPT_LOGBUFS	"logbufs"	/* number of XFS log buffers */
-#define	MNTOPT_LOGBSIZE	"logbsize"	/* size of XFS log buffers */
-#define	MNTOPT_DMI	"dmi"		/* DMI enabled (XFS only) */
-#define	MNTOPT_QUOTA	"quota"		/* disk quotas */
-#define	MNTOPT_NOQUOTA	"noquota"	/* no quotas */
-#define MNTOPT_UQUOTA	"uquota"	/* user quota enabled (XFS only) */
-#define MNTOPT_PQUOTA	"pquota"	/* project quota enabled (XFS only) */
-#define MNTOPT_GQUOTA	"gquota"	/* group quota enabled (XFS only) */
-#define MNTOPT_UQUOTANOENF "uqnoenforce"/* user quota limit enforcement */
-#define MNTOPT_PQUOTANOENF "pqnoenforce"/* project quota limit enforcement */
-#define MNTOPT_GQUOTANOENF "gqnoenforce"/* group quota limit non-enforcement */
-#define MNTOPT_QUOTANOENF  "qnoenforce" /* same as uqnoenforce */
-#define MNTOPT_MRQUOTA	"mrquota"   	/* don't turnoff if SB has quotas on */
-#define	MNTOPT_WSYNC	"wsync"		/* safe-mode nfs compatible mount */
-#define MNTOPT_ASYNCNLM	"asyncnlm"	/* async NLM test calls */
-#define MNTOPT_NOATIME	"noatime"	/* don't modify access times on reads */
-#define	MNTOPT_INO64	"ino64"		/* force inodes into 64-bit range */
-#define MNTOPT_NOALIGN  "noalign"	/* turn off stripe alignment */
-#define	MNTOPT_SWALLOC	"swalloc"	/* turn on stripe width allocation */
-#define MNTOPT_SUNIT	"sunit"		/* data volume stripe unit */
-#define MNTOPT_SWIDTH	"swidth"	/* data volume stripe width */
-#define	MNTOPT_VERS	"vers"		/* nfs protocol version */
-#define	MNTOPT_PROTO	"proto"         /* udp/tcp protocol specifier */
-#define MNTOPT_DEFXATTR	"defxattr"	/* use default values for
-					   system attributes */
-#define MNTOPT_NODEFXATTR "nodefxattr"	/* don't use default values for
-					   system attributes */
-#define MNTOPT_DOXATTR	"doxattr"	/* tell server to trust us with
-					   attributes */
-#define MNTOPT_NORECOVERY "norecovery"	/* don't run XFS recovery */
-#define MNTOPT_SHARED	"shared"	/* shared XFS mount */
-#define MNTOPT_BIOSIZE	"biosize"	/* log2 of preferred buffered io size */
-#define MNTOPT_OSYNCISDSYNC "osyncisdsync" /* o_sync == o_dsync on this fs */
+
 
 #define MNTINFO_DEV     "dev"   /* device number of the mounted file system */
-#define MNTINFO_LOFSID  "lofsid" /* id for mounted loopback file system */
-#define MNTOPT_CLNTONLY "client_only"      /* may not become cxfs server */
-                                           /* (allowed on remount) */
-#define MNTOPT_UNSHARED "unshared"         /* non-shared access for cxfs */
-#define MNTOPT_STIMEOUT "server_timeout"   /* timeout for each server in list */
-#define MNTOPT_CTIMEOUT "client_timeout"   /* timeout for client before */ 
-                                           /* failing mount */
-#define MNTOPT_SERVERLIST "server_list"    /* list of hosts which can be */
-                                           /* servers (allowed on remount) */
-#define MNTOPT_FORCECLNT "force_client"    /* forces server to resign its */
-                                           /* role (remount only). */
-#define MNTOPT_CLRCLNTONLY "clear_client_only" /* reallow as potential server */
-                                               /* (remount only). */
-#define MNTOPT_SETSERVER "set_server"      /* force a new server (remount */
-                                           /* only). */
-#define MNTOPT_FORCESVR "force_server"     /* become the server (remount */
-                                           /* only). */
-#define MNTOPT_64BITINODE "inode64"	   /* permit inode creation into
-					    * 64 bit space */
-#define	MNTOPT_MFDS "filestreams"	   /* mult-file data streams */
-#define MNTOPT_ATTR2	"attr2"            /* allow new format inline attrs */
-#define MNTOPT_NOATTR2	"noattr2"          /* traditional format attrs only */
 
 struct mntent {
 	char	*mnt_fsname;		/* name of mounted file system */
@@ -163,15 +104,18 @@ struct mntent {
 	int	mnt_passno;		/* pass number on parallel fsck */
 };
 
-__SGI_LIBC_BEGIN_EXTERN_C
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 FILE		*setmntent(const char *, const char *);
 struct mntent	*getmntent(FILE *);
-int		addmntent(FILE *, const struct mntent *);
-char		*hasmntopt(const struct mntent *, const char *);
-int		getmntany(FILE *, struct mntent *, const struct mntent *);
+int		addmntent(FILE *, struct mntent *);
+char		*hasmntopt(struct mntent *, const char *);
+int		getmntany( FILE *, struct mntent *, struct mntent *);
 int		endmntent(FILE *);
-int		delmntent(const char *, struct mntent *);
 
-__SGI_LIBC_END_EXTERN_C
+#ifdef __cplusplus
+}
+#endif
 #endif /* !__MNTENT_H__ */

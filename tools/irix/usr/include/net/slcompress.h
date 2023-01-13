@@ -2,7 +2,7 @@
 /*
  * Definitions for tcp compression routines.
  *
- * $Revision: 1.10 $
+ * $Revision: 1.7 $
  *
  * Copyright (c) 1989 Regents of the University of California.
  * All rights reserved.
@@ -38,18 +38,15 @@
  *	Van Jacobson (van@helios.ee.lbl.gov), Dec 31, 1989:
  *	- Initial distribution.
  */
-#ifdef __cplusplus
-extern "C" {
-#endif
 
-#define DEF_MAX_STATES 16		/* must be > 2 and < 256 */
-#define MAX_HDR	   64
+#define MAX_STATES 16		/* must be > 2 and < 256 */
+#define MAX_HDR MLEN		/* XXX 4bsd-ism: should really be 128 */
 
+#ifdef sgi
 #define MIN_MAX_STATES 3
 #define MAX_MAX_STATES 254
-
-#define MAX_LINKNUM 4
-
+#undef SL_NO_STATS
+#endif
 /*
  * Compressed packet format:
  *
@@ -62,7 +59,7 @@ extern "C" {
  * sequence number changes, one change per bit set in the header
  * (there may be no changes and there are two special cases where
  * the receiver implicitly knows what changed -- see below).
- *
+ * 
  * There are 5 numbers which can change (they are always inserted
  * in the following order): TCP urgent pointer, window,
  * acknowlegement, sequence number and IP ID.  (The urgent pointer
@@ -121,57 +118,68 @@ extern "C" {
  * we saw from the conversation together with a small identifier
  * the transmit & receive ends of the line use to locate saved header.
  */
-struct vj_comp {
-	struct tx_cstate *last_cs;	/* most recently used tstate */
-	int	tx_states;		/* # of TX slots */
-	int	actconn;		/* apparent active TCP connections */
-	u_char	last;			/* last sent slot id */
-
-	int	cnt_packets;		/* outbound packets */
-	int	cnt_compressed;		/* outbound compressed packets */
-	int	cnt_searches;		/* searches for connection state */
-	int	cnt_misses;		/* could not find state */
-
-	/* xmit connection states */
-	struct tx_cstate {
-	    struct tx_cstate *cs_next;  /* next most recently used cstate */
-	    u_char	cs_id;		/* slot # of this state */
-	    u_char	cs_linknum;	/* BF&I multilink number */
-	    signed char	cs_active;	/* >0 if alive--no FIN seen */
-	    union slcs_u {
+struct cstate {
+	struct cstate *cs_next;	/* next most recently used cstate (xmit only) */
+	u_short cs_hlen;	/* size of hdr (receive only) */
+	u_char cs_id;		/* connection # associated with this state */
+#ifdef sgi
+	signed char cs_active;	/* >0 if alive--no FIN seen */
+#else
+	u_char cs_filler;
+#endif
+	union {
 		char csu_hdr[MAX_HDR];
-		struct ip csu_ip;	/* most recent ip/tcp hdr */
-	    } slcs_u;
-	} tstate[1];
+		struct ip csu_ip;	/* ip/tcp hdr from most recent packet */
+	} slcs_u;
 };
 #define cs_ip slcs_u.csu_ip
 #define cs_hdr slcs_u.csu_hdr
 
-
-struct vj_uncomp {
-	int	rx_states;		/* # of RX slots */
-	u_char	last;			/* last rcvd slot id */
-	u_short	flags;
-#	 define SLF_TOSS 1		/* tossing frames because of err */
-
-	int	cnt_uncompressed;	/* inbound uncompressed packets */
-	int	cnt_compressed;		/* inbound compressed packets */
-	int	cnt_tossed;		/* inbound packets tossed for error */
-	int	cnt_error;		/* inbound unknown type packets */
-
-	/* receive connection states */
-	struct rx_cstate {
-	    u_short	cs_hlen;	/* size of hdr */
-	    union slcs_u slcs_u;
-	} rstate[1];
-};
-
-
-extern struct vj_comp* vj_comp_init(struct vj_comp*, int);
-extern u_char vj_compress(struct mbuf**, struct vj_comp*, int*, u_int,int,int);
-
-extern struct vj_uncomp* vj_uncomp_init(struct vj_uncomp*, int);
-extern int vj_uncompress(struct mbuf*, int, u_char**, u_int,struct vj_uncomp*);
-#ifdef __cplusplus
-}
+/*
+ * all the state data for one serial line (we need one of these
+ * per line).
+ */
+struct slcompress {
+	struct cstate *last_cs;	/* most recently used tstate */
+	u_char last_recv;	/* last rcvd conn. id */
+	u_char last_xmit;	/* last sent conn. id */
+	u_short flags;
+#ifdef sgi
+	int actconn;		/* apparent active TCP connections */
+	int tx_states;
+	int rx_states;
 #endif
+#ifndef SL_NO_STATS
+	int sls_packets;	/* outbound packets */
+	int sls_compressed;	/* outbound compressed packets */
+	int sls_searches;	/* searches for connection state */
+	int sls_misses;		/* times couldn't find conn. state */
+	int sls_uncompressedin;	/* inbound uncompressed packets */
+	int sls_compressedin;	/* inbound compressed packets */
+	int sls_errorin;	/* inbound unknown type packets */
+	int sls_tossed;		/* inbound packets tossed because of error */
+#endif
+#ifdef sgi
+	struct cstate *tstate;	/* xmit connection states */
+	struct cstate *rstate;	/* receive connection states */
+#else
+	struct cstate tstate[MAX_STATES];	/* xmit connection states */
+	struct cstate rstate[MAX_STATES];	/* receive connection states */
+#endif
+};
+/* flag values */
+#define SLF_TOSS 1		/* tossing rcvd frames because of input err */
+
+#ifdef sgi
+extern void sl_compress_init(struct slcompress**,int,int);
+extern u_char sl_compress_tcp(struct mbuf**, struct slcompress*,
+			      int*, int);
+extern int sl_uncompress_tcp(struct mbuf*,
+			     int, u_char**, u_int,
+			     struct slcompress*);
+#else
+extern void sl_compress_init(/* struct slcompress * */);
+extern u_char sl_compress_tcp(/* struct mbuf *, struct ip *,
+				struct slcompress *, int compress_cid_flag */);
+extern int sl_uncompress_tcp(/* u_char **, int,  u_char, struct slcompress * */);
+#endif /* sgi */

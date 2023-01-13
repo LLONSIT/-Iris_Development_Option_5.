@@ -1,6 +1,9 @@
 #ifndef __POLL_H__
 #define __POLL_H__
-#ident "$Revision: 1.5 $"
+#ifdef __cplusplus
+extern "C" {
+#endif
+#ident "$Revision: 1.4 $"
 /*
 *
 * Copyright 1992, Silicon Graphics, Inc.
@@ -35,4 +38,7 @@
 
 #include <sys/poll.h>
 
+#ifdef __cplusplus
+}
+#endif
 #endif /* !__POLL_H__ */

@@ -17,7 +17,7 @@
  * rights reserved under the Copyright Laws of the United States.
  */
 
-#ident "$Revision: 1.16 $"
+#ident "$Revision: 1.7 $"
 
 #ifdef __cplusplus
 extern "C" {
@@ -44,56 +44,18 @@ extern "C" {
  *	@(#)inet.h	5.4 (Berkeley) 6/1/90
  */
 
-/**************************************************************************
- *                                                                        *
- *               Copyright (C) 2002 Silicon Graphics, Inc.                *
- *                                                                        *
- *  These coded instructions, statements, and computer programs  contain  *
- *  unpublished  proprietary  information of Silicon Graphics, Inc., and  *
- *  are protected by Federal copyright law.  They  may  not be disclosed  *
- *  to  third  parties  or copied or duplicated in any form, in whole or  *
- *  in part, without the prior written consent of Silicon Graphics, Inc.  *
- *                                                                        *
- **************************************************************************/
-
 /* External definitions for functions in inet(3N) */
 
-#include <standards.h>
 #include <sys/types.h>
 #include <netinet/in.h>
-#if _NO_XOPEN4 && _NO_XOPEN5
-#include <sys/socket.h>
-#endif /* _NO_XOPEN4 && _NO_XOPEN5 */
-#include <sys/endian.h>
 
-extern in_addr_t	inet_addr(const char *);
-extern in_addr_t        inet_lnaof(struct in_addr);
-extern struct in_addr   inet_makeaddr(in_addr_t, in_addr_t);
-extern in_addr_t        inet_netof(struct in_addr);
-extern in_addr_t        inet_network(const char *);
-extern char *           inet_ntoa(struct in_addr);
-
-#if _SGIAPI
+extern unsigned long	inet_addr(const char *);
 extern int		inet_aton(const char *, struct in_addr *);
-extern u_int		inet_nsap_addr(const char *, u_char *, int);
-extern char *		inet_nsap_ntoa(int, const u_char *, char *);
-extern int		inet_isaddr(const char *, uint32_t *);
-#endif  /* _SGIAPI */
-
-/*
- * The following symbols will be visible 
- * when _NO_XOPEN4 && _NO_XOPEN5 are defined.
- */
-#if _NO_XOPEN4 && _NO_XOPEN5
-extern int		inet_pton(int, const char *, void *);
-extern const char *	inet_ntop(int, const void *, char *, socklen_t);
-
-/* pragma optional directives for the above two fns. */
-#if !defined(_SGI_COMPILING_LIBC)
-#pragma optional inet_pton
-#pragma optional inet_ntop
-#endif /* _SGI_COMPILING_LIBC */
-#endif /* _NO_XOPEN4 && _NO_XOPEN5 */
+extern char *		inet_ntoa(struct in_addr);
+extern struct in_addr	inet_makeaddr(int, int);
+extern unsigned long	inet_network(const char *);
+extern unsigned long	inet_lnaof(struct in_addr);
+extern unsigned long	inet_netof(struct in_addr);
 
 #ifdef __cplusplus
 }

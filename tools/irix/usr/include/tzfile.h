@@ -1,6 +1,9 @@
 #ifndef __TZFILE_H__
 #define __TZFILE_H__
-#ident "$Revision: 1.5 $"
+#ifdef __cplusplus
+extern "C" {
+#endif
+#ident "$Revision: 1.3 $"
 /*
 *
 * Copyright 1992, Silicon Graphics, Inc.
@@ -30,10 +33,6 @@
 
 #ident	"@(#)libc-port:gen/tzfile.h	1.3"
 
-#include <internal/sgimacros.h>
-
-__SGI_LIBC_BEGIN_EXTERN_C
-
 /*
 ** Information about time zone files.
 */
@@ -42,18 +41,12 @@ __SGI_LIBC_BEGIN_EXTERN_C
 
 #define TZDEFAULT	"localtime"
 
-#define TZDEFRULES	"posixrules"
-
-
 /*
 ** Each file begins with. . .
 */
 
 struct tzhead {
-	char	tzh_reserved[20];	/* reserved for future use */
-	char	tzh_ttisgmtcnt[4];	/* coded number of trans. time flags */
-	char	tzh_ttisstdcnt[4];	/* coded number of trans. time flags */
-	char	tzh_leapcnt[4];		/* coded number of leap seconds */
+	char	tzh_reserved[32];	/* reserved for future use */
 	char	tzh_timecnt[4];		/* coded number of transition times */
 	char	tzh_typecnt[4];		/* coded number of local time types */
 	char	tzh_charcnt[4];		/* coded number of abbr. chars */
@@ -62,18 +55,6 @@ struct tzhead {
 /*
 ** . . .followed by. . .
 **
-**	tzh_ttisgmtcnt (char)s		indexed by type; if TRUE, transition 
-**					time is GMT, if FALSE, transition time 
-**					is local time, if absent, transition 
-**					times are assumed to be local time.
-**	tzh_ttisstdcnt (char)s		indexed by type; if TRUE, transition
-**					time is standard time, if FALSE,
-**					transition time is wall clock time
-**					if absent, transition times are
-**					assumed to be wall clock time.
-**	tzh_leapcnt repetitions of
-**		one (char [4])		coded leap second transition times
-**		one (char [4])		total correction after above
 **	tzh_timecnt (char [4])s		coded transition times a la time(2)
 **	tzh_timecnt (unsigned char)s	types of local time starting at above
 **	tzh_typecnt repetitions of
@@ -103,8 +84,6 @@ struct tzhead {
 #endif /* !NOSOLAR */
 
 #define TZ_MAX_CHARS	50	/* Maximum number of abbreviation characters */
-
-#define TZ_MAX_LEAPS	50	/* Maximum number of leap second corrections */
 
 #define SECS_PER_MIN	60
 #define MINS_PER_HOUR	60
@@ -150,5 +129,7 @@ struct tzhead {
 
 #define isleap(y) (((y) % 4) == 0 && ((y) % 100) != 0 || ((y) % 400) == 0)
 
-__SGI_LIBC_END_EXTERN_C
+#ifdef __cplusplus
+}
+#endif
 #endif /* !__TZFILE_H__ */

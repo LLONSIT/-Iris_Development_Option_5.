@@ -15,7 +15,7 @@ extern "C" {
 #endif
 
 /*#ident	"@(#)uts-3b2:svc/utssys.h	1.2"*/
-#ident	"$Revision: 1.6 $"
+#ident	"$Revision: 1.4 $"
 
 /*
  * Definitions related to the utssys() system call. 
@@ -28,15 +28,13 @@ extern "C" {
  */
 #define UTS_UNAME	0x0
 #define UTS_USTAT	0x2	/* 1 was umask */
-#define UTS_FUSERS	0x3	/* file users */
-#define UTS_VUSERS	0x4	/* vnode # users */
+#define UTS_FUSERS	0x3
 
 /*
  * Flags to UTS_FUSERS
  */
 #define F_FILE_ONLY	0x1
 #define F_CONTAINED	0x2
-#define	F_CREDENTIALS	0x4
 #define F_ANONYMOUS	0x8000	/* anonymous file, e.g. socket */
 
 typedef struct f_anonid {
@@ -49,15 +47,9 @@ typedef struct f_anonid {
  */
 typedef struct f_user {
 	pid_t	fu_pid;
-	/* XXX: An int and a gid_t is always 4 bytes */
-	union {
-		int 	u_fu_flags;	/* w/o  F_CREDENTIALS set : see below */
-		gid_t	u_fu_gid;	/* with F_CREDENTIALS set */
-	} u;
+	int	fu_flags;	/* see below */
 	uid_t	fu_uid;	
 } f_user_t;
-#define	fu_flags	u.u_fu_flags
-#define	fu_gid		u.u_fu_gid
 
 /*
  * fu_flags values

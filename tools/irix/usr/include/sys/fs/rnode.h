@@ -1,13 +1,8 @@
-/*
- * $Revision: 1.73 $
- */
 /*      @(#)rnode.h	1.4 88/07/15 NFSSRC4.0 from 1.21 88/02/08 SMI      */
 /*	Copyright (C) 1988, Sun Microsystems Inc. */
 
 #ifndef __NFS_RNODE_H__
 #define __NFS_RNODE_H__
-
-#include <sys/sema.h>
 
 #define NFS_FHANDLE_LEN 64
 
@@ -23,77 +18,34 @@ typedef struct symlink_cache {
 	int size;               /* size of the allocated buffer */
 } symlink_cache;
 
-/*
- * Commit info.
- */
-struct commit {
-	mutex_t	c_mutex;	/* protects the following */
-	uint32	c_flags;
-	offset3	c_count;
-	offset3	c_offset;
-	union {
-		writeverf3	cu_verf1; /* version 3 write verifier */
-		__uint64_t	cu_verf2; /* for efficiency */
-	} c_verf_u;
-	time_t	c_flushtime;
-	short	c_flushpercent;	/* % of range to background commit */
-	offset3	c_flushcount;
-	offset3	c_flushoffset;
-}; 
-typedef struct commit commit_t;
-#define c_verf	c_verf_u.cu_verf2
-#define COMMIT_UNSTABLE		0x1	/* (count,offset,verf) valid */
-#define COMMIT_FAILING		0x2	/* encountered bad verifier */
-#define COMMIT_FLUSHING		0x4	/* unlocked async commit in progress */
-#define COMMIT_FLUSH_ASYNC	0x8	/* flush in async queue, not yet begun */
-#define IS_UNSTABLE(rp)		((rp)->r_commit.c_flags & COMMIT_UNSTABLE)
-#define IS_FAILING(rp)		((rp)->r_commit.c_flags & COMMIT_FAILING)
-#define IS_FLUSHING(rp)		((rp)->r_commit.c_flags & COMMIT_FLUSHING)
-#define COMMIT_FLUSH_INTERVAL	(HZ/2)
-#define COMMIT_FLUSH_PERCENTAGE_MAX 80
-#define COMMIT_FLUSH_PERCENTAGE_MIN 20
-#define COMMIT_FLUSH_PERCENTAGE_INTERVAL 10
-
-/*
- * PV 880574 - Delayed operation bits
- */
-struct nfs3_delargs {
-	struct nfs3_delargs	*do_next;	/* next in dopq */
-	sv_t			do_sv;		/* delayee sleeps here */
-	int			do_delay;	/* total operation delay */
-	int			do_delta;	/* delay once we get to head */
-};
-typedef struct nfs3_delargs nfs3_delargs_t;
-
-#define NFS3_RIO_WRITE		1
-#define NFS3_RIO_READ		2
-#define NFS3_RIO_METADATA	3
-
 struct access_cache;
 struct rddir_cache;
-struct xattr_cache;
 /*
  * Remote file information structure.
  * The rnode is the "inode" for remote files.  It contains all the
- * information necessary to handle remote files on the client side.
+ * information necessary to handle remote file on the client side.
  */
 struct rnode {
 	struct rnode	*r_next;	/* active rnode list */
 	struct rnode	**r_prevp;	/* back-pointer in active list */
 	struct rnode	*r_mnext;	/* next rnode in mntinfo list */
 	struct rnode	**r_mprevp;	/* and previous rnode's &r_mnext */
-	struct mntinfo	*r_mi;		/* points back to mntinfo struct */
-	bhv_desc_t	r_bhv_desc;	/* nfs/nfs3 behavior descriptor */
-	nfs_fh3		r_fh;		/* nfs3 compatible file handle */
+	struct vnode	*r_vnode;	/* associated vnode */
+	union {
+	    fhandle_t	r_fh2;		/* file handle */
+	    nfs_fhandle	r_fh3;
+	} r_ufh;
+	u_short		r_flags;	/* flags, see below */
 	short		r_error;	/* async write error */
-	uint		r_flags;	/* flags, see below (must be uint) */
 	daddr_t		r_lastr;	/* last block read (read-ahead) */
+	long		r_mapcnt;	/* total count of mapped pages */
+	lock_t		r_flaglock;	/* to protect r_flags and r_iocount */
 	struct cred	*r_cred;	/* current credentials */
 	union {
 	    struct {
 		struct cred	*ruu_unlcred;	/* unlinked credentials */
 		char		*ruu_unlname;	/* unlinked regular file name */
-		struct rnode	*ruu_unldrp;	/* unlinked file's parent dir */
+		struct vnode	*ruu_unldvp;	/* unlinked file's parent dir */
 	    } ru_unl;
 	    struct {
 		time_t		rus_symtime;	/* symlink expiration time */
@@ -101,64 +53,35 @@ struct rnode {
 		char		*rus_symval;	/* cached symlink contents */
 	    } ru_sym;
 	} r_u;
-	off_t		r_size;		/* client's idea of file size */
-	off_t		r_localsize;	/* client's highest local mapping */
-	union {
-	    struct nfsfattr	r_nfsattr2;	/* cached nfs attributes */
-	    struct vattr	r_attr3;	/* cached vnode attributes */
-	} r_a;
-	time_t		r_attrtime;	/* time attributes become invalid */
-	time_t		r_mtime;	/* client time file last modified */
+	scoff_t		r_size;		/* client's idea of file size */
+	scoff_t		r_localsize;	/* client's highest local mapping */
+	struct nfsfattr	r_nfsattr;	/* cached nfs attributes */
 	struct timeval	r_nfsattrtime;	/* time attributes become invalid */
 	int		r_iocount;	/* io operations in progress */
-	sv_t		r_iowait;	/* io synchronization */
-	uint64_t	r_rwlockid;	/* id of thread owning r_rwlock */
+	sema_t		r_iowait;	/* io synchronization semaphore */
+#ifdef DEBUG
+	short		r_lockpid;	/* pid of process owning r_lock */
+#endif
+	short		r_rwlockpid;	/* pid of process owning r_rwlock */
 	short		r_locktrips;	/* number of r_rwlock reacquisitions */
-	mutex_t		r_rwlock;	/* vop_rwlock for nfs */
-	mutex_t		r_statelock;	/* protects (most of) rnode contents */
+	sema_t		r_rwlock;	/* vop_rwlock for nfs */
+	sema_t		r_lock;		/* semaphore guarding attributes */
+	sema_t		r_statelock;	/* protects (most of) rnode contents */
 	struct access_cache *r_acc;	/* cache of access results */
 	struct rddir_cache *r_dir;	/* cache of readdir responses */
 	struct rddir_cache *r_direof;	/* pointer to the EOF entry */
+	lloff_t		r_cookie;	/* cookie of last entry in directory */
+	mrlock_t        r_3rwlock;      /* read-write lock for NFS3 */
 	symlink_cache	r_symlink;	/* cached readlink response */
-	commit_t	r_commit;	/* commit information */
-	cookieverf3     r_cookieverf;	/* cookie verifier from last readdir* */
-	struct vsocket	*r_bds;		/* bulk data service */
-        struct vsocket  *r_bds_data;    /* bulk data service over STP */
-	ushort		r_bds_vers;	/* bds protocol version */
-	ushort		r_bds_flags;	/* RBDS_ flags */
-	int		r_bds_oflags;	/* oflags of the last read/write req */
-	uint64_t	r_bds_buflen;	/* buflen to request of the server */
-	u_char		r_bds_priority;	/* BDS priority */
-	mrlock_t	r_otw_attr_lock;
-	struct xattr_cache *r_xattr;	/* critical extended attributes */
-
-	/* PV 880574
-	 *
-	 * Delayed operation support to provide a mechanism for
-	 * waiting on a certain number of async writes to complete
-	 */
-	nfs3_delargs_t  *r_dopq_head;	/* delayed operation q head */
-	nfs3_delargs_t  *r_dopq_tail;	/* delayed operation q tail */
-	int		r_iowcount;	/* write io ops in progress */
-
-	/* 03 Feb 2003
-	 *
-	 * We are very close to the 768 byte zone size - the
-	 * structure is currently 748 bytes long. We don't want
-	 * to fall into the next zone, so keep this in mind when
-	 * adding to this structure....
-	 */
-
-	int		r_next_warn;	/* rate limiting for warnings */
+	cnt_t		r_iocnt;	/* # of outstanding async write ops */
+	writeverf3	r_verf;		/* version 3 write verifier */
 };
 typedef struct rnode	rnode_t;
-
-#define r_nfsattr	r_a.r_nfsattr2
-#define r_attr		r_a.r_attr3
+#define r_fh	r_ufh.r_fh2
 
 #define r_unlcred	r_u.ru_unl.ruu_unlcred
 #define r_unlname	r_u.ru_unl.ruu_unlname
-#define r_unldrp	r_u.ru_unl.ruu_unldrp
+#define r_unldvp	r_u.ru_unl.ruu_unldvp
 #define r_symval	r_u.ru_sym.rus_symval
 #define r_symlen	r_u.ru_sym.rus_symlen
 #define r_symtime	r_u.ru_sym.rus_symtime
@@ -166,90 +89,61 @@ typedef struct rnode	rnode_t;
 /*
  * Flags
  */
-#define RLOCKED		0x00001		/* rnode is in use */
-#define REOF		0x00008		/* EOF encountered on read */
-#define RDIRTY		0x00010		/* dirty buffers may be in buf cache */
-#define RVNODEWAIT	0x00100		/* waiting for iget in makenfsnode */
-#define RRECLAIMED	0x04000		/* file locks have been reclaimed */
-#define RCLEANLOCKS 	0x08000		/* file locks must be cleaned remotely */
-#define RV3 		0x10000		/* version 3 rnode */
-#define RCLOSE          0x20000	        /* rnode is closed. */
-#define RJUKEBOX	0x40000		/* jukebox error received */
-
-
-#define	RBDS_WBEHIND		0x0001	/* BDS writes are being ack'd early */
-#define	RBDS_DIRTY		0x0002	/* BDS has outstanding, unsync'd writes */
-#define	RBDS_SPECIFIED		0x0004	/* user set r_bds_oflags explicitly */
-#define	RBDS_NEED_REOPEN	0x0008	/* oflags has changed -- must reopen */
-#define RBDS_PEND_ERR		0x0010	/* error not yet reported to client */
-#define RBDS_STP                0x0020  /* BDS over Scheduled Transfers */
+#define RLOCKED		0x0001		/* rnode is in use */
+#define RWANT		0x0002		/* someone wants a wakeup */
+#define RATTRVALID	0x0004		/* Attributes in the rnode are valid */
+#define REOF		0x0008		/* EOF encountered on read */
+#define RDIRTY		0x0010		/* dirty buffers may be in buf cache */
+#define RNOCACHE	0x0020		/* don't cache read and write blocks */
+#define RIOWAIT		0x0040		/* rnode waiting for io completion */
+#define RGONE		0x0080		/* rnode really isn't here */
+#define RVNODEWAIT	0x0100		/* waiting for iget in makenfsnode */
+#define RTEXT		0x0200		/* rnode mapped for execution */
 
 /*
- * Maximum allowed file offset for NFSv2.
+ * Maximum allowed file offset.
  */
 #define	NFS_MAX_FILE_OFFSET	0x7fffffff
 
 /*
  * Convert between vnode and rnode
  */
-#define rtov(rp)	((struct vnode *)BHV_VOBJNULL(rtobhv(rp)))
-#define bhvtor(bdp)	((struct rnode *)(BHV_PDATA((bdp))))
-#define	rtobhv(rp)	(&((rp)->r_bhv_desc))
-#define bhvtofh(bdp)	(&(bhvtor(bdp)->r_fh))
-#define BHVTOFH(bdp)	(&(bhvtor(bdp)->r_fh))
+#define rtov(rp)	((rp)->r_vnode)
+#define vtor(vp)	((struct rnode *)((vp)->v_data))
+#define vtofh(vp)	(&(vtor(vp)->r_fh))
 #define rtofh(rp)	(&(rp)->r_fh)
-/*
- * these three are to get the nfs2 file handle out of the nfs3 structure
- */
-#define rtofh2(rp)	(&((rp)->r_fh.fh3_u.nfs_fh3_i.fh3_i))
-#define bhvtofh2(bdp)	(rtofh2(bhvtor(bdp)))
-#define BHVTOFH2(bdp)	(rtofh2(bhvtor(bdp)))
 
-#define nohang()    (curuthread ? \
-			 (curuthread->ut_pproxy->prxy_flags & PRXY_NOHANG) : 0)
-#ifdef DEBUG_NOHANG
-#define debug_rlock()         (curuthread ? \
-			 (curuthread->ut_pproxy->prxy_flags & PRXY_RLCKDEBUG) : 0)
-#define debug_rwlock()        (curuthread ? \
-			 (curuthread->ut_pproxy->prxy_flags & PRXY_RWLCKDEBUG) : 0)
-#endif
+#ifdef _KERNEL
+#define vtorfsid(vp)	(vtor(vp)->r_nfsattr.na_fsid)
+#define vtornodeid(vp)	(vtor(vp)->r_nfsattr.na_nodeid)
 
 /*
  * Lock and unlock rnodes.
  */
-#define rnode_is_locked(rp)	(mrislocked_any(&(rp)->r_otw_attr_lock))
-#define rnode_is_rwlocked(rp)	(mutex_owned(&(rp)->r_rwlock))
+#define rnode_is_locked(rp)	(valusema(&(rp)->r_lock) <= 0)
+#define vnode_is_locked(rp)	(valusema(&(rp)->r_rwlock) <= 0)
 
-#define RNODE_FLAGLOCK(rp, s)	(s) = mutex_bitlock(&(rp)->r_flags, RLOCKED)
-#define RNODE_FLAGUNLOCK(rp, s)	mutex_bitunlock(&(rp)->r_flags, RLOCKED, (s))
-
-extern int raccess(rnode_t *);
-extern void rlock(rnode_t *);
-extern int rlock_nohang(rnode_t *);
-extern void runlock(rnode_t *);
-
-extern void	initrnodes(void);
+extern void	rlock(struct rnode *);
+extern int	rlock_nowait(struct rnode *);
+extern void	runlock(struct rnode *);
+extern void	initrnodes();
 extern void	rdestroy(struct rnode *, struct mntinfo *);
 extern int	rflush(struct mntinfo *);
-extern int	makenfsnode(struct vfs *, mntinfo_t *, fhandle_t *, 
-				struct nfsfattr *,  bhv_desc_t **); 
-extern struct rnode *rfind(struct vfs *, nfs_fh3 *);
-extern int	make_rnode(nfs_fh3 *fh, struct vfs *vfsp,
-		           struct vnodeops *vops, int *newnode,
-			   struct mntinfo *mi, bhv_desc_t **bdpp,
-			   struct nfsfattr *attr);
-			   
-extern void	rinactive(rnode_t *);
-
-extern mutex_t rnodemonitor;
-extern sv_t vnodewait;
+extern int	makenfsnode(struct vfs *, fhandle_t *, struct nfsfattr *,
+			    struct vnode **);
 
 /*
  * Set and clear rnode flags.
  */
-#define rsetflag(rp, f)		bitlock_set(&(rp)->r_flags, RLOCKED, (f))
-#define rclrflag(rp, f)		bitlock_clr(&(rp)->r_flags, RLOCKED, (f))
+#define rsetflag(rp, f)		{ int _s = splock((rp)->r_flaglock); \
+				  (rp)->r_flags |= (f); \
+				  spunlock((rp)->r_flaglock, _s); }
+#define rclrflag(rp, f)		{ int _s = splock((rp)->r_flaglock); \
+				  (rp)->r_flags &= ~(f); \
+				  spunlock((rp)->r_flaglock, _s); }
 
-#define nfsattr_inval(bdp)	(bhvtor(bdp)->r_nfsattrtime.tv_sec = 0)
+#define nfsattr_inval(vp)	(vtor(vp)->r_nfsattrtime.tv_sec = 0)
 
+
+#endif /* _KERNEL */
 #endif /* __NFS_RNODE_H__ */

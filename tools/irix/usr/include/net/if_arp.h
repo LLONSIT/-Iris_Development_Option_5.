@@ -13,9 +13,6 @@
  *
  *	@(#)if_arp.h	7.2 (Berkeley) 12/30/87
  */
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 /*
  * Address Resolution Protocol.
@@ -41,12 +38,10 @@ struct	arphdr {
  * The remaining fields are variable in size,
  * according to the sizes above.
  */
-#if 0
-	u_char	ar_sha[];	/* sender hardware address */
-	u_char	ar_spa[];	/* sender protocol address */
-	u_char	ar_tha[];	/* target hardware address */
-	u_char	ar_tpa[];	/* target protocol address */
-#endif
+/*	u_char	ar_sha[];	*//* sender hardware address */
+/*	u_char	ar_spa[];	*//* sender protocol address */
+/*	u_char	ar_tha[];	*//* target hardware address */
+/*	u_char	ar_tpa[];	*//* target protocol address */
 };
 
 /*
@@ -76,7 +71,4 @@ struct arpreqx {
 #define	ATF_PUBL	0x08	/* publish entry (respond for other host) */
 #define	ATF_USETRAILERS	0x10	/* has requested trailers */
 #define	ATF_SRI		0x20	/* has SRCROUTE info */
-#ifdef __cplusplus
-}
-#endif
 #endif	/* __net_if_arp__ */

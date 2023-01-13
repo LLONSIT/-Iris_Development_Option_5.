@@ -11,9 +11,6 @@
  *
  *      @(#)spidp.h	7.2 (Berkeley) 1/20/88
  */
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 /*
  * Definitions for NS(tm) Internet Datagram Protocol
@@ -42,6 +39,3 @@ struct spidp_q {
 #define si_seq	si_s.sp_seq
 #define si_ack	si_s.sp_ack
 #define si_alo	si_s.sp_alo
-#ifdef __cplusplus
-}
-#endif

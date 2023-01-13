@@ -1,6 +1,9 @@
 #ifndef __CR1_H__
 #define __CR1_H__
-#ident "$Revision: 1.4 $"
+#ifdef __cplusplus
+extern "C" {
+#endif
+#ident "$Revision: 1.3 $"
 /*
 *
 * Copyright 1992, Silicon Graphics, Inc.
@@ -37,16 +40,13 @@
 
 #ident	"@(#)head.usr:cr1.h	1.1"
 
-#include <internal/sgimacros.h>
-
-__SGI_LIBC_BEGIN_EXTERN_C
-
 /*
  *	CR1 function prototype(s)
  */
 
-extern char  *getkey(char *, char *, char*);	/* get key from daemon	*/
+char  *getkey(char *, char *, char*);	/* get key from daemon	*/
 
-__SGI_LIBC_END_EXTERN_C
-
+#ifdef __cplusplus
+}
+#endif
 #endif /* !__CR1_H__ */

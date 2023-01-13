@@ -41,9 +41,7 @@
  * |         Sunnyvale, CA 94086                               |
  * |-----------------------------------------------------------|
  */
-/* $Header: /plroot/cmplrs.src/v7.4.4m/.RCS/PL/include/RCS/stamp.h,v 7.20 2004/10/20 22:27:56 mpm Exp $ */
-
-/* THIS FILE MUST BE MODIFIED WHENEVER WE HAVE A NEW COMPILER VERSION */
+/* $Header: /proj/irix5.3/isms/cmplrs/include/RCS/stamp.h,v 7.9 1994/08/30 21:23:56 dlai Exp $ */
 
 #ifndef __STAMP_H__
 #define __STAMP_H__
@@ -52,11 +50,9 @@
 extern "C" {
 #endif
 
-#define	MS_STAMP 7
-#define	LS_STAMP 44
-#define INCLUDE_STAMP "7.44"
-/* full name of compiler version */
-#define FULL_INCLUDE_STAMP "7.4.4m"
+#define	MS_STAMP 3
+#define	LS_STAMP 19
+#define INCLUDE_STAMP "3.19"
 
 #ifdef __cplusplus
 }

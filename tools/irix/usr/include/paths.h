@@ -1,6 +1,9 @@
 #ifndef __PATHS_H__
 #define __PATHS_H__
-#ident "$Revision: 1.23 $"
+#ifdef __cplusplus
+extern "C" {
+#endif
+#ident "$Revision: 1.18 $"
 /*
 *
 * Copyright 1992, Silicon Graphics, Inc.
@@ -60,15 +63,12 @@
 #define	_PATH_LASTLOG	"/var/adm/lastlog"
 #define	_PATH_LOGINLOG	"/var/adm/loginlog"
 #define	_PATH_LOG	"/dev/log"
-#define _PATH_LS        "/sbin/ls"
 #define	_PATH_MAILDIR	"/usr/mail/"
 #define	_PATH_MAN	"/usr/man"
 #define	_PATH_MAGIC	"/etc/magic"
 #define	_PATH_MEM	"/dev/mem"
 #define	_PATH_NOLOGIN	"/etc/nologin"
 #define	_PATH_PASSWD	"/etc/passwd"
-#define _PATH_PROJECT	"/etc/project"
-#define _PATH_PROJID	"/etc/projid"
 #define	_PATH_QUOTA	"/usr/bsd/quota"
 #define	_PATH_SCHEME	"/usr/lib/iaf/scheme"
 #define	_PATH_SENDMAIL	"/usr/lib/sendmail"
@@ -78,10 +78,12 @@
 #define	_PATH_VARTMP	"/var/tmp/"
 #define	_PATH_VI	"/usr/bin/vi"
 #define	_PATH_PROCFS	"/proc/"
-#define	_PATH_HWGFS	"/hw/"
 #define	_PATH_PROCFSPI	"/proc/pinfo/"
 
-#define _PATH_ROOTPATH	"/usr/sbin:/usr/bsd:/sbin:/usr/bin:/etc:/usr/etc:/usr/bin/X11"
-#define _PATH_USERPATH	"/usr/sbin:/usr/bsd:/sbin:/usr/bin:/usr/bin/X11:"
+#define _PATH_ROOTPATH	"/usr/sbin:/usr/bsd:/sbin:/usr/bin:/bin:/etc:/usr/etc:/usr/bin/X11"
+#define _PATH_USERPATH	":/usr/sbin:/usr/bsd:/sbin:/usr/bin:/bin:/usr/bin/X11"
 
+#ifdef __cplusplus
+}
+#endif
 #endif /* !__PATHS_H__ */

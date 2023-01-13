@@ -12,7 +12,7 @@
 #ident	"@(#)uts-3b2:proc/auxv.h	1.2"
 
 #ifdef __cplusplus
-extern "C" {
+}
 #endif
 
 
@@ -40,7 +40,6 @@ typedef struct
 #define AT_BASE		7	/* ld.so base addr */
 #define AT_FLAGS	8	/* processor flags */
 #define AT_ENTRY	9	/* a.out entry point */
-#define AT_PFETCHFD     100     /* executable's fd for prefetch fix-up */
 
 #ifdef __cplusplus
 }

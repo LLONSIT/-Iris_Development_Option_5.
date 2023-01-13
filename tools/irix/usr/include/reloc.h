@@ -13,7 +13,7 @@
  * |         Sunnyvale, CA 94086                               |
  * |-----------------------------------------------------------|
  */
-/* $Header: /isms/cmplrs.src/v7.4/include/RCS/reloc.h,v 7.17 1994/06/01 04:14:35 dlai Exp $ */
+/* $Header: /proj/irix5.3/isms/cmplrs/include/RCS/reloc.h,v 7.17 1994/06/01 04:14:35 dlai Exp $ */
 #ifndef __RELOC_H__
 #define __RELOC_H__
 

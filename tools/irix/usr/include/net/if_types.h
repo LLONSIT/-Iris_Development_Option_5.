@@ -19,9 +19,6 @@
  *
  *	@(#)if_types.h	7.3 (Berkeley) 6/28/90
  */
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 
 /* interface types for benefit of parsing media address headers */
@@ -52,41 +49,4 @@ extern "C" {
 #define	IFT_XETHER	0x1a		/* obsolete 3MB experimental ethernet */
 #define	IFT_NSIP	0x1b		/* XNS over IP */
 #define	IFT_SLIP	0x1c		/* IP over generic TTY */
-#define IFT_ULTRA	0x1d		/* Ultra Technologies */
-#define	IFT_DS3		0x1e		/* Generic T3 */
-#define	IFT_SIP		0x1f		/* SMDS */
-#define	IFT_FRELAY	0x20		/* Frame Relay DTE only */
-#define	IFT_RS232	0x21
-#define	IFT_PARA	0x22		/* parallel-port */
-#define	IFT_ARCNET	0x23
-#define	IFT_ARCNETPLUS	0x24
-#define IFT_ATM		0x25		/* ATM cells */
-#define	IFT_MIOX25	0x26
-#define	IFT_SONET	0x27		/* SONET or SDH */
-#define	IFT_X25PLE	0x28
-#define	IFT_ISO88022LLC	0x29
-#define	IFT_LOCALTALK	0x2a
-#define	IFT_SMDSDXI	0x2b
-#define	IFT_FRELAYDCE	0x2c		/* Frame Relay DCE */
-#define	IFT_V35		0x2d
-#define	IFT_HSSI	0x2e
-#define	IFT_HIPPI	0x2f
-#define	IFT_MODEM	0x30		/* Generic Modem */
-#define	IFT_AAL5	0x31		/* AAL5 over ATM */
-#define	IFT_SONETPATH	0x32
-#define	IFT_SONETVT	0x33
-#define	IFT_SMDSICIP	0x34		/* SMDS InterCarrier Interface */
-#define	IFT_PROPVIRTUAL	0x35		/* Proprietary Virtual/internal */
-#define	IFT_PROPMUX	0x36		/* Proprietary Multiplexing */
-#define	IFT_CLXP	0x37		/* Cell Layer cross pttn driver */
-#define IFT_LS		0x38		/* load sharing network interface */
-#define IFT_GIF		0x39		/* configured tunnel */
-#define IFT_GSN		0x91		/* IANA ifType if-gsn aka HIPPI-6400 */
-
-#define	IFT_PVC		0xfd		/* (Cray) ATM - PVC interface */
-#define	IFT_Q2931	0xfe		/* (Cray) ATM - UNI interface */
-#define	IFT_SPANS	0xff		/* (Cray) ATM - SPANS interface */
-
-#ifdef __cplusplus
-}
-#endif
+#define	IFT_ATM		0x1d		/* ATM */

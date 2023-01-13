@@ -15,13 +15,13 @@
 #ifndef __PWD_H__
 #define __PWD_H__
 
-#ident "$Revision: 1.37 $"
+#ident "$Revision: 1.25 $"
 
-#include <standards.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <sys/types.h>
-#include <internal/sgimacros.h>
-
-__SGI_LIBC_BEGIN_EXTERN_C
 
 struct passwd {
 	char	*pw_name;
@@ -35,7 +35,7 @@ struct passwd {
 	char	*pw_shell;
 };
 
-#if _SGIAPI 
+#if defined(_SGI_SOURCE) && !defined(_POSIX_SOURCE) && !defined(_XOPEN_SOURCE)
 struct xpasswd {
 	/* The following should be identical to struct passwd */
 	char	*pw_name;
@@ -62,41 +62,63 @@ struct xpasswd {
 #define _PW_YP_NETGROUP	2
 #define _PW_YP_ALL	3
 #define	_PW_YP_REMOTE	4
+#endif	/* _SGI_SOURCE && !_POSIX_SOURCE && !_XOPEN_SOURCE */
 
+#if !defined(_POSIX_SOURCE)
 struct comment {
 	char	*c_dept;
 	char	*c_name;
 	char	*c_acct;
 	char	*c_bin;
 };
-#endif	/* _SGIAPI */
+#endif 
+
+#if defined(_MODERN_C)
+
+#include <stdio.h>
 
 extern struct passwd *	getpwuid(uid_t);
 extern struct passwd *	getpwnam(const char *);
-
-#if _XOPEN4UX || _XOPEN5
-extern void		endpwent(void);
+#if !defined(_POSIX_SOURCE)
 extern struct passwd *	getpwent(void);
 extern void		setpwent(void);
-#endif  /* _XOPEN4UX || _XOPEN5 */
-
-#if _SGIAPI
-#include <stdio.h>
+extern void		endpwent(void);
 extern struct passwd *	fgetpwent(FILE *);
 extern int		putpwent(const struct passwd *, FILE *);
+#if defined(_SGI_SOURCE) && !defined(_XOPEN_SOURCE)
 extern void		_yp_setpwent(void);
 extern struct xpasswd *	_yp_getpwent(void);
 extern struct xpasswd *	_pw_interpret(char *, int, FILE *);
+#endif	/* _SGI_SOURCE && !_XOPEN_SOURCE */
 extern int		lckpwdf(void);
 extern int		ulckpwdf(void);
-extern struct passwd *	fgetpwent_r(FILE *, struct passwd *, char *, size_t);
-extern struct passwd *	getpwent_r(struct passwd *, char *, size_t);
-#endif	/* _SGIAPI */
+#endif 	/* !_POSIX_SOURCE */
 
-#if _POSIX1C
-extern int getpwuid_r(uid_t, struct passwd *, char *, size_t, struct passwd **);
-extern int getpwnam_r(const char *, struct passwd *, char *, size_t, struct passwd **);
+#if (defined(_SGI_SOURCE) && !defined(_POSIX_SOURCE) && !defined(_XOPEN_SOURCE)) || defined(_SGI_REENTRANT_FUNCTIONS)
+extern struct passwd *getpwuid_r(uid_t, struct passwd *, char *, int);
+extern struct passwd *getpwnam_r(const char *, struct passwd *, char *, int);
 #endif
 
-__SGI_LIBC_END_EXTERN_C
+#else 	/* !_MODERN_C */
+
+extern struct passwd *	getpwuid();
+extern struct passwd *	getpwnam();
+#if !defined(_POSIX_SOURCE)
+extern struct passwd *	getpwent();
+extern void		setpwent();
+extern void		endpwent();
+extern struct passwd *	fgetpwent();
+extern int		putpwent();
+#if defined(_SGI_SOURCE)
+extern void		_yp_setpwent();
+extern struct xpasswd *	_yp_getpwent();
+extern struct xpasswd *	_pw_interpret();
+#endif	/* _SGI_SOURCE */
+extern int		lckpwdf();
+extern int		ulckpwdf();
+#endif 	/* !_POSIX_SOURCE */
+#endif
+#ifdef __cplusplus
+}
+#endif
 #endif /* !__PWD_H__ */

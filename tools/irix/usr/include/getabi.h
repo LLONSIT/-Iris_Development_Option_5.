@@ -1,6 +1,9 @@
 #ifndef __GETABI_H__
 #define __GETABI_H__
-#ident "$Revision: 1.4 $"
+#ident "$Revision: 1.2 $"
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*
  * Declarations for getabi().
@@ -21,10 +24,6 @@
  * rights reserved under the Copyright Laws of the United States.
  */
 
-#include <internal/sgimacros.h>
-
-__SGI_LIBC_BEGIN_EXTERN_C
-
 /* enumeration of possible abi types */
 typedef enum {
 	noabi,
@@ -44,7 +43,6 @@ typedef enum {
 #define PRESERVE_ABI_ARG	1
 #define REMOVE_ABI_ARG		2
 #define ADD_ABI_ARG		3
-#define ADD_FRONT_ABI_ARG	4
 
 /*
  * getabi() is used to determine what the abi is.  
@@ -66,7 +64,9 @@ extern abi_t getabi (
 	int*		/*argc*/
 );
 
-__SGI_LIBC_END_EXTERN_C
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* !__GETABI_H__ */
 

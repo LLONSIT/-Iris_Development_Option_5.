@@ -1,6 +1,6 @@
 #ifndef __FP_CLASS_H__
 #define __FP_CLASS_H__
-#ident "$Revision: 1.15 $"
+#ident "$Revision: 1.12 $"
 /*
 *
 * Copyright 1992, Silicon Graphics, Inc.
@@ -18,26 +18,23 @@
 * successor clauses in the FAR, DOD or NASA FAR Supplement. Unpublished -
 * rights reserved under the Copyright Laws of the United States.
 */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /* | Copyright (c) 1986 MIPS Computer Systems, Inc.  | */
 /* | All Rights Reserved.                            | */
 /* --------------------------------------------------- */
-/* $Revision: 1.15 $ */
+/* $Revision: 1.12 $ */
 
-#include <internal/sgimacros.h>
 
-__SGI_LIBC_BEGIN_EXTERN_C
 
 #if (defined(_LANGUAGE_C) || defined(_LANGUAGE_C_PLUS_PLUS))
 extern int fp_class_d(double);
 extern int fp_class_f(float);
-#if _COMPILER_VERSION >= 400
-extern int fp_class_q(long double);
-extern int fp_class_l(long double);
-#endif
 #endif /* LANGUAGE_C */
 
 /*
- * Constants returned by the floating point fp_class_[fdl]() functions.
+ * Constants returned by the floating point fp_class_[fd]() functions.
  */
 #define	FP_SNAN		0
 #define	FP_QNAN		1
@@ -50,5 +47,7 @@ extern int fp_class_l(long double);
 #define	FP_POS_ZERO	8
 #define	FP_NEG_ZERO	9
 
-__SGI_LIBC_END_EXTERN_C
+#ifdef __cplusplus
+}
+#endif
 #endif /* !__FP_CLASS_H__ */

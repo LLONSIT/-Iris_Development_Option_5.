@@ -38,7 +38,7 @@ extern "C" {
 #endif
 
 /*#ident	"@(#)uts-3b2:fs/pathname.h	1.2"*/
-#ident	"$Revision: 1.5 $"
+#ident	"$Revision: 1.3 $"
 
 /*
  * Pathname structure.
@@ -91,10 +91,8 @@ extern int	pn_get(char *, enum uio_seg, pathname_t *);
 extern int	pn_set(pathname_t *, char *);
 extern int	pn_insert(pathname_t *, pathname_t *);
 extern int	pn_getsymlink(struct vnode *, pathname_t *, struct cred *);
-extern int	pn_getpathattr(struct vnode *, char *, pathname_t *pnp, struct cred *);
 extern u_long	pn_hash(char *, int);
 extern int	pn_getcomponent(pathname_t *, char *, int);
-extern void	pn_setcomponent(pathname_t *, char *, int);
 extern void	pn_setlast(pathname_t *);	/* isolate last component */
 extern void	pn_skipslash(pathname_t *);	/* skip over slashes */
 extern void	pn_fixslash(pathname_t *);	/* eliminate trailing slashes */

@@ -1,5 +1,8 @@
 #ifndef __WSREGEXP_H__
 #define __WSREGEXP_H__
+#ifdef __cplusplus
+extern "C" {
+#endif
 /*
  *
  * Copyright 1992, Silicon Graphics, Inc.
@@ -21,11 +24,7 @@
  *	on wchar_t basis
  *	by frank@ceres.esd.sgi.com Dec 3 1992
  */
-#ident  "$Revision: 1.2 $"
-
-#include <internal/sgimacros.h>
-
-__SGI_LIBC_BEGIN_EXTERN_C
+#ident  "$Revision: 1.1 $"
 
 /*
  * command codes
@@ -99,6 +98,8 @@ int	wsrestep(struct rexdata *, wchar_t *, long *);
 int	wsrematch(struct rexdata *, wchar_t *, long *);
 char	*wsreerr(int);
 
-__SGI_LIBC_END_EXTERN_C
+#ifdef __cplusplus
+}
+#endif
 #endif /* !__WSREGEXP_H__ */
 

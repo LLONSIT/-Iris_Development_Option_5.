@@ -1,0 +1,3 @@
+rom_offset,vram,text
+0,DEADBEEF,file1
+0,DEADBEEF,file1

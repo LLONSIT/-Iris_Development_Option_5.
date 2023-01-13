@@ -1,7 +1,6 @@
 /*
  *	hostreg.h	1.1	7/27/88	host registrar initial release.
  */
-#include <sys/bsd_types.h>
 
 #define REG_NEWNAME	1	/* allocate new IP address */
 #define REG_RENAME	2	/* rename host */

@@ -13,7 +13,7 @@
  * |         Sunnyvale, California 94088-3650, USA             |
  * |-----------------------------------------------------------|
  */
-/* $Header: /isms/cmplrs.src/v7.4/include/RCS/ieeefp.h,v 1.8 1997/07/22 21:55:46 vegas Exp $ */
+/* $Header: /proj/irix5.3/isms/cmplrs/commonlib/include/RCS/ieeefp.h,v 1.3 1993/06/08 01:15:17 bettina Exp $ */
 /*	Copyright (c) 1988 AT&T	*/
 /*	  All Rights Reserved  	*/
 
@@ -28,10 +28,8 @@
 extern "C" {
 #endif
 
-#include <sgidefs.h>
-
 /*
- * Floating point environment for machines that support
+ * Floating point enviornment for machines that support
  * the IEEE 754 floating-point standard.  This file currently 
  * supports the 3B2 and 80*87 families.
  *
@@ -67,20 +65,6 @@ extern int	finite( double );
 extern int	unordered( double, double );
 #else
 extern fpclass_t fpclass();	/* get class of double value */
-#endif
-
-#if (_MIPS_SIM==_MIPS_SIM_NABI32 || _MIPS_SIM==_MIPS_SIM_ABI64)
-
-extern fpclass_t fpclassl (long double);
-extern int unorderedl (long double, long double);
-extern int finitel(long double);
-
-#if (defined(__EXTENSIONS__))
-#define	qfpclass fpclassl
-#define	qunordered unorderedl
-#define qfinite	finitel
-#endif
-
 #endif
 
 /* ROUNDING CONTROL ******************************************

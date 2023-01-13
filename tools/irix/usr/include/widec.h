@@ -1,26 +1,3 @@
-#ifndef __WIDEC_H__
-#define __WIDEC_H__
-#ifdef __cplusplus
-extern "C" {
-#endif
-#ident "$Revision: 1.2 $"
-/*
-*
-* Copyright 1984-1995, Silicon Graphics, Inc.
-* All Rights Reserved.
-*
-* This is UNPUBLISHED PROPRIETARY SOURCE CODE of Silicon Graphics, Inc.;
-* the contents of this file may not be disclosed to third parties, copied or
-* duplicated in any form, in whole or in part, without the prior written
-* permission of Silicon Graphics, Inc.
-*
-* RESTRICTED RIGHTS LEGEND:
-* Use, duplication or disclosure by the Government is subject to restrictions
-* as set forth in subdivision (c)(1)(ii) of the Rights in Technical Data
-* and Computer Software clause at DFARS 252.227-7013, and/or in similar or
-* successor clauses in the FAR, DOD or NASA FAR Supplement. Unpublished -
-* rights reserved under the Copyright Laws of the United States.
-*/
 /*	Copyright (c) 1990, 1991 UNIX System Laboratories, Inc.	*/
 /*	Copyright (c) 1984, 1986, 1987, 1988, 1989, 1990 AT&T	*/
 /*	  All Rights Reserved  	*/
@@ -30,32 +7,82 @@ extern "C" {
 /*	The copyright notice above does not evidence any   	*/
 /*	actual or intended publication of such source code.	*/
 
-#include <stdio.h>
-#include <wchar.h>
+#ifndef __WIDEC_H__
+#define __WIDEC_H__
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-/* 
- * Old, non XPG wide string operations
- */
+#ident	"@(#)libw:inc/widec.h	1.1.1.1"
+
+#include <stdio.h>
+
+/* declaration of a wide character data type			*/
+
+#ifndef _WCHAR_T
+#define _WCHAR_T
+ typedef long  wchar_t;
+#endif
+
+/* Character based input and output functions			*/
+#if defined(_MODERN_C)
+extern	int		fgetwc(FILE *), fputwc(wchar_t, FILE *); 
+extern	int		ungetwc(wchar_t, FILE *);
+extern	wchar_t		*getws(wchar_t *), *fgetws(wchar_t *, int, FILE *);
+extern	int		putws(wchar_t *), fputws(wchar_t *, FILE *);
+#else
+extern	int		fgetwc(), fputwc(), ungetwc();
+extern	wchar_t		*getws(), *fgetws();
+extern	int		putws(), fputws();
+#endif
+#define	getwc(p)	fgetwc((p))
+#define	putwc(x, p)	fputwc((x), (p))
+#define getwchar()	getwc(stdin)
+#define putwchar(x)	putwc((x), stdout)
+
+/* wchar_t string operation functions				*/
+
+#if defined(_MODERN_C)
 extern wchar_t
-	*wscpy(wchar_t *, const wchar_t *),
-	*wsncpy(wchar_t *, const wchar_t *, size_t),
-	*wscat(wchar_t *, const wchar_t *),
-	*wsncat(wchar_t *, const wchar_t *, size_t),
-	*wschr(const wchar_t *, wchar_t),
-	*wsrchr(const wchar_t *, wchar_t),
-	*wspbrk(const wchar_t *, const wchar_t *),
-	*wstok(wchar_t *, const wchar_t *);
+	*wscpy(wchar_t *, wchar_t *),
+	*wsncpy(wchar_t *, wchar_t *, int),
+	*wscat(wchar_t *, wchar_t *),
+	*wsncat(wchar_t *, wchar_t *, int),
+	*wschr(wchar_t *, int),
+	*wsrchr(wchar_t *, int),
+	*wspbrk(wchar_t *, wchar_t *),
+	*wstok(wchar_t *, wchar_t *);
 extern int
-	wscmp(const wchar_t *, const wchar_t *),
-	wsncmp(const wchar_t *, const wchar_t *, size_t);
-extern size_t
-	wslen(const wchar_t *),
-	wsspn(const wchar_t *, const wchar_t *),
-	wscspn(const wchar_t *, const wchar_t *);
+	wscmp(wchar_t *, wchar_t *),
+	wsncmp(wchar_t *, wchar_t *, int),
+	wslen(wchar_t *),
+	wsspn(wchar_t *, wchar_t *),
+	wscspn(wchar_t *, wchar_t *);
 extern char
 	*wstostr(char *, wchar_t *);
 extern	wchar_t
 	*strtows(wchar_t *, char *);
+#else
+extern wchar_t
+	*wscpy(),
+	*wsncpy(),
+	*wscat(),
+	*wsncat(),
+	*wschr(),
+	*wsrchr(),
+	*wspbrk(),
+	*wstok();
+extern int
+	wscmp(),
+	wsncmp(),
+	wslen(),
+	wsspn(),
+	wscspn();
+extern char
+	*wstostr();
+extern	wchar_t
+	*strtows();
+#endif
 
 #ifdef __cplusplus
 }

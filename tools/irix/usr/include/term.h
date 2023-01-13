@@ -1152,13 +1152,13 @@ extern	char	term_parm_err[], *term_err_strings[], *Def_term,
 
 #ifdef __STDC__
 extern	TERMINAL	*setcurterm(TERMINAL *);
-extern	char	*tparm(char *instring, ...),
-		*tgoto(char *, int, int),
+extern	char	*tparm(),		/* the correct way is		    */
+					/* *tparm(char *, ...), but that    */
+					/* would require a lot of changes   */
+					/* in the implementation of tparm() */
 		*tgetstr(char *, char **),
 		*tigetstr(char *),
 		*termname(void);
-
-extern	int	tigetflag(char *), tigetnum(char *);
 
 extern	int	tgetent(char *, char *), tgetflag(char *), tgetnum(char *),
 		tputs(char *, int, int (*)(int)), putp(char *),
@@ -1172,8 +1172,6 @@ extern	void	termerr(void), tinputfd(int);
 extern	TERMINAL	*setcurterm();
 extern	char	*tparm(), *tgoto(), *tgetstr(), *tigetstr(),
 		*termname();
-
-extern	int	tigetflag(), tigetnum();
 
 extern	int	tgetent(), tgetflag(), tgetnum(),
 		tputs(), putp(), vidputs(), vidattr();

@@ -1,6 +1,9 @@
 #ifndef __DIRENT_H__
 #define __DIRENT_H__
-#ident "$Revision: 1.36 $"
+#ifdef __cplusplus
+extern "C" {
+#endif
+#ident "$Revision: 1.18 $"
 /*
 *
 * Copyright 1992, Silicon Graphics, Inc.
@@ -25,77 +28,69 @@
 /*	The copyright notice above does not evidence any   	*/
 /*	actual or intended publication of such source code.	*/
 
-#include <standards.h>
-#include <sys/types.h>
-#include <sys/dirent.h>
-#include <internal/sgimacros.h>
 
-__SGI_LIBC_BEGIN_EXTERN_C
-
-/*
- * This is a POSIX/XPG header
- */
-#if _SGIAPI
+#if !defined(_POSIX_SOURCE) 
 #define MAXNAMLEN	255		/* maximum filename length */
 #define DIRBUF		4096		/* buffer size for fs-indep. dirs */
-#endif /* _SGIAPI */
+#endif /* !defined(_POSIX_SOURCE) */ 
 
-#if _SGIAPI && !defined(__SGI_NODIRENT_COMPAT)
-#define	dd_fd		__dd_fd
-#define	dd_loc		__dd_loc
-#define	dd_size		__dd_size
-#define	dd_buf		__dd_buf
-#endif /* _SGIAPI && !__SGI_NODIRENT_COMPAT */
+#ifndef _SYS_TYPES_H
+#include <sys/types.h>
+#endif
 
-typedef struct {
-	int		__dd_fd;	/* file descriptor */
-	int		__dd_loc;	/* offset in block */
-	int		__dd_size;	/* amount of valid data */
-	char		*__dd_buf;	/* directory block */
-	int		__dd_flags;	/* using readdir64 or not; eof */
-} DIR;			/* stream data from opendir() */
-/* values for __dd_flags */
-#define	_DIR_FLAGS_READDIR32	1
-#define	_DIR_FLAGS_READDIR64	2
-#define	_DIR_FLAGS_MODE		(_DIR_FLAGS_READDIR32|_DIR_FLAGS_READDIR64)
-#define	_DIR_FLAGS_SEEN_EOF	4
+typedef struct
+	{
+	int		dd_fd;		/* file descriptor */
+	int		dd_loc;		/* offset in block */
+	int		dd_size;	/* amount of valid data */
+	char		*dd_buf;	/* directory block */
+	}	DIR;			/* stream data from opendir() */
+
+#if defined(_MODERN_C)
 
 extern DIR		*opendir( const char * );
-extern int		closedir( DIR * );
-extern dirent_t		*readdir( DIR * );
-extern void		rewinddir( DIR * );
-
-#if _SGIAPI && (_MIPS_SIM == _MIPS_SIM_NABI32)
-extern off_t		telldir( DIR * );
-extern void		seekdir( DIR *, off_t );
-#else
+extern struct dirent	*readdir( DIR * );
+#if !defined(_POSIX_SOURCE) || defined(_XOPEN_SOURCE)
 extern long		telldir( DIR * );
 extern void		seekdir( DIR *, long );
+#endif /* !defined(_POSIX_SOURCE) */ 
+#if defined(_SGI_SOURCE) && !defined(_POSIX_SOURCE) && !defined(_XOPEN_SOURCE)
+extern int 		scandir(const char *, struct dirent **[],
+				int (*)(struct dirent *),
+				int (*)(struct dirent **, struct dirent **));
+extern int		alphasort(struct dirent **, struct dirent **);
+#endif /* defined(_SGI_SOURCE) && !defined(_POSIX_SOURCE) && !defined(_XOPEN_SOURCE) */
+extern void		rewinddir( DIR * );
+extern int		closedir( DIR * );
+
+#if (defined(_SGI_SOURCE) && !defined(_POSIX_SOURCE) && !defined(_XOPEN_SOURCE)) || defined(_SGI_REENTRANT_FUNCTIONS)
+extern struct dirent	*readdir_r(DIR *, struct dirent *);
+#endif
+
+#else	/* !_MODERN_C */
+
+extern DIR		*opendir();
+extern struct dirent	*readdir();
+#if !defined(_POSIX_SOURCE) || defined(_XOPEN_SOURCE)
+extern long		telldir();
+extern void		seekdir();
+#endif /* !defined(_POSIX_SOURCE) */ 
+#if defined(_SGI_SOURCE) && !defined(_POSIX_SOURCE) && !defined(_XOPEN_SOURCE)
+extern int 		scandir();
+extern int		alphasort();
+#endif /* defined(_SGI_SOURCE) && !defined(_POSIX_SOURCE) && !defined(_XOPEN_SOURCE) */
+extern void		rewinddir();
+extern int		closedir();
+
+#endif
+
+#if !defined(_POSIX_SOURCE) || defined(_XOPEN_SOURCE)
 #define rewinddir( dirp )	seekdir( dirp, 0L )
 #endif
 
-#if _SGIAPI
-extern int 		scandir(const char *, dirent_t **[],
-				int (*)(dirent_t *),
-				int (*)(dirent_t **, dirent_t **));
-extern int		alphasort(dirent_t **, dirent_t **);
-extern int 		scandir64(const char *, dirent64_t **[],
-				int (*)(dirent64_t *),
-				int (*)(dirent64_t **, dirent64_t **));
-extern int		alphasort64(dirent64_t **, dirent64_t **);
-extern int		readdir64_r(DIR *, dirent64_t *, dirent64_t **);
-extern off64_t		telldir64(DIR *);
-extern void		seekdir64(DIR *, off64_t);
-#endif /* _SGIAPI */
+#include <sys/dirent.h>
 
-#if _LFAPI
-extern dirent64_t *readdir64(DIR *);
-#endif /* _LFAPI */
-
-#if _POSIX1C
-extern int readdir_r(DIR *, dirent_t *, dirent_t **);
+#ifdef __cplusplus
+}
 #endif
-
-__SGI_LIBC_END_EXTERN_C
-
 #endif /* !__DIRENT_H__ */

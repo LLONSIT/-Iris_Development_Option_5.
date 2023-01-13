@@ -1,7 +1,9 @@
 #ifndef __CAPABILITY_H__
 #define __CAPABILITY_H__
-
-#ident "$Revision: 1.3 $"
+#ifdef __cplusplus
+extern "C" {
+#endif
+#ident "$Revision: 1.1 $"
 /*
 *
 * Copyright 1992, Silicon Graphics, Inc.
@@ -20,10 +22,6 @@
 * rights reserved under the Copyright Laws of the United States.
 */
 
-#include <internal/sgimacros.h>
-
-__SGI_LIBC_BEGIN_EXTERN_C
-
 #define USER_CAPABILITY	"/etc/capability"
 
 struct user_cap {
@@ -32,9 +30,11 @@ struct user_cap {
 	char *ca_allowed;	/* Allowed Capability */
 };
 
-extern struct user_cap *sgi_getcapabilitybyname (const char *);
-extern int sgi_cap_cleared (const struct user_cap *, const char *);
+/*
+ * Use ia_openinfo to read this database.
+ */
 
-__SGI_LIBC_END_EXTERN_C
-
+#ifdef __cplusplus
+}
+#endif
 #endif /* !__CAPABILITY_H__ */

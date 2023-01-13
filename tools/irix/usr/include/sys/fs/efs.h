@@ -13,16 +13,16 @@
  *									  *
  **************************************************************************/
 
-#ident "$Revision: 3.9 $"
+#ident "$Revision: 3.8 $"
 
 /*
  * Include file to include efs definitions
  */
 
 #include <sys/param.h>
-#include "efs_ino.h"
 #include "efs_fs.h"
 #include "efs_sb.h"
+#include "efs_ino.h"
 #include "efs_dir.h"
 #ifdef _KERNEL
 #include "efs_inode.h"

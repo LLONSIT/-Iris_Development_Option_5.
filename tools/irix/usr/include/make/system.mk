@@ -1,7 +1,7 @@
 #
 # Pmake system makefile for IRIX
 #
-# $Revision: 1.17 $
+# $Revision: 1.13 $
 #
 # The following variables specify the nature of the system on which Pmake 
 # is running. These names may later be used in #if expressions for conditional 
@@ -16,14 +16,9 @@ mips		= Machine has a MIPS CPU
 mipseb		= Machine has a big-endian MIPS CPU
 
 .SUFFIXES : .out .a .b .o .u .c .c++ .C .cxx .p .f .e .r .pl1 .pli \
-		.f90 .F .F90 \
-		.y .Y .yxx .l .L .lxx .s .sh .h .i
-
-#ifndef (NORCS)
-.SUFFIXES : .c,v .c++,v .f,v .p,v .pl1,v .pli,v .y,v .l,v .s,v .sh,v .h,v \
-		.f90,v .F,v .F90,v \
+		.y .Y .yxx .l .L .lxx .s .sh .h .i \
+		.c,v .c++,v .f,v .p,v .pl1,v .pli,v .y,v .l,v .s,v .sh,v .h,v \
 		.Y,v .L,v .C,v .cxx,v .lxx,v .yxx,v
-#endif
 .INCLUDES : .h
 .LIBS: .a .b
 .NULL: .out
@@ -42,9 +37,7 @@ PFLAGS		= -O
 PL1		= pl1
 PL1FLAGS	= -O
 FC		= f77
-F90C		= f90
 FFLAGS		= -O
-F90FLAGS	= -O
 RFLAGS		=
 EFLAGS		=
 MKF2C		= mkf2c
@@ -66,12 +59,9 @@ INSTALL		= install
 EXTCENTRY	= extcentry
 
 
-#ifndef (NORCS)
 .c,v.c .c++,v.c++ .y,v.y .l,v.l .s,v.s .f,v.f .p,v.p .pl1,v.pl1 .pli,v.pli \
-.f90,v.f90 .F,v.F .F90,v.F90 \
- .sh,v.sh .h,v.h .C,v.C .L,v.L .Y,v.Y .cxx,v.cxx .yxx,v.yxx .lxx,v.lxx :
+ .sh,v.sh .h,v.h .C,v.C .L,v.L .Y,v.Y .cxx,v .yxx,v .lxx,v :
 	$(CO) $(COFLAGS) $(.IMPSRC) $(.TARGET)
-#endif
 
 .s.out .c.out .o.out :
 	$(CC) $(CFLAGS) $(.IMPSRC) $(LDFLAGS) -o $(.TARGET)
@@ -117,21 +107,12 @@ EXTCENTRY	= extcentry
 
 .f.o :
 	$(FC) $(FFLAGS) -c $(.IMPSRC)
-.F.o :
-	$(F90C) $(F90FLAGS) -c $(.IMPSRC)
-.f90.o :
-	$(F90C) $(F90FLAGS) -c $(.IMPSRC)
-.F90.o :
-	$(F90C) $(F90FLAGS) -c $(.IMPSRC)
 .f.u :
 	$(FC) $(FFLAGS) -j $(.IMPSRC)
 .e.o .r.o :
 	$(FC) $(RFLAGS) $(EFLAGS) $(FFLAGS) -c $(.IMPSRC)
 .f.out .r.out .e.out :
 	$(FC) $(EFLAGS) $(RFLAGS) $(FFLAGS) $(.IMPSRC) $(LDFLAGS) -o $(.TARGET)
-	-rm -f $(.PREFIX).o
-.f90.out .F90.out .F.out :
-	$(F90C) $(EFLAGS) $(RFLAGS) $(F90FLAGS) $(.IMPSRC) $(LDFLAGS) -o $(.TARGET)
 	-rm -f $(.PREFIX).o
 
 

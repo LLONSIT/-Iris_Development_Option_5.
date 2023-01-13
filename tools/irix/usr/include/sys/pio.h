@@ -14,7 +14,6 @@
 #define _SYS_PIO_H_
 
 #include "sys/edt.h"
-#include "sys/iobus.h"
 
 /*
  * pioaddr_t	- The kernel virtual address that a PIO can be done upon.
@@ -31,7 +30,6 @@ typedef volatile ulong*	pioaddr_t;
  *		  access functions.
  */
 
-
 typedef struct piomap {
 	uint_t		pio_bus;
 	uint_t		pio_adap;
@@ -44,8 +42,6 @@ typedef struct piomap {
 	void		(*pio_errfunc)(); /* Pointer to an error function */
 					  /* Used only for piomaps allocated
 					   * in user level vme driver     */
-	iopaddr_t	pio_iopmask;	/* valid iop address bit mask */
-	iobush_t	pio_bushandle;	/* bus-level handle */
 } piomap_t;
 
 #define pio_type	pio_iospace.ios_type
@@ -69,8 +65,7 @@ typedef struct piomap {
 extern piomap_t	*pio_mapalloc(uint_t,uint_t,iospace_t*,int,char*);
 extern void	 pio_mapfree(piomap_t*);
 extern caddr_t	 pio_mapaddr(piomap_t*,iopaddr_t);
-extern piomap_t *pio_ioaddr(int, iobush_t, iopaddr_t, piomap_t *);
-
+extern piomap_t *pio_ioaddr(int, int, iopaddr_t, piomap_t *);
 /*
  * PIO access functions.
  */
@@ -121,11 +116,6 @@ extern void andw_rmw(volatile void*, unsigned int);
 #define PIOMAP_EISA_IO	0
 #define PIOMAP_EISA_MEM	1
 
-#define PIOMAP_PCI_IO	0
-#define PIOMAP_PCI_MEM	1
-#define PIOMAP_PCI_CFG	2
-#define PIOMAP_PCI_ID	3
-
 /* IBUS piomap types */
 #define PIOMAP_FCI	0
 
@@ -140,27 +130,9 @@ extern void andw_rmw(volatile void*, unsigned int);
 #define LAN_IO          3
 
 #define PIOREG_NULL	-1
+#define PIOMAP_UNFIXED	0
+#define PIOMAP_FIXED	1
 
-/* standard flags values for pio_map routines,
- * including {xtalk,pciio}_piomap calls.
- * NOTE: try to keep these in step with DMAMAP flags.
- */
-#define PIOMAP_UNFIXED	0x0
-#define PIOMAP_FIXED	0x1
-#define PIOMAP_NOSLEEP	0x2
-#define	PIOMAP_INPLACE	0x4
-#if defined(IP25) || defined(IP27) || defined(IP30) || defined(IP35)
-/*
- * There are _not_ dmamap equivalents for these
- */
-#define PIOMAP_UNC_ACC  0x8
-#define PIOMAP_PIO_FLUSH  0x10		/* PIC only */
+#define PIO_NOSLEEP	1
 
-#define	PIOMAP_FLAGS	0x1f
-
-#define PIOMAP_UNC_ACC_SPACE (7ull << 59)
-#else
-#define	PIOMAP_FLAGS	0x7
-#endif
-
-#endif	/* _SYS_PIO_H_ */
+#endif	/* _SYS_EVEREST_PIO_H_ */

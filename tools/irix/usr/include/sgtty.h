@@ -1,6 +1,9 @@
 #ifndef __SGTTY_H__
 #define __SGTTY_H__
-#ident "$Revision: 1.7 $"
+#ifdef __cplusplus
+extern "C" {
+#endif
+#ident "$Revision: 1.6 $"
 /*
 *
 * Copyright 1992, Silicon Graphics, Inc.
@@ -25,5 +28,8 @@
 
 #ifndef	_SYS_IOCTL_H
 #include <sys/ioctl.h>
+#endif
+#ifdef __cplusplus
+}
 #endif
 #endif /* !__SGTTY_H__ */

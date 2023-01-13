@@ -23,24 +23,14 @@
 extern "C" {
 #endif
 
-#ident "$Revision: 1.80 $"
+#ident "$Revision: 1.42 $"
 
 #include <sys/types.h>
 #ifdef _KERNEL
 #include <sys/systm.h>	/* for rval_t */
 #include <sys/vnode.h>	/* for enum symfollow */
 #endif /* _KERNEL */
-#include <sys/acl.h>
 #include <sys/mac_label.h>
-#include <sys/capability.h>
-#include <sys/select.h>
-struct socket;
-struct soacl;
-
-/* The following define must match user.h */
-#ifndef PSCOMSIZ
-#define PSCOMSIZ        32
-#endif
 
 
 	/*********************/
@@ -48,44 +38,99 @@ struct soacl;
 	/*********************/
 
 typedef struct mbuf sat_rec_t;		/* for audit records */
-typedef unsigned int sat_host_t;	/* host identifier */
-typedef uint16_t	sat_token_id_t;
-typedef uint16_t	sat_token_size_t;
+typedef struct mbuf sat_pn_t;		/* for sat_pathname records */
 
-struct sat_token_header {
-	sat_token_id_t		sat_token_id;
-	sat_token_size_t	sat_token_size;
-};
-typedef struct sat_token_header sat_token_header_t;
 
-struct sat_record_header {
-	sat_token_header_t	sat_token_header;
-	uint32_t		sat_rec_magic;
-	uint16_t		sat_rec_size;
-	uint8_t			sat_rec_type;
-	uint8_t			sat_rec_outcome;
-	uint8_t			sat_req_sequence;
-	uint8_t			sat_rec_errno;
-};
-typedef struct sat_record_header sat_record_header_t;
+	/************************/
+	/*	Prototypes      */
+	/************************/
 
-#ifdef	_KERNEL
+#ifdef _KERNEL
+/* Prototypes for sat kernel interfaces */
 
-struct sat_token;
+struct pathname;
+extern void	sat_init( void );
+extern sat_rec_t *sat_alloc( int );
+extern sat_pn_t *sat_pnalloc( int );
+extern sat_rec_t *sat_kern_alloc( int );
+extern void	sat_enqueue( sat_rec_t *, int );
+extern void	sat_kern_enqueue( sat_rec_t * );
+extern void	sat_update_rwdir( sat_rec_t *, int );
+extern void	sat_pn_init( sat_pn_t *, struct pathname *, int );
+extern void	sat_pn_finalize( struct vnode * );
+extern int	sat_lookup( char *, enum symfollow );
+extern void	sat_mb_align( struct mbuf * );
+extern void	sat_mcat( struct mbuf *, struct mbuf * );
+extern int	sat_mcat_data( int (*)(void *, void *, int),
+			       struct mbuf *, char *, int );
+extern void	sat_mcatstr( struct mbuf *, char * );
+extern int	sat_read( char *, unsigned, rval_t * );
+extern int	sat_write( int, int, char *, unsigned );
+extern int	sat_ctl( int, int, pid_t, rval_t * );
 
-#else	/* _KERNEL */
-#define PSEUDO_SIZE 4
-struct sat_token {
-	sat_token_header_t	token_header;
-	char			token_data[PSEUDO_SIZE];
-};
+/* Prototypes for "audit points" */
 
-#define SAT_TOKEN_DATA_SIZE(x) \
-	((x)->token_header.sat_token_size - sizeof(sat_token_header_t))
-
-#endif	/* _KERNEL */
-
-typedef struct sat_token *sat_token_t;
+struct ifnet;
+struct ifreq;
+struct inpcb;
+struct ip;
+struct pollfd;
+extern void sat_access( int, sat_pn_t *, int );
+extern void sat_access2( int, sat_pn_t *, sat_pn_t *, int );
+extern void sat_acct( char *, sat_pn_t *, int );
+extern void sat_bsdipc_addr( int, void *, struct mbuf *, int );
+extern void sat_bsdipc_create( short, void *, short, short, int );
+extern void sat_bsdipc_create_pair( short, void *, short, short, short, void *,
+				    int );
+extern void sat_bsdipc_if_config( int, void *, int, struct ifreq *, int );
+extern void sat_bsdipc_if_setlabel( int, void *, struct ifreq *, int, int );
+extern void sat_bsdipc_mac_change( short, void *, mac_label *, int );
+extern void sat_bsdipc_match( struct ip *, mac_label *, struct inpcb *, int );
+extern void sat_bsdipc_missing( struct ifnet *, struct ip *, int );
+extern void sat_bsdipc_range( struct ifnet *, struct ip *, mac_label *, int,
+			      int );
+extern void sat_bsdipc_resvport( int, void *, int, int );
+extern void sat_bsdipc_shutdown( short, void *, short, int );
+extern void sat_bsdipc_snoop( void *, mac_label *, int, int );
+extern void sat_check_priv( int, int );
+extern void sat_chmod( sat_pn_t *, int, int );
+extern void sat_chown( sat_pn_t *, int, int, int );
+extern void sat_chrwdir( sat_pn_t *, int );
+extern void sat_clock( int, int );
+extern void sat_close( int, int );
+extern void sat_domainname_set( char *, int, int );
+extern void sat_dup( int, int, int );
+extern void sat_exec( sat_rec_t *, sat_pn_t *, sat_pn_t *, int, sat_pn_t **,
+		      int );
+extern void sat_exit( int, int );
+extern void sat_fchdir( int, int );
+extern void sat_fchmod( mode_t, int );
+extern void sat_fchown( uid_t, gid_t, int );
+extern void sat_fd_read( int, int );
+extern void sat_fd_read2( fd_set *, int );
+extern void sat_pfd_read2( struct pollfd *, int, int );
+extern void sat_tty_setlabel( int, mac_label *, int );
+extern void sat_fd_rdwr( int, int, int );
+extern void sat_fork( pid_t, int );
+extern void sat_hostid_set( long, int );
+extern void sat_hostname_set( char *, int, int );
+extern void sat_mount( sat_pn_t *, sat_pn_t *, dev_t, int );
+extern void sat_open( int, int, int, sat_pn_t *, int );
+extern void sat_pipe( int, int, int );
+extern void sat_kill( int, pid_t, uid_t, uid_t, mac_label *, int );
+extern void sat_proc_access( int, pid_t, uid_t, uid_t, mac_label *, int );
+extern void sat_setgroups( int, gid_t *, int );
+extern void sat_setlabel( sat_pn_t *, struct mac_label *, int );
+extern void sat_setplabel( sat_rec_t *, mac_label *, int );
+extern void sat_setregid( sat_rec_t *, gid_t, gid_t, int );
+extern void sat_setreuid( sat_rec_t *, uid_t, uid_t, int );
+extern void sat_svipc_access( mac_label *, int, int, int );
+extern void sat_svipc_change( int, int, int, int, int, int, int, int );
+extern void sat_svipc_create( key_t, int, int, int );
+extern void sat_svipc_remove( int, int );
+extern void sat_utime( sat_pn_t *, time_t *, time_t, time_t, int );
+extern void sat_control( int, int, int, int );
+#endif /* _KERNEL */
 
 	/*********************/
 	/*	Defines      */
@@ -95,17 +140,16 @@ typedef struct sat_token *sat_token_t;
  * Major and minor version numbers.  These identify the
  * "version" of the records in a file.
  */
-#define	SAT_VERSION_MAJOR	4
-#define	SAT_VERSION_MINOR	0
+#define	SAT_VERSION_MAJOR	2
+#define	SAT_VERSION_MINOR	1
 #define	SAT_FILE_MAGIC		"SGIAUDIT"
-#define	SAT_RECORD_MAGIC	0xee6540ee
 
-/*
- * Resist the temptation to assume that everyone thinks these
- * are th ecorrect values for true and false.
- */
-#define SAT_TRUE 1
-#define SAT_FALSE 0
+#ifndef TRUE
+#define TRUE 1
+#endif
+#ifndef FALSE
+#define FALSE 0
+#endif
 
 /* handy macro */
 
@@ -124,35 +168,26 @@ typedef struct sat_token *sat_token_t;
 #define SAT_DAC			0x02	/* 1 = dac affected outcome, 0 = not */
 #define SAT_MAC			0x04	/* 1 = mac affected outcome, 0 = not */
 #define SAT_PRIVILEGE		0x08	/* 1 = failed/succeded due to priv.  */
-#define SAT_SUSER		0x08	/* 1 = failed/succeeded due to suser */
-#define SAT_CAPABILITY		0x10	/* 1 = failed/succeeded due to cap */
-#define SAT_CHK			0x20	/* 1 = was suser/priv checked? */
 
 /* sat_ctl() commands */
 
-#define SATCTL_AUDIT_ON			1
-#define SATCTL_AUDIT_OFF		2
-#define SATCTL_AUDIT_QUERY		3
-#define SATCTL_SET_SAT_ID		4
-#define SATCTL_GET_SAT_ID		5
-#define SATCTL_LOCALAUDIT_ON		6
-#define SATCTL_LOCALAUDIT_OFF		7
-#define SATCTL_LOCALAUDIT_QUERY		8
-#define SATCTL_REGISTER_SATD		9
-#define SATCTL_TARGET_AUDIT_ON		10
-#define SATCTL_TARGET_AUDIT_OFF		11
-#define SATCTL_TARGET_AUDIT_QUERY	12
-#define SATCTL_TARGET_AUDIT_COPY 	13
-#define SATCTL_TARGET_AUDIT_CLEAR_ALL 	14
+#define SATCTL_AUDIT_ON		1
+#define SATCTL_AUDIT_OFF	2
+#define SATCTL_AUDIT_QUERY	3
+#define SATCTL_SET_SAT_ID	4
+#define SATCTL_GET_SAT_ID	5
+#define SATCTL_LOCALAUDIT_ON	6
+#define SATCTL_LOCALAUDIT_OFF	7
+#define SATCTL_LOCALAUDIT_QUERY	8
+#define SATCTL_REGISTER_SATD	9
 
-
-
-
-
+/* u.u_suser values */
+#define SAT_SUSER_CHECKED	0x01	/* we checked u.u_uid == 0 */
+#define SAT_SUSER_POSSESSED	0x02	/* our u.u_uid was 0 when checked */
 
 /* bitmask for audit events */
 
-#define NSATBITS	(sizeof(unsigned int) * __NBBY)	/* bits per mask */
+#define NSATBITS	(sizeof(unsigned long) * NBBY)	/* bits per mask */
 #ifndef howmany
 #define	howmany(x, y)	(((x)+((y)-1))/(y))
 #endif
@@ -163,525 +198,160 @@ typedef struct sat_token *sat_token_t;
 	(((p)->ev_bits[(n)/NSATBITS] & (1 << ((n) % NSATBITS))) != 0)
 #define SAT_ZERO(p)	bzero((char *)(p), sizeof(*(p)))
 
-#define SAT_NTYPES		130	/* max record type + 1 (or greater) */
-
-typedef	struct sat_ev_mask {
-	unsigned int	ev_bits[howmany(SAT_NTYPES, NSATBITS)];
-} sat_event_mask;
-
-/*
- * Auditing of user, group, subject or object event variable declarations
- */
-
-#define LOCAL_AUDIT_ERROR 1
-#define INVALID_MAC_ERROR -1;
-
-typedef	struct sat_summary_ev_mask {
-	unsigned int	ev_bits[howmany(SAT_NTYPES, NSATBITS)];
-	unsigned int	ev_counts[SAT_NTYPES];
-} sat_summary_event_mask;
-
-enum mask_type {SAT_MASK_GL,
-		SAT_MASK_SUBJ_UID, SAT_MASK_SUBJ_GID, SAT_MASK_SUBJ_MAC,
-		SAT_MASK_OBJ_UID, SAT_MASK_OBJ_GID, SAT_MASK_OBJ_MAC};
-
-typedef union sat_event_id {
-		uid_t		sei_uid;
-		gid_t		sei_gid;
-		mac_label	*sei_mac;
-} sat_event_id_t;
-
-typedef struct sat_local_mask {
-	int 			slm_mask_type; 		/*one from the mask_type above*/
-	sat_event_id_t		slm_event_id;  		/*one of iud,gid,mac for which events are audited*/
-	sat_event_id_t		slm_event_copy_id;	/*one of uid,gid,mac to which event mask being copied*/
-	int			slm_type;		/*event number*/
-} sat_local_mask_t;
-
-typedef struct sat_event_list {
-	int			sel_mask_type;	/*one from the mask_type above*/
-	int			sel_events_set; /*number of events set*/
-	sat_event_id_t		sel_id;		/*one of iud,gid,mac for which events are audited*/
-	sat_event_mask		sel_mask; 	/*event mask*/
-	struct sat_event_list	*seml_next;
-} sat_event_mask_list_t;
-
+	/********************************/
+	/*	Function macros		*/
+	/********************************/
 
 #ifdef _KERNEL
-typedef union file_handle {
-	char 		*filename;
-	sysarg_t	file_desc;
-} file_handle_t;
-
-enum file_handle_type_t {NAME, DESCRIPTOR};
-
-typedef struct sat_object_prep {
-	uid_t			uid;
-	gid_t			gid;
-	mac_label		*mac;
-} sat_object_prep_t;
-
-void sat_object_prep(void *file_handle, 
-		enum file_handle_type_t file_handle_type, 
-		vnode_t *vnode, 
-		sat_object_prep_t *objp);		
-
-
-void store_process_object_data(sat_object_prep_t *objp, sat_token_t *token);
-
-void sat_check_process_event(
-		int,
-		sat_object_prep_t *);
-
-void sat_check_socket_event(int, sat_object_prep_t **);
-
-void sat_object_process_prep(sat_object_prep_t *objp);
-
-void store_socket_object_data(sat_object_prep_t *objp);
-
-void sat_object_socket_prep(sat_object_prep_t *objp);
-
-int sat_list_search(int, struct uthread_s *, sat_object_prep_t *);
-
-void store_object_data(void *file_handles, 
-		enum file_handle_type_t file_handle_type, 
-		struct vattr attributes, 
-		vnode_t *vnode);
-int sat_check_event_interest_object(int type);
-int sat_check_event_interest_subject(int type);
-int sat_list_clrset(int, sat_event_id_t, int);
-int sat_list_copy(int, sat_event_id_t, sat_event_id_t);
-int sat_list_query(int, sat_event_id_t, int);	 
-int sat_list_set(int, sat_event_id_t, int);
-
-#endif /*_KERNEL*/
-
-/*
- * END of user, group, subject or object auditing functions
- */
-
-
-#ifdef _KERNEL
-
-
-
-	/************************************************/
-	/*	Prototypes and function macros		*/
-	/************************************************/
-
 extern	int	sat_enabled;
-extern void	sat_init( void );
-
-/* opaque type definitions */
-struct pathname;
-struct acct_counts;
-struct acct_timers;
-struct ifnet;
-struct ifreq;
-struct ipc_perm;
-struct pollfd;
-struct ip;
-struct uthread_s;
-struct proc;
-struct arsess;
-
-/*
- * We mark all of the audit routines as infrequent in order to cause any
- * code necessary to call them to be compiled out of line.  This penalizes
- * sites that use SAT slightly and rewards those that don't.  Since the SAT
- * calls already involve an out-of-line function call this seems like a good
- * tradeoff.
- */
-
-
-static __inline void sat_never(void) {}
-#pragma mips_frequency_hint NEVER sat_never
 
 /* syscalls */
 
-extern int sat_read(char *, unsigned, rval_t *);
-#define _SAT_READ(a,b,c) \
-	(sat_enabled? (sat_never(), sat_read(a,b,c)): ENOSYS)
-
-extern int sat_write(int, int, char *, unsigned);
-#define _SAT_WRITE(a,b,c,d) \
-	(sat_enabled? (sat_never(), sat_write(a,b,c,d)): ENOSYS)
-
-extern int sat_get_cwd(char *, int *);
-#define _SAT_GET_CWD(a, b) \
-	(sat_enabled? (sat_never(), sat_get_cwd(a,b)): ENOSYS)
-
-extern int sat_ctl(int, int, pid_t, rval_t *);
-#define _SAT_CTL(a,b,c,d) \
-	(sat_enabled? (sat_never(), sat_ctl(a,b,c,d)): ENOSYS)
-
-extern int sat_ctl_local(int, sat_local_mask_t *, pid_t, rval_t *);
-#define _SAT_CTL_LOCAL(a,b,c,d) \
-	(sat_enabled? (sat_never(), sat_ctl_local(a,b,c,d)): ENOSYS)
+#define _SAT_READ(a,b,c)	((sat_enabled)? sat_read(a,b,c): ENOPKG)
+#define _SAT_WRITE(a,b,c,d)	((sat_enabled)? sat_write(a,b,c,d): ENOPKG)
+#define _SAT_CTL(a,b,c,d)	((sat_enabled)? sat_ctl(a,b,c,d): ENOPKG)
 
 /* misc kernel routines */
-
-#ifdef _KERNEL
-
-extern void sat_check_event(void *, 
-		enum file_handle_type_t , 
-		int , 
-		vnode_t *, 
-		sat_object_prep_t **);
-#define _SAT_CHECK_EVENT(a,b,c,d,e) \
-	(sat_enabled? (sat_never(), sat_check_event(a,b,c,d,e)):(void)0)
-
-#endif	
-
-extern void sat_pn_save (struct pathname *, struct uthread_s *);
-#define _SAT_PN_SAVE(a,b) \
-	(sat_enabled? (sat_never(), sat_pn_save(a,b)): (void)0)
-
-extern sat_token_t sat_alloc(int, struct uthread_s *, sat_object_prep_t *);
-#define _SAT_ALLOC(a,b) \
-	(sat_enabled? (sat_never(), sat_alloc(a,b,NULL)): NULL)
-
-extern void sat_enqueue(sat_token_t, int, struct uthread_s *);
-#define _SAT_ENQUEUE(a,b,c) \
-	(sat_enabled? (sat_never(), sat_enqueue(a,b,c)): (void)0)
-
-extern void sat_pn_book(int, struct uthread_s *);
-#define _SAT_PN_BOOK(a,b) \
-	(sat_enabled? (sat_never(), sat_pn_book(a,b)): (void)0)
-
-extern void sat_pn_start(struct uthread_s *);
-#define _SAT_PN_START(a) \
-	(sat_enabled? (sat_never(), sat_pn_start(a)): (void)0)
-
-extern void sat_pn_finalize(struct vnode *, struct uthread_s *);
-#define _SAT_PN_FINALIZE(a,b) \
-	(sat_enabled? (sat_never(), sat_pn_finalize(a,b)): (void)0)
-
-extern void sat_pn_append(char *, struct uthread_s *);
-#define _SAT_PN_APPEND(a,b) \
-	(sat_enabled? (sat_never(), sat_pn_append(a,b)): (void)0)
-
-extern void sat_save_attr (sat_token_id_t, struct uthread_s *);
-#define _SAT_SAVE_ATTR(a,b) \
-	(sat_enabled? (sat_never(), sat_save_attr(a,b)): (void)0)
-
-extern void sat_update_rwdir (int, struct uthread_s *);
-#define _SAT_UPDATE_RWDIR(a,b) \
-	(sat_enabled? (sat_never(), sat_update_rwdir(a,b)): (void)0)
-
-extern int sat_lookup(char *, enum symfollow, struct uthread_s *);
-#define _SAT_LOOKUP(a,b,c) \
-	(sat_enabled? (sat_never(), sat_lookup(a,b,c)): 0)
-
-extern void sat_confignote(void);
-#define _SAT_CONFIGNOTE() \
-	(sat_enabled? (sat_never(), sat_confignote()): (void)0)
+#define _SAT_ALLOC(a)		((sat_enabled)? sat_alloc(a): NULL)
+#define _SAT_PNALLOC(a)		((sat_enabled)? sat_pnalloc(a): NULL)
+#define _SAT_PN_INIT(a,b,c)	((sat_enabled)? sat_pn_init(a,b,c): (void)0)
+#define _SAT_PN_FINALIZE(a)	((sat_enabled)? sat_pn_finalize(a): (void)0)
 
 /* "audit points" */
 
-extern void sat_access(int, int, sat_object_prep_t *);
-#define	_SAT_ACCESS(a,b,c) \
-	(sat_enabled? (sat_never(), sat_access(a,b,c)): (void)0)
-
-extern void sat_access_pn(int, int, sat_object_prep_t *);
-#define	_SAT_ACCESS_PN(a,b,c) \
-	(sat_enabled? (sat_never(), sat_access_pn(a,b,c)): (void)0)
-
-extern void sat_access2(int, int);
-#define	_SAT_ACCESS2(a,b) \
-	(sat_enabled? (sat_never(), sat_access2(a,b)): (void)0)
-
-extern void sat_acct(char *,  int);
-#define	_SAT_ACCT(a,b) \
-	(sat_enabled? (sat_never(), sat_acct(a,b)): (void)0)
-
-extern void sat_bsdipc_addr(int, struct socket *, struct mbuf *, int);
-#define	_SAT_BSDIPC_ADDR(a,b,c,d) \
-	(sat_enabled? (sat_never(), sat_bsdipc_addr(a,b,c,d)): (void)0)
-
-extern void sat_bsdipc_create(short, struct socket *, short, short, int);
-#define	_SAT_BSDIPC_CREATE(a,b,c,d,e) \
-	(sat_enabled? (sat_never(), sat_bsdipc_create(a,b,c,d,e)): (void)0)
-
-extern void sat_bsdipc_create_pair(short, struct socket *, short, short,
-				   short, struct socket *, int);
-#define	_SAT_BSDIPC_CREATE_PAIR(a,b,c,d,e,f,g) \
-	(sat_enabled? (sat_never(), sat_bsdipc_create_pair(a,b,c,d,e,f,g)): (void)0)
-
-extern void sat_bsdipc_if_config(int, struct socket *, int, struct ifreq *, int);
-#define	_SAT_BSDIPC_IF_CONFIG(a,b,c,d,e) \
-	(sat_enabled? (sat_never(), sat_bsdipc_if_config(a,b,c,d,e)): (void)0)
-
-extern void sat_bsdipc_missing(struct ifnet *, struct ip *, int);
-#define	_SAT_BSDIPC_MISSING(a,b,c) \
-	(sat_enabled? (sat_never(), sat_bsdipc_missing(a,b,c)): (void)0)
-
-extern void sat_bsdipc_range(struct ifnet *, struct ip *, uid_t,
-			     mac_label *, int, int);
-#define	_SAT_BSDIPC_RANGE(a,b,c,d,e,f) \
-	(sat_enabled? (sat_never(), sat_bsdipc_range(a,b,c,d,e,f)): (void)0)
-
-extern void sat_bsdipc_resvport(int, struct socket *, int, int);
-#define	_SAT_BSDIPC_RESVPORT(a,b,c,d) \
-	(sat_enabled? (sat_never(), sat_bsdipc_resvport(a,b,c,d)): (void)0)
-
-extern void sat_bsdipc_shutdown(short, struct socket *, short, int);
-#define	_SAT_BSDIPC_SHUTDOWN(a,b,c,d) \
-	(sat_enabled? (sat_never(), sat_bsdipc_shutdown(a,b,c,d)): (void)0)
-
-extern void sat_bsdipc_snoop(struct socket *, mac_label *, int, int);
-#define	_SAT_BSDIPC_SNOOP(a,b,c,d) \
-	(sat_enabled? (sat_never(), sat_bsdipc_snoop(a,b,c,d)): (void)0)
-
-extern void sat_check_priv(int, int);
-#define	_SAT_CHECK_PRIV(a,b) \
-	(sat_enabled? (sat_never(), sat_check_priv(a,b)): (void)0)
-
-extern void sat_chmod(int, int, sat_object_prep_t *);
-#define	_SAT_CHMOD(a,b,c) \
-	(sat_enabled? (sat_never(), sat_chmod(a,b,c)): (void)0)
-
-extern void sat_chown(int, int, int, sat_object_prep_t *);
-#define	_SAT_CHOWN(a,b,c,d) \
-	(sat_enabled? (sat_never(), sat_chown(a,b,c,d)): (void)0)
-
-extern void sat_chrwdir( int, sat_object_prep_t *);
-#define	_SAT_CHRWDIR(a, b) \
-	(sat_enabled? (sat_never(), sat_chrwdir(a, b)): (void)0)
-
-extern void sat_clock(time_t, int);
-#define	_SAT_CLOCK(a,b) \
-	(sat_enabled? (sat_never(), sat_clock(a,b)): (void)0)
-
-extern void sat_close(int, int);
-#define	_SAT_CLOSE(a,b) \
-	(sat_enabled? (sat_never(), sat_close(a,b)): (void)0)
-
-extern void sat_domainname_set(char *, int);
-#define	_SAT_DOMAINNAME_SET(a,b) \
-	(sat_enabled? (sat_never(), sat_domainname_set(a,b)): (void)0)
-
-extern void sat_dup(int, int, int, sat_object_prep_t *);
-#define	_SAT_DUP(a,b,c,d) \
-	(sat_enabled? (sat_never(), sat_dup(a,b,c,d)): (void)0)
-
-extern void sat_exec(int);
-#define	_SAT_EXEC(a) \
-	(sat_enabled? (sat_never(), sat_exec(a)): (void)0)
-
-extern void sat_exit(int, int);
-#define	_SAT_EXIT(a,b) \
-	(sat_enabled? (sat_never(), sat_exit(a,b)): (void)0)
-
-extern void sat_fchdir(int, int, sat_object_prep_t *);
-#define	_SAT_FCHDIR(a,b,c) \
-	(sat_enabled? (sat_never(), sat_fchdir(a,b,c)): (void)0)
-
-extern void sat_fchmod(int, mode_t, int, sat_object_prep_t *);
-#define	_SAT_FCHMOD(a,b,c,d) \
-	(sat_enabled? (sat_never(), sat_fchmod(a,b,c,d)): (void)0)
-
-extern void sat_fchown(int, uid_t, gid_t, int, sat_object_prep_t *);
-#define	_SAT_FCHOWN(a,b,c,d,e) \
-	(sat_enabled? (sat_never(), sat_fchown(a,b,c,d,e)): (void)0)
-
-extern void sat_fd_read(int, int, sat_object_prep_t *);
-#define	_SAT_FD_READ(a,b,c) \
-	(sat_enabled? (sat_never(), sat_fd_read(a,b,c)): (void)0)
-
-extern void sat_fd_read2(fd_set *, int);
-#define	_SAT_FD_READ2(a,b) \
-	(sat_enabled? (sat_never(), sat_fd_read2(a,b)): (void)0)
-
-extern void sat_pfd_read2(struct pollfd *, int, int);
-#define	_SAT_PFD_READ2(a,b,c) \
-	(sat_enabled? (sat_never(), sat_pfd_read2(a,b,c)): (void)0)
-
-extern void sat_tty_setlabel( mac_label *, int);
-#define	_SAT_TTY_SETLABEL(a,b) \
-	(sat_enabled? (sat_never(), sat_tty_setlabel(a,b)): (void)0)
-
-extern void sat_fd_rdwr(int, int, int, sat_object_prep_t *);
-#define	_SAT_FD_RDWR(a,b,c,d) \
-	(sat_enabled? (sat_never(), sat_fd_rdwr(a,b,c,d)): (void)0)
-
-extern void sat_fork(pid_t, int);
-#define	_SAT_FORK(a,b) \
-	(sat_enabled? (sat_never(), sat_fork(a,b)): (void)0)
-
-extern void sat_hostid_set(long, int);
-#define	_SAT_HOSTID_SET(a,b) \
-	(sat_enabled? (sat_never(), sat_hostid_set(a,b)): (void)0)
-
-extern void sat_hostname_set(char *, int);
-#define	_SAT_HOSTNAME_SET(a,b) \
-	(sat_enabled? (sat_never(), sat_hostname_set(a,b)): (void)0)
-
-extern void sat_mount(dev_t, int);
-#define	_SAT_MOUNT(a,b,c,d) \
-	(sat_enabled? (sat_never(), sat_mount(a,b,c,d)): (void)0)
-
-extern void sat_open(int, int, int,  int);
-#define	_SAT_OPEN(a,b,c,d) \
-	(sat_enabled? (sat_never(), sat_open(a,b,c,d)): (void)0)
-
-extern void sat_pipe(int, int, int, sat_object_prep_t *);
-#define	_SAT_PIPE(a,b,c,d) \
-	(sat_enabled? (sat_never(), sat_pipe(a,b,c,d)): (void)0)
-
-extern void sat_kill(int, pid_t, uid_t, uid_t, mac_label *, int);
-#define	_SAT_KILL(a,b,c,d,e,f) \
-	(sat_enabled? (sat_never(), sat_kill(a,b,c,d,e,f)): (void)0)
-
-extern void sat_proc_access(int, pid_t, struct cred *, int, int);
-#define	_SAT_PROC_ACCESS(a,b,c,d,e) \
-	(sat_enabled? (sat_never(), sat_proc_access(a,b,c,d,e)): (void)0)
-
-extern void sat_ptrace(int, pid_t, struct cred *, int);
-#define	_SAT_PTRACE(a,b,c,d) \
-	(sat_enabled? (sat_never(), sat_ptrace(a,b,c,d)): (void)0)
-
-extern void sat_setgroups(int, gid_t *, int);
-#define	_SAT_SETGROUPS(a,b,c) \
-	(sat_enabled? (sat_never(), sat_setgroups(a,b,c)): (void)0)
-
-extern void sat_setlabel(struct mac_label *, int, sat_object_prep_t *);
-#define	_SAT_SETLABEL(a,b,c) \
-	(sat_enabled? (sat_never(), sat_setlabel(a,b,c)): (void)0)
-
-extern void sat_setplabel(mac_label *, int);
-#define	_SAT_SETPLABEL(a,b) \
-	(sat_enabled? (sat_never(), sat_setplabel(a,b)): (void)0)
-
-extern void sat_setacl(struct acl *, struct acl *, int);
-#define _SAT_SETACL(a,b,c) \
-	(sat_enabled? (sat_never(), sat_setacl(a,b,c)): (void)0)
-
-extern void sat_setcap(cap_t, int);
-#define	_SAT_SETCAP(a,b) \
-	(sat_enabled? (sat_never(), sat_setcap(a,b)): (void)0)
-
-extern void sat_setpcap(cap_t, int);
-#define	_SAT_SETPCAP(a,b) \
-	(sat_enabled? (sat_never(), sat_setpcap(a,b)): (void)0)
-
-extern void sat_setregid(gid_t, gid_t, int);
-#define	_SAT_SETREGID(a,b,c) \
-	(sat_enabled? (sat_never(), sat_setregid(a,b,c)): (void)0)
-
-extern void sat_setreuid(uid_t, uid_t, int);
-#define	_SAT_SETREUID(a,b,c) \
-	(sat_enabled? (sat_never(), sat_setreuid(a,b,c)): (void)0)
-
-extern void sat_umask(mode_t, int);
-#define _SAT_UMASK(a,b) \
-	(sat_enabled? (sat_never(), sat_umask(a,b)): (void)0)
-
-extern void sat_svipc_access(mac_label *, int, int, int);
-#define	_SAT_SVIPC_ACCESS(a,b,c,d) \
-	(sat_enabled? (sat_never(), sat_svipc_access(a,b,c,d)): (void)0)
-
-extern void sat_svipc_change(int, struct ipc_perm *, struct ipc_perm *, int);
-#define	_SAT_SVIPC_CHANGE(a,b,c,d) \
-	(sat_enabled? (sat_never(), sat_svipc_change(a,b,c,d)): (void)0)
-
-extern void sat_svipc_create(key_t, int, int, int);
-#define	_SAT_SVIPC_CREATE(a,b,c,d) \
-	(sat_enabled? (sat_never(), sat_svipc_create(a,b,c,d)): (void)0)
-
-extern void sat_svipc_ctl(int, int, struct ipc_perm *, struct ipc_perm *, int);
-#define	_SAT_SVIPC_CTL(a,b,c,d,e) \
-	(sat_enabled? (sat_never(), sat_svipc_ctl(a,b,c,d,e)): (void)0)
-
-extern void sat_svipc_remove(int, int);
-#define	_SAT_SVIPC_REMOVE(a,b) \
-	(sat_enabled? (sat_never(), sat_svipc_remove(a,b)): (void)0)
-
-extern struct ipc_perm *sat_svipc_save(struct ipc_perm *);
-#define	_SAT_SVIPC_SAVE(a) \
-	(sat_enabled? (sat_never(), sat_svipc_save(a)): NULL)
-
-extern void sat_utime(int, time_t, time_t, int, sat_object_prep_t *);
-#define	_SAT_UTIME(a,b,c,d,e) \
-	(sat_enabled? (sat_never(), sat_utime(a,b,c,d,e)): (void)0)
-
-extern void sat_control(int, int, int, int);
-#define	_SAT_CONTROL(a,b,c,d) \
-	(sat_enabled? (sat_never(), sat_control(a,b,c,d)): (void)0)
-
-extern void sat_proc_acct(struct proc *, struct acct_timers *,
-	  struct acct_counts *, int);
-#define _SAT_PROC_ACCT(a,b,c,d) \
-	(sat_enabled? (sat_never(), sat_proc_acct(a,b,c,d)): (void)0)
-
-extern void sat_session_acct(struct arsess *, struct uthread_s *, int);
-#define _SAT_SESSION_ACCT(a,b,c) \
-	(sat_enabled? (sat_never(), sat_session_acct(a,b,c)): (void)0)
-
-
-extern void sat_svr4net_addr(int, void *, struct mbuf *, int);
-#define	_SAT_SVR4NET_ADDR(a,b,c,d) \
-	(sat_enabled? (sat_never(), sat_svr4net_addr(a,b,c,d)): (void)0)
-
-extern void sat_svr4net_create(int, void *, short, short, int);
-#define	_SAT_SVR4NET_CREATE(a,b,c,d,e) \
-	(sat_enabled? (sat_never(), sat_svr4net_create(a,b,c,d,e)): (void)0)
-
-extern void sat_svr4net_shutdown(int, void *, short, int);
-#define	_SAT_SVR4NET_SHUTDOWN(a,b,c,d) \
-	(sat_enabled? (sat_never(), sat_svr4net_shutdown(a,b,c,d)): (void)0)
-
-/* Functions for setting items the sat_proc area */
-
-extern void sat_init_syscall (void);
-#define _SAT_INIT_SYSCALL() \
-	(sat_enabled? (sat_never(), sat_init_syscall()): (void)0)
-
-extern void sat_set_subsysnum (u_short);
-#define _SAT_SET_SUBSYSNUM(a) \
-	(sat_enabled? (sat_never(), sat_set_subsysnum(a)): (void)0)
-
-extern void sat_set_suflag (u_short);
-#define _SAT_SET_SUFLAG(a) \
-	(sat_enabled? (sat_never(), sat_set_suflag(a)): (void)0)
-
-extern void sat_set_uid (uid_t);
-#define _SAT_SET_UID(a) \
-	(sat_enabled? (sat_never(), sat_set_uid(a)): (void)0)
-
-extern void sat_set_soacl (struct proc * , struct soacl *);
-#define _SAT_SET_SOACL(a,b) \
-	(sat_enabled? (sat_never(), sat_set_soacl(a,b)): (void)0)
-
-extern void sat_set_comm (char *);
-#define _SAT_SET_COMM(a) \
-	(sat_enabled? (sat_never(), sat_set_comm(a)): (void)0)
-
-extern void sat_set_openfd (int);
-#define _SAT_SET_OPENFD(a) \
-	(sat_enabled? (sat_never(), sat_set_openfd(a)): (void)0)
-
-extern void sat_set_cap (cap_value_t);
-#define	_SAT_SET_CAP(a) \
-	(sat_enabled? (sat_never(), sat_set_cap(a)): (void)0)
-
-extern void sat_check_flags (int);
-#define _SAT_CHECK_FLAGS(a) \
-	(sat_enabled? (sat_never(), sat_check_flags(a)): (void)0)
-
-extern void sat_proc_init (struct uthread_s * ut, struct uthread_s * parent);
-#define _SAT_PROC_INIT(a,b) \
-	(sat_enabled? (sat_never(), sat_proc_init(a,b)): (void)0)
-
-extern void sat_proc_exit (struct uthread_s * ut);
-#define _SAT_PROC_EXIT(a) \
-	(sat_enabled? (sat_never(), sat_proc_exit(a)): (void)0)
-
-extern void sat_sys_note(char *, int);
-#define	_SAT_SYS_NOTE(a) \
-	(sat_enabled? (sat_never(), sat_sys_note(a)): (void)0)
-
+#define	_SAT_ACCESS(a,b,c)	((sat_enabled)? sat_access(a,b,c): (void)0)
+#define	_SAT_ACCESS2(a,b,c,d)	((sat_enabled)? sat_access2(a,b,c,d): (void)0)
+#define	_SAT_ACCT(a,b,c)	((sat_enabled)? sat_acct(a,b,c): (void)0)
+#define	_SAT_BSDIPC_ADDR(a,b,c,d)	\
+			((sat_enabled)? sat_bsdipc_addr(a,b,c,d): (void)0)
+#define	_SAT_BSDIPC_CREATE(a,b,c,d,e)	\
+			((sat_enabled)? sat_bsdipc_create(a,b,c,d,e): (void)0)
+#define	_SAT_BSDIPC_CREATE_PAIR(a,b,c,d,e,f,g)	\
+			((sat_enabled)?	\
+				sat_bsdipc_create_pair(a,b,c,d,e,f,g): (void)0)
+#define	_SAT_BSDIPC_IF_CONFIG(a,b,c,d,e)	\
+			((sat_enabled)? \
+				sat_bsdipc_if_config(a,b,c,d,e): (void)0)
+#define	_SAT_BSDIPC_IF_SETLABEL(a,b,c,d,e)	\
+			((sat_enabled)?	\
+				sat_bsdipc_if_setlabel(a,b,c,d,e): (void)0)
+#define	_SAT_BSDIPC_MAC_CHANGE(a,b,c,d)	\
+			((sat_enabled)? sat_bsdipc_mac_change(a,b,c,d): (void)0)
+#define	_SAT_BSDIPC_MATCH(a,b,c,d)	\
+			((sat_enabled)? sat_bsdipc_match(a,b,c,d): (void)0)
+#define	_SAT_BSDIPC_MISSING(a,b,c)	\
+			((sat_enabled)? sat_bsdipc_missing(a,b,c): (void)0)
+#define	_SAT_BSDIPC_RANGE(a,b,c,d,e)	\
+			((sat_enabled)? sat_bsdipc_range(a,b,c,d,e): (void)0)
+#define	_SAT_BSDIPC_RESVPORT(a,b,c,d)	\
+			((sat_enabled)? sat_bsdipc_resvport(a,b,c,d): (void)0)
+#define	_SAT_BSDIPC_SHUTDOWN(a,b,c,d)	\
+			((sat_enabled)? sat_bsdipc_shutdown(a,b,c,d): (void)0)
+#define	_SAT_BSDIPC_SNOOP(a,b,c,d)	\
+			((sat_enabled)? sat_bsdipc_snoop(a,b,c,d): (void)0)
+#define	_SAT_CHECK_PRIV(a,b)	((sat_enabled)? sat_check_priv(a,b): (void)0)
+#define	_SAT_CHMOD(a,b,c)	((sat_enabled)? sat_chmod(a,b,c): (void)0)
+#define	_SAT_CHOWN(a,b,c,d)	((sat_enabled)? sat_chown(a,b,c,d): (void)0)
+#define	_SAT_CHRWDIR(a,b)	((sat_enabled)? sat_chrwdir(a,b): (void)0)
+#define	_SAT_CLOCK(a,b)		((sat_enabled)? sat_clock(a,b): (void)0)
+#define	_SAT_CLOSE(a,b)		((sat_enabled)? sat_close(a,b): (void)0)
+#define	_SAT_DOMAINNAME_SET(a,b,c)	\
+			((sat_enabled)? sat_domainname_set(a,b,c): (void)0)
+#define	_SAT_DUP(a,b,c)		((sat_enabled)? sat_dup(a,b,c): (void)0)
+#define	_SAT_EXEC(a,b,c,d,e,f)	((sat_enabled)? sat_exec(a,b,c,d,e,f): (void)0)
+#define	_SAT_EXIT(a,b)		((sat_enabled)? sat_exit(a,b): (void)0)
+#define	_SAT_FCHDIR(a,b)	((sat_enabled)? sat_fchdir(a,b): (void)0)
+#define	_SAT_FCHMOD(a,b)	((sat_enabled)? sat_fchmod(a,b): (void)0)
+#define	_SAT_FCHOWN(a,b,c)	((sat_enabled)? sat_fchown(a,b,c): (void)0)
+#define	_SAT_FD_READ(a,b)	((sat_enabled)? sat_fd_read(a,b): (void)0)
+#define	_SAT_FD_READ2(a,b)	((sat_enabled)? sat_fd_read2(a,b): (void)0)
+#define	_SAT_PFD_READ2(a,b,c)	((sat_enabled)? sat_pfd_read2(a,b,c): (void)0)
+#define	_SAT_TTY_SETLABEL(a,b,c)	\
+			((sat_enabled)? sat_tty_setlabel(a,b,c): (void)0)
+#define	_SAT_FD_RDWR(a,b,c)	((sat_enabled)? sat_fd_rdwr(a,b,c): (void)0)
+#define	_SAT_FORK(a,b)		((sat_enabled)? sat_fork(a,b): (void)0)
+#define	_SAT_HOSTID_SET(a,b)	((sat_enabled)? sat_hostid_set(a,b): (void)0)
+#define	_SAT_HOSTNAME_SET(a,b,c)	\
+			((sat_enabled)? sat_hostname_set(a,b,c): (void)0)
+#define	_SAT_MOUNT(a,b,c,d)	((sat_enabled)? sat_mount(a,b,c,d): (void)0)
+#define	_SAT_OPEN(a,b,c,d,e)	((sat_enabled)? sat_open(a,b,c,d,e): (void)0)
+#define	_SAT_PIPE(a,b,c)	((sat_enabled)? sat_pipe(a,b,c): (void)0)
+#define	_SAT_KILL(a,b,c,d,e,f)	((sat_enabled)? sat_kill(a,b,c,d,e,f): (void)0)
+#define	_SAT_PROC_ACCESS(a,b,c,d,e,f)	\
+			((sat_enabled)? sat_proc_access(a,b,c,d,e,f): (void)0)
+#define	_SAT_SETGROUPS(a,b,c)	((sat_enabled)? sat_setgroups(a,b,c): (void)0)
+#define	_SAT_SETLABEL(a,b,c)	((sat_enabled)? sat_setlabel(a,b,c): (void)0)
+#define	_SAT_SETPLABEL(a,b,c)	((sat_enabled)? sat_setplabel(a,b,c): (void)0)
+#define	_SAT_SETREGID(a,b,c,d)	((sat_enabled)? sat_setregid(a,b,c,d): (void)0)
+#define	_SAT_SETREUID(a,b,c,d)	((sat_enabled)? sat_setreuid(a,b,c,d): (void)0)
+#define	_SAT_SVIPC_ACCESS(a,b,c,d)	\
+			((sat_enabled)? sat_svipc_access(a,b,c,d): (void)0)
+#define	_SAT_SVIPC_CHANGE(a,b,c,d,e,f,g,h)	\
+				((sat_enabled)?	\
+				    sat_svipc_change(a,b,c,d,e,f,g,h): (void)0)
+#define	_SAT_SVIPC_CREATE(a,b,c,d)	\
+			((sat_enabled)? sat_svipc_create(a,b,c,d): (void)0)
+#define	_SAT_SVIPC_REMOVE(a,b)	((sat_enabled)? sat_svipc_remove(a,b): (void)0)
+#define	_SAT_UTIME(a,b,c,d,e)	((sat_enabled)? sat_utime(a,b,c,d,e): (void)0)
+#define	_SAT_CONTROL(a,b,c,d)	((sat_enabled)? sat_control(a,b,c,d): (void)0)
 #endif /* _KERNEL */
+
+	/***************************************/
+	/*	Common record definitions      */
+	/***************************************/
+
+struct	sat_hdr {
+    /* fixed-length portion of header (sizeof struct sat_hdr) */
+	int	sat_magic;	/* sat header "magic number" */
+	u_char	sat_rectype;	/* what type of record follows */
+	u_char	sat_outcome;	/* failure/success, because of dac/mac check */
+	u_char	sat_sequence;	/* sequence number for this record (by type) */
+	u_char	sat_errno;	/* system call error number */
+	time_t	sat_time;	/* seconds since 1970 */
+	u_char	sat_ticks;	/* sub-second clock ticks (0-99) */
+	u_char	sat_syscall;	/* system call number */
+	u_short	sat_subsyscall;	/* system call "command" number */
+	long	sat_host_id;	/* host id (new for format 2.0) */
+	uid_t	sat_id;		/* SAT user-id */
+	dev_t	sat_tty;	/* controlling tty, if present */
+	pid_t	sat_ppid;	/* parent process id */
+	pid_t	sat_pid;	/* process id of record's generator */
+	uid_t	sat_euid;	/* Effective user id */
+	uid_t	sat_ruid;	/* Real user id */
+	gid_t	sat_egid;	/* Effective group id */
+	gid_t	sat_rgid;	/* Real group id */
+	u_short	sat_hdrsize;	/* total bytes in the header */
+	u_short	sat_recsize;	/* bytes in the following record */
+	u_short	sat_label_size;	/* how many bytes of label follow? */
+	u_short	sat_cwd_len;	/* bytes of current working dir following */
+	u_short	sat_root_len;	/* bytes of current root dir following */
+	u_char	sat_glist_len;	/* number of multi-group entries */
+	u_char	sat_pname_len;	/* process name length */
+    /* variable-length portion: size = hdr->sat_hdrsize - sizeof(sat_hdr_t) */
+	/* group list */
+	/* process label */
+	/* current working directory */
+	/* current root directory */
+	/* process name, from u.u_comm */
+};
+
+typedef struct	sat_hdr sat_hdr_t;
+
+/*
+ * Common pathname record.
+ * Note: the data for the filenames immediately follows the record.
+ */
+struct	sat_pathname {
+	ino_t sat_inode;
+	dev_t sat_device;
+	uid_t sat_fileown;
+	gid_t sat_filegrp;
+	mode_t sat_filemode;
+	u_short sat_reqname_len;
+	u_short sat_actname_len;
+	/* char data[];	*/
+	/* file label */
+};
 
 /*
  * The audit file header
@@ -693,11 +363,9 @@ struct sat_filehdr {
 	u_char	sat_pad1[2];		/* alignment filler */
 	time_t	sat_start_time;		/* time header written */
 	time_t	sat_stop_time;		/* time file closed (added later) */
-	sat_host_t sat_host_id;		/* host id */
-	u_int	sat_mac_enabled: 1;	/* boolean: ignore mac fields or not */
-	u_int	sat_cap_enabled: 1;	/* boolean: ignore cap fields or not */
-	u_int	sat_cipso_enabled: 1;	/* boolean: ignore cipso fields or not */
-	u_int	sat_total_bytes: 29;	/* number of bytes to skip past hdr */
+	long	sat_host_id;		/* host id */
+	int	sat_mac_enabled: 1;	/* boolean: ignore mac fields or not */
+	int	sat_total_bytes: 31;	/* number of bytes to skip past hdr */
 	u_short	sat_user_entries;	/* number of sat_list_ent structs */
 	u_short	sat_group_entries;	/*   in the user and group lists */
 	u_short	sat_host_entries;	/*   and the hostid <-> name list */
@@ -713,64 +381,382 @@ struct sat_filehdr {
 	/* hostid entries, each word aligned */
 };
 
+struct sat_list_ent {
+	long	sat_id;			/* user/group/host id */
+	union {				/* user/group/host name */
+		u_short	len;		/* --file format */
+		char	data[1];	/* --memory format */
+	} sat_name;
+	/* name (including trailing null) */
+};
+
+/*
+ * used in the u-area to record current working and root
+ * directories
+ */
+struct	sat_wd {
+	u_short cwd_len;
+	u_short root_len;
+	char data[1];
+	/* cwd */
+	/* root */
+};
+
 	/**************************************/
 	/*	Audit record definitions      */
 	/**************************************/
 
+/*
+ * These records consist of nothing more than a pathname
+ * record and thus have no struct definition:
+ *
+ *	sat_access_denied
+ *	sat_access_failed
+ *	sat_chrwdir
+ *	sat_rd_symlink
+ *	sat_file_crt_del
+ *	sat_file_write
+ *	sat_file_attr_read
+ */
+
+struct	sat_open {
+	short sat_filedes;
+	short sat_file_created;
+	int sat_open_flags;
+	/* sat_pathname */
+};
+
+struct	sat_mount {
+	dev_t sat_fs_dev;
+	short sat_npaths;
+	/* sat_pathname device */
+	/* sat_pathname mount_point */
+};
+
+struct	sat_file_attr_write {
+	union {
+		mode_t sat_filemode;		/* for chmod */
+		struct {
+			uid_t sat_fileown;
+			gid_t sat_filegrp;
+		} chown;			/* for chown */
+		int sat_label_size;		/* for setlabel */
+		struct {
+			time_t sat_atime;
+			time_t sat_mtime;
+		} utime;			/* for utime */
+	} newattr;
+	/* label, if setlabel */
+	/* sat_pathname */
+};
+
+struct	sat_exec {
+	uid_t sat_euid;		/* effective could be set by setuid progs */
+	gid_t sat_egid;		/* effective could be set by setgid progs */
+	u_char sat_npaths;	/* number of pathname modules following */
+	u_char sat_interpreter;	/* is there a shell interpreter? */
+	/* sat_pathname */
+	/* ... */
+};
+
+struct	sat_sysacct {
+	/* was accounting turned on or off? TRUE=on, FALSE=off */
+	int sat_acct_state;
+};
+
+struct	sat_fchdir {
+	int sat_filedes;
+};
+
+struct	sat_fd_read {
+	int sat_filedes;
+};
+
+struct	sat_fd_read2 {
+	int sat_nfds;
+	/* "short *" list of descriptors */
+};
+
+struct sat_tty_setlabel {
+	u_short sat_filedes;
+	u_short sat_label_size;
+	/* tty label */
+};
+
+struct	sat_fd_write {
+	int sat_filedes;
+};
+
+struct	sat_fd_attr_write {
+	int sat_filedes;
+	union {
+		mode_t sat_filemode;		/* for fchmod */
+		struct {
+			uid_t sat_fileown;
+			gid_t sat_filegrp;
+		} fchown;			/* for fchown */
+	} newattr;
+};
+
+struct	sat_pipe {
+	short sat_read_filedes;
+	short sat_write_filedes;
+};
+
+struct	sat_dup {
+	short sat_old_filedes;
+	short sat_new_filedes;
+};
+
+struct	sat_close {
+	int sat_filedes;
+};
+
+struct	sat_fork {
+	pid_t sat_newpid;
+};
+
+struct	sat_exit {
+	int sat_exit_status;
+};
+
+struct	sat_proc_access {
+	pid_t sat_pid;
+	uid_t sat_ruid;
+	uid_t sat_euid;
+	int sat_signal;		/* kill only */
+	/* process label */
+};
+
+struct	sat_proc_own_attr_write {
+	union {
+		struct {
+			uid_t sat_euid;
+			uid_t sat_ruid;
+		} uid;				/* for setuid, setreuid */
+		struct {
+			gid_t sat_egid;
+			gid_t sat_rgid;
+		} gid;				/* for setgid, setregid */
+		int sat_label_size;		/* for setplabel */
+		int sat_glist_len;		/* for setgroups */
+	} newattr;
+	/* process label, if setplabel */
+	/* group list, if setgroups */
+};
+
+struct	sat_svipc_access {
+	int sat_svipc_id;
+	u_short sat_label_size;
+	u_short sat_svipc_perm;
+	/* label */
+};
+
+struct	sat_svipc_create {
+	int sat_svipc_id;
+	key_t sat_svipc_key;
+	u_short sat_svipc_perm;
+};
+
+struct	sat_svipc_remove {
+	int sat_svipc_id;
+};
+
+struct	sat_svipc_change {
+	int sat_svipc_id;
+	uid_t sat_svipc_oldown;
+	gid_t sat_svipc_oldgrp;
+	u_short sat_svipc_oldperm;
+	uid_t sat_svipc_newown;
+	gid_t sat_svipc_newgrp;
+	u_short sat_svipc_newperm;
+};
+
+struct	sat_bsdipc_create {
+	void *	sat_socket;		/* socket identifier 		*/
+	short	sat_socket_dscr;
+	short	sat_comm_domain;
+	short	sat_protocol;
+	uid_t   sat_so_uid;
+	uid_t   sat_so_rcvuid;
+	short   sat_so_uidcount;
+/*	int  *	sat_so_uidlist;		- allocated separately		*/
+};
+
+struct	sat_bsdipc_create_pair {
+	void *	sat_socket;		/* socket identifier 		*/
+	short	sat_socket_dscr;
+	short	sat_comm_domain;
+	short	sat_protocol;
+	short	sat_second_dscr;
+	void *	sat_second_socket;	/* second socket identifier	*/
+	uid_t   sat_so_uid;
+	uid_t   sat_so_rcvuid;
+	short   sat_so_uidcount;
+	uid_t   sat_second_so_uid;
+	uid_t   sat_second_so_rcvuid;
+	short   sat_second_so_uidcount;
+/*	int  *	sat_so_uidlist;		- allocated separately		*/
+/*	int  *	sat_second_so_uidlist;	- allocated separately		*/
+};
+
+struct	sat_bsdipc_shutdown {
+	void *	sat_socket;		/* socket identifier 		*/
+	short	sat_socket_dscr;
+	short	sat_how;
+	uid_t   sat_so_uid;
+	uid_t   sat_so_rcvuid;
+	short   sat_so_uidcount;
+/*	int  *	sat_so_uidlist;		- allocated separately		*/
+};
+
+struct	sat_bsdipc_mac_change {
+	void *	sat_socket;		/* socket identifier 		*/
+	short	sat_socket_dscr;
+	u_short sat_label_size;
+	uid_t   sat_so_uid;
+	uid_t   sat_so_rcvuid;
+	short   sat_so_uidcount;
+/*	mac_label   sat_label;		-  New label on socket 		*/
+/*	int  *	sat_so_uidlist;		- allocated separately		*/
+};
+
+struct	sat_bsdipc_dac_change {
+	void *	sat_socket;		/* socket identifier 		*/
+	short	sat_socket_dscr;
+	uid_t   sat_so_uid;
+	uid_t   sat_so_rcvuid;
+	short   sat_so_uidcount;
+/*	int  *	sat_so_uidlist;		- allocated separately		*/
+};
+
+struct	sat_bsdipc_address {
+	void *	sat_socket;		/* socket identifier 		*/
+	short	sat_socket_dscr;
+	short	sat_addr_len;
+	uid_t   sat_so_uid;
+	uid_t   sat_so_rcvuid;
+	short   sat_so_uidcount;
+/*	char *	sat_socket_addr;	- allocated separately		*/
+/*	int  *	sat_so_uidlist;		- allocated separately		*/
+};
+
+struct	sat_bsdipc_resvport {
+	void *	sat_socket;		/* socket identifier 		*/
+	short	sat_socket_dscr;
+	short	sat_port;
+	uid_t   sat_so_uid;
+	uid_t   sat_so_rcvuid;
+	short   sat_so_uidcount;
+/*	int  *	sat_so_uidlist;		- allocated separately		*/
+};
+
 #define SATIFNAMSIZ 16
-
-struct sat_proc_acct {
-	char	sat_version;		/* Accounting data version */
-	char	sat_flag;		/* Miscellaneous flags */
-	char	sat_nice;		/* Nice value */
-	unchar	sat_sched;		/* Scheduling discipline */
-					/* (see sys/schedctl.h) */
-	int	sat_spare1;		/*   reserved */
-	ash_t	sat_ash;		/* Array session handle */
-	prid_t	sat_prid;		/* Project ID */
-	time_t	sat_btime;		/* Begin time (in secs since 1970)*/
-	time_t	sat_etime;		/* Elapsed time (in HZ) */
-	int	sat_spare2[2];		/*   reserved */
+struct	sat_bsdipc_if_setlabel {
+	void *	sat_socket;		/* socket identifier 		*/
+	int	sat_socket_dscr;
+	u_long	sat_doi;		/* domain of interpretation	*/
+	u_char	sat_authority_max;	/* maximum authority allowed	*/
+	u_char	sat_authority_min;	/* minimum authority permitted	*/
+	u_char	sat_reserved;		/* must be zero until defined	*/
+	u_char	sat_idiom;		/* security idiom		*/
+	short	sat_maxlabel_len;
+	short	sat_minlabel_len;
+	char    sat_ifname[SATIFNAMSIZ];/* name of intended interface	*/
+/*	mac_label   sat_label_max;	-  dominates all dgrams on if	*/
+/*	mac_label   sat_label_min;	-  dominated by all if dgrams 	*/
 };
-/* Generally followed by SAT_ACCT_TIMERS_TOKEN and SAT_ACCT_COUNTS_TOKEN */
 
-/* sat_proc_acct.sat_flag */
-#define	SPASF_FORK	0x80		/* has executed fork, but no exec */
-#define	SPASF_SU	0x40		/* used privilege */
-#define SPASF_SESSEND   0x20		/* Last process in session */
-#define SPASF_CKPT	0x10		/* process has been checkpointed */
-#define SPASF_SECONDARY	0x08		/* 2nd+ record for this process */
-
-
-struct sat_session_acct {
-	char	sat_version;		/* Accounting data version */
-	char	sat_flag;		/* Miscellaneous flags */
-	char	sat_nice;		/* Initial nice of session leader */
-	char	sat_spare1;		/*   reserved */
-	int	sat_spare2;		/*   reserved */
-	ash_t	sat_ash;		/* Array session handle */
-	prid_t	sat_prid;		/* Project ID */
-	time_t	sat_btime;		/* Begin time (in secs since 1970) */
-	time_t	sat_etime;		/* Elapsed time (in HZ) */
-	short	sat_spilen;		/* Length of "sat_spi" (ver 2 only) */
-	short	sat_spare3;		/*   reserved */
-	int     sat_spare4;		/*   reserved */
+struct	sat_bsdipc_if_setuid {
+	void *	sat_socket;		/* socket identifier 		*/
+	int	sat_socket_dscr;
+	uid_t   sat_newuid;
+	char    sat_ifname[SATIFNAMSIZ];/* name of intended interface	*/
 };
-/* struct sat_session_acct is valid for both version 1 and version 2 */
-/* records - the only difference is that the "sat_spilen" field does */
-/* not contain valid data in version 1. This appears in the audit    */
-/* stream as a SAT_SESSION_ACCT_TOKEN. If this is flushed accounting */
-/* data, then it will be followed by a SAT_UGID_TOKEN containing the */
-/* real user and group of an arbitrary member of the array session   */
-/* (since the ruid/rgid in the record header will belong to the user */
-/* the caused the flush operation). Next will be one of the SPI	     */
-/* tokens (SAT_ACCT_SPI_TOKEN or SAT_ACCT_SPI2_TOKEN) and then both  */
-/* SAT_ACCT_TIMERS_TOKEN and SAT_ACCT_COUNTS_TOKEN.		     */
 
-/* sat_session_acct.sat_flag */
-#define SSASF_CKPT	0x80		/* process has been checkpointed */
-#define SSASF_SECONDARY	0x40		/* 2nd+ record for this session */
-#define SSASF_FLUSHED   0x20		/* flushed, session still active */
+struct	sat_bsdipc_if_config {
+	void *	sat_socket;		/* socket identifier 		*/
+	short	sat_socket_dscr;
+	short	sat_ifreq_len;
+	int	sat_ioctl_cmd;
+/*	struct ifreq sat_ifreq;		- allocated separately		*/
+};
+
+struct	sat_bsdipc_match {
+	void *	sat_socket;		/* socket identifier 		*/
+	u_short sat_ip_len;
+	u_short sat_label_len;
+	uid_t   sat_so_uid;
+	uid_t   sat_so_rcvuid;
+	short   sat_so_uidcount;
+	uid_t   sat_uid;		/* Uid on datagram 		*/
+/*	struct ip sat_ip;		-  ip header & port numbers	*/
+/*	mac_label   sat_label;		-  Label on datagram 		*/
+/*	int  *	sat_so_uidlist;		- allocated separately		*/
+};
+
+struct	sat_bsdipc_dac_denied {
+	void *	sat_socket;		/* socket identifier 		*/
+	u_short sat_ip_len;
+	u_short sat_label_len;
+	uid_t   sat_so_uid;
+	uid_t   sat_so_rcvuid;
+	short   sat_so_uidcount;
+/*	struct ip sat_ip;		-  ip header & port numbers	*/
+/*	mac_label   sat_label;		-  Label on datagram 		*/
+/*	int  *	sat_so_uidlist;		- allocated separately		*/
+};
+
+struct	sat_bsdipc_snoop {
+	void *	sat_socket;		/* socket identifier 		*/
+					/* <<< NEED MORE HERE ??? >>>	*/
+	u_short sat_label_len;
+	uid_t   sat_so_uid;
+	uid_t   sat_so_rcvuid;
+	short   sat_so_uidcount;
+/*	mac_label   sat_label;		-  Label on datagram 		*/
+/*	int  *	sat_so_uidlist;		- allocated separately		*/
+};
+
+/* used for rx and tx out of range errors, and tx and rx OK */
+struct	sat_bsdipc_range {  
+	char    sat_ifname[SATIFNAMSIZ];/* name of interface		*/
+	u_short sat_ip_len;
+	u_short sat_label_len;
+	uid_t   sat_uid;		/* Uid on datagram 		*/
+/*	struct ip sat_ip;		-  ip datagram header (only!)	*/
+/*	mac_label   sat_label;		-  Label on datagram 		*/
+};
+
+struct	sat_bsdipc_missing {  /* IP security option missing or malformed */
+	char    sat_ifname[SATIFNAMSIZ];/* name of interface		*/
+	u_short sat_ip_len;		/* length of following ip hdr	*/
+/*	struct ip sat_ip;		-  ip datagram header & options	*/
+};
+
+struct	sat_clock_set {
+	time_t sat_newtime;
+};
+
+/*
+ * sat_hostname_set and sat_domainname_set consist of
+ * nothing more than a null-terminated string and thus
+ * have no struct definition.
+ */
+
+struct	sat_hostid_set {
+	long sat_newhostid;
+};
+
+struct	sat_check_priv {
+	int sat_priv_state;	/* did they possess superuser privilege? */
+};
+
+struct sat_control {
+	int sat_cmd;		/* satctl command (e.g. SATCTL_AUDIT_ON) */
+	int sat_arg;		/* argument (depends on command) */
+	pid_t sat_pid;		/* pid (depends on command) */
+};
 
 	/*********************************/
 	/*	System call numbers      */
@@ -818,7 +804,6 @@ struct sat_session_acct {
 #define SAT_SYSCALL_SYSSGI	 40
 #define SAT_SYSCALL_STAT	 18
 #define SAT_SYSCALL_TRUNCATE	112
-#define SAT_SYSCALL_UMASK	 60
 #define SAT_SYSCALL_UMOUNT	 22
 #define SAT_SYSCALL_UNLINK	 10
 #define SAT_SYSCALL_UTIME	 30
@@ -866,8 +851,6 @@ struct sat_session_acct {
 #define SAT_PROC_ATTR_READ	44	/* read a process's attributes */
 #define SAT_PROC_ATTR_WRITE	45	/* change a process's attributes */
 #define SAT_PROC_OWN_ATTR_WRITE	46	/* change this process's attributes */
-#define SAT_PROC_ACCT		47	/* process end accounting data */
-#define SAT_SESSION_ACCT	48	/* session end accounting data */
 /* System V IPC record types */
 #define SAT_SVIPC_ACCESS	50	/* System V IPC access */
 #define SAT_SVIPC_CREATE	51	/* System V IPC create */
@@ -893,7 +876,7 @@ struct sat_session_acct {
 /* other record types */
 #define SAT_CHECK_PRIV		80	/* make-or-break privilege checks */
 #define SAT_CONTROL		81	/* audit controls */
-#define SAT_SYS_NOTE		82	/* debug string */
+
 /* more BSD IPC types */
 #define SAT_BSDIPC_DAC_CHANGE	87	/* change socket uid or acl	*/
 #define SAT_BSDIPC_DAC_DENIED	88	/* rx pkt not delivered	due to DAC  */
@@ -916,115 +899,12 @@ struct sat_session_acct {
 #define SAT_AE_MOUNT		103	/* mount / unmount */
 #define SAT_AE_CUSTOM		104	/* user-defined */
 #define SAT_AE_LP		105	/* lp subsystem */
-#define SAT_AE_X_ALLOWED	106	/* X11 Server permitted accesses */
-#define SAT_AE_X_DENIED		107	/* X11 Server prohibited accesses */
 
-/* record types for svr4 networking */
-#define	SAT_SVR4NET_CREATE	120	/* socket, accept */
-#define	SAT_SVR4NET_ADDRESS	121	/* bind, connect, accept syscalls */
-#define	SAT_SVR4NET_SHUTDOWN	122	/* shutdown */
+#define SAT_NTYPES		110	/* max record type + 1 (or greater) */
 
-/* extended process attributes */
-#define SAT_PROC_OWN_EXT_ATTR_WRITE	123	/* capability, mac */
-
-/*
- *  Generic information required for every sat audit record.
- *  Currently this infomation duplicates information in the
- *  user area.  In the future this dupication can be eliminated,
- *  but for the Trusted Irix 5.3 release, we don't want to
- *  alter the shape of the user area.
- */
-
-typedef struct sat_proc {
-	u_short         sat_subsysnum;	/* cmd arg from sysgi and ilk */
-	u_short         sat_suflag;	/* superuser checks, etc. */
-	u_short         sat_sequence;	/* event sequence number */
-	uid_t           sat_uid;	/* SAT user-id (only set by login) */
-	sat_token_t	sat_cwd;	/* current directory */
-	sat_token_t	sat_root;	/* current root */
-	sat_token_t	sat_pn;		/* Pathname assembled by lookup */
-	sat_token_t	sat_tokens;	/* Full tokens for current activity */
-	char            sat_comm[PSCOMSIZ];
-	int		sat_openfd;
-	int		sat_event;	/* event type number */
-	cap_value_t	sat_cap;	/* capability used */
-	char*		sat_abs;	/* Absolute pathname base */
-} sat_proc_t;
-
-/*
- * sat_suflag values
- */
-#define SAT_SUSERCHK	0x0001	/* auditing: superuser was checked */
-#define SAT_SUSERPOSS	0x0002	/* auditing: uid == 0 when checked */
-#define SAT_CAPPOSS	0x0004	/* auditing: capability ON when checked */
-#define SAT_PATHLESS	0x0008	/* auditing: don't gather pathnames */
-#define SAT_IGNORE	0x0010	/* auditing: this event is not interesting */
-
-/*
- * Audit record token types - sat_token_id_t's
- */
-#define SAT_TOKEN_BASE			0
-#define SAT_RECORD_HEADER_TOKEN		(SAT_TOKEN_BASE + 0x01)
-#define SAT_IFREQ_TOKEN			(SAT_TOKEN_BASE + 0x02)
-#define SAT_PROTOCOL_TOKEN		(SAT_TOKEN_BASE + 0x03)
-#define SAT_TIME_TOKEN			(SAT_TOKEN_BASE + 0x04)
-#define SAT_SYSCALL_TOKEN		(SAT_TOKEN_BASE + 0x05)
-#define SAT_UGID_TOKEN			(SAT_TOKEN_BASE + 0x06)
-#define SAT_FILE_TOKEN			(SAT_TOKEN_BASE + 0x07)
-#define SAT_SOCKADDER_TOKEN		(SAT_TOKEN_BASE + 0x08)
-#define SAT_IP_HEADER_TOKEN		(SAT_TOKEN_BASE + 0x09)
-#define SAT_GID_LIST_TOKEN		(SAT_TOKEN_BASE + 0x0a)
-#define SAT_UID_LIST_TOKEN		(SAT_TOKEN_BASE + 0x0b)
-#define SAT_SYSARG_LIST_TOKEN		(SAT_TOKEN_BASE + 0x0c)
-#define SAT_DESCRIPTOR_LIST_TOKEN	(SAT_TOKEN_BASE + 0x0d)
-#define SAT_IFNAME_TOKEN		(SAT_TOKEN_BASE + 0x0e)
-#define SAT_SOCKET_TOKEN		(SAT_TOKEN_BASE + 0x0f)
-#define SAT_MAC_LABEL_TOKEN		(SAT_TOKEN_BASE + 0x10)
-#define SAT_ACL_TOKEN			(SAT_TOKEN_BASE + 0x11)
-#define SAT_CAP_VALUE_TOKEN		(SAT_TOKEN_BASE + 0x12)
-#define SAT_CAP_SET_TOKEN		(SAT_TOKEN_BASE + 0x13)
-#define SAT_TEXT_TOKEN			(SAT_TOKEN_BASE + 0x14)
-#define SAT_SVIPC_KEY_TOKEN		(SAT_TOKEN_BASE + 0x15)
-#define SAT_SVIPC_ID_TOKEN		(SAT_TOKEN_BASE + 0x16)
-#define SAT_MODE_TOKEN			(SAT_TOKEN_BASE + 0x17)
-#define SAT_PORT_TOKEN			(SAT_TOKEN_BASE + 0x18)
-#define SAT_HOSTID_TOKEN		(SAT_TOKEN_BASE + 0x19)
-#define SAT_BINARY_TOKEN		(SAT_TOKEN_BASE + 0x1a)
-#define SAT_PID_TOKEN			(SAT_TOKEN_BASE + 0x1b)
-#define SAT_PRIVILEGE_TOKEN		(SAT_TOKEN_BASE + 0x1c)
-#define SAT_ERRNO_TOKEN			(SAT_TOKEN_BASE + 0x1d)
-#define SAT_SATID_TOKEN			(SAT_TOKEN_BASE + 0x1e)
-#define SAT_DEVICE_TOKEN		(SAT_TOKEN_BASE + 0x1f)
-#define SAT_TITLED_TEXT_TOKEN		(SAT_TOKEN_BASE + 0x20)
-#define SAT_PATHNAME_TOKEN		(SAT_TOKEN_BASE + 0x21)
-#define SAT_OPENMODE_TOKEN		(SAT_TOKEN_BASE + 0x22)
-#define SAT_SIGNAL_TOKEN		(SAT_TOKEN_BASE + 0x23)
-#define SAT_STATUS_TOKEN		(SAT_TOKEN_BASE + 0x24)
-#define SAT_OPAQUE_TOKEN		(SAT_TOKEN_BASE + 0x25)
-#define SAT_LOOKUP_TOKEN		(SAT_TOKEN_BASE + 0x26)
-#define SAT_CWD_TOKEN			(SAT_TOKEN_BASE + 0x27)
-#define SAT_ROOT_TOKEN			(SAT_TOKEN_BASE + 0x28)
-#define SAT_PARENT_PID_TOKEN		(SAT_TOKEN_BASE + 0x29)
-#define SAT_COMMAND_TOKEN		(SAT_TOKEN_BASE + 0x2a)
-#define SAT_ACCT_COUNTS_TOKEN		(SAT_TOKEN_BASE + 0x2b)
-#define SAT_ACCT_TIMERS_TOKEN		(SAT_TOKEN_BASE + 0x2c)
-#define SAT_ACCT_PROC_TOKEN		(SAT_TOKEN_BASE + 0x2d)
-#define SAT_ACCT_SESSION_TOKEN		(SAT_TOKEN_BASE + 0x2e)
-#define SAT_ACCT_SPI_TOKEN		(SAT_TOKEN_BASE + 0x2f)
-#define SAT_ACCT_SPI2_TOKEN		(SAT_TOKEN_BASE + 0x30)
-#define SAT_OBJECT_TOKEN		(SAT_TOKEN_BASE + 0x31)
-
-
-typedef __uint64_t	sat_socket_id_t;
-typedef __uint32_t	sat_descriptor_t;
-typedef __uint64_t	sat_sysarg_t;
-
-#define SAT_IFNAME_SIZE	16
-typedef char *	sat_ifname_t;
-
-#define SAT_TITLE_SIZE	8
-
-
+typedef	struct sat_ev_mask {
+	unsigned long	ev_bits[howmany(SAT_NTYPES, NSATBITS)];
+} sat_event_mask;
 
 #ifdef __cplusplus
 }

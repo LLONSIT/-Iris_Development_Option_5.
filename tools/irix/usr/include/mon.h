@@ -1,6 +1,9 @@
 #ifndef __MON_H__
 #define __MON_H__
-#ident "$Revision: 1.17 $"
+#ifdef __cplusplus
+extern "C" {
+#endif
+#ident "$Revision: 1.14 $"
 /*
 *
 * Copyright 1992, Silicon Graphics, Inc.
@@ -27,9 +30,7 @@
 /*	The copyright notice above does not evidence any   	*/
 /*	actual or intended publication of such source code.	*/
 
-#include <internal/sgimacros.h>
 
-__SGI_LIBC_BEGIN_EXTERN_C
 
 struct hdr {
 	char	*lpc;
@@ -54,12 +55,21 @@ typedef unsigned short _WORD;	/* XXX */
 #define MPROGS0	(150 * sizeof(WORD))	/* 300 for pdp11, 600 for 32-bits */
 #define MSCALE0	4
 #ifndef NULL
-#define NULL	0L
+#define NULL	0
 #endif
 
+
+#if defined(_MODERN_C)
 extern void monitor(int (*)(), int (*)(), WORD *, int, int);
 extern void     monstartup(int (*)(), int (*)());
 extern void     moncontrol(int);
+#else
+extern void monitor();
+extern void     monstartup();
+extern void     moncontrol();
+#endif
 
-__SGI_LIBC_END_EXTERN_C
+#ifdef __cplusplus
+}
+#endif
 #endif /* !__MON_H__ */

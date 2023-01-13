@@ -129,7 +129,7 @@ DNR* st_pdn_idn(int idn) {
     return &st_pchdr->pdn[idn];
 }
 
-#ifdef BLAH
+#if 0
 __asm__(R""(
 .macro glabel label
     .global \label

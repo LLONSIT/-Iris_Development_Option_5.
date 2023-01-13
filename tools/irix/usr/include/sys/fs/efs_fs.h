@@ -83,16 +83,16 @@
  *	   probably won't work.
  *
  */
-#ident "$Revision: 3.13 $"
+#ident "$Revision: 3.9 $"
 
 /*
  * Locations of the efs superblock, bitmap and root inode.
  */
-#define	EFS_SUPERBB	((efs_daddr_t)1)	/* bb # of the superblock */
-#define	EFS_BITMAPBB	((efs_daddr_t)2) 	/* bb of the bitmap, pre 3.3*/
+#define	EFS_SUPERBB	((daddr_t)1)		/* bb # of the superblock */
+#define	EFS_BITMAPBB	((daddr_t)2) 		/* bb of the bitmap, pre 3.3*/
 #define	EFS_SUPERBOFF	BBTOB(EFS_SUPERBB)	/* superblock byte offset */
 #define	EFS_BITMAPBOFF	BBTOB(EFS_BITMAPBB)	/* bitmap byte offset */
-#define	EFS_ROOTINO	((efs_ino_t)2)		/* where else... */
+#define	EFS_ROOTINO	((ino_t)2)		/* where else... */
 
 /*
  * Inode parameters.
@@ -130,7 +130,7 @@
 
 /* inode number to bb, relative to cylinder group */
 #define	EFS_ITOCGBB(fs, i) \
-	((efs_daddr_t) (((i) >> EFS_INOPBBSHIFT) % (fs)->fs_cgisize))
+	((daddr_t) (((i) >> EFS_INOPBBSHIFT) % (fs)->fs_cgisize))
 
 /* inode number to offset from bb base */
 #define	EFS_ITOO(fs, i) \
@@ -146,7 +146,7 @@
 
 /* inode number to disk bb number */
 #define	EFS_ITOBB(fs, i) \
-	((efs_daddr_t) ((fs)->fs_firstcg + \
+	((daddr_t) ((fs)->fs_firstcg + \
 		    (EFS_ITOCG(fs, i) * (fs)->fs_cgfsize) + \
 		    EFS_ITOCGBB(fs, i)))
 
@@ -156,7 +156,7 @@
 
 /* cylinder group number to disk bb of base of cg */
 #define	EFS_CGIMIN(fs, cg) \
-	((efs_daddr_t) ((fs)->fs_firstcg + (cg) * (fs)->fs_cgfsize))
+	((daddr_t) ((fs)->fs_firstcg + (cg) * (fs)->fs_cgfsize))
 
 /* inode number to base inode number in its chunk */
 #define	EFS_ITOCHUNKI(fs, cg, inum) \

@@ -1,6 +1,9 @@
 #ifndef __PKGLOCS_H__
 #define __PKGLOCS_H__
-#ident "$Revision: 1.4 $"
+#ifdef __cplusplus
+extern "C" {
+#endif
+#ident "$Revision: 1.3 $"
 /*
 *
 * Copyright 1992, Silicon Graphics, Inc.
@@ -32,4 +35,7 @@
 #define PKGADM	"/var/sadm/install"
 #define PKGBIN	"/usr/sadm/install/bin"
 #define PKGSCR	"/usr/sadm/install/scripts"
+#ifdef __cplusplus
+}
+#endif
 #endif /* !__PKGLOCS_H__ */

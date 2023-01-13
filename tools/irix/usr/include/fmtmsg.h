@@ -1,6 +1,9 @@
 #ifndef __FMTMSG_H__
 #define __FMTMSG_H__
-#ident "$Revision: 1.12 $"
+#ifdef __cplusplus
+extern "C" {
+#endif
+#ident "$Revision: 1.6 $"
 /*
 *
 * Copyright 1992, Silicon Graphics, Inc.
@@ -42,15 +45,10 @@
  * Define the value "NULL" if it hasn't been defined already.
  */
 
-#if _SGIAPI
 #ifndef	NULL
-#define	NULL	0L
-#endif
+#define	NULL	0
 #endif
 
-#include <internal/sgimacros.h>
-
-__SGI_LIBC_BEGIN_EXTERN_C
 
 /*
  * Constraint definitions:
@@ -66,7 +64,6 @@ __SGI_LIBC_BEGIN_EXTERN_C
 #define MM_MXACTLN	512
 
 
-#if _SGIAPI
 /*
  * Environment variable names used by fmtmsg():
  *	MSGVERB		Tells fmtmsg() which components it is to write
@@ -74,8 +71,7 @@ __SGI_LIBC_BEGIN_EXTERN_C
  */
 
 #define	MSGVERB		"MSGVERB"
-#endif
-
+
 /*
  * Classification information
  *      - Definition of classifications
@@ -146,9 +142,7 @@ __SGI_LIBC_BEGIN_EXTERN_C
  *	MM_INFO		Message informs, not in error
  */
 
-#if _SGIAPI
 #define	SEV_LEVEL	"SEV_LEVEL"
-#endif
 #define MM_NOSEV	0
 #define	MM_HALT		1
 #define	MM_ERROR	2
@@ -167,12 +161,12 @@ __SGI_LIBC_BEGIN_EXTERN_C
  *	MM_NULLTAG		Null value for the tag-component
  */
 
-#define	MM_NULLLBL	((char *) 0L)
+#define	MM_NULLLBL	((char *) NULL)
 #define	MM_NULLSEV	MM_NOSEV
 #define	MM_NULLMC	MM_NULL
-#define	MM_NULLTXT	((char *) 0L)
-#define	MM_NULLACT	((char *) 0L)
-#define	MM_NULLTAG	((char *) 0L)
+#define	MM_NULLTXT	((char *) NULL)
+#define	MM_NULLACT	((char *) NULL)
+#define	MM_NULLTAG	((char *) NULL)
 
 /*
  * Values returned by fmtmsg()
@@ -190,10 +184,16 @@ __SGI_LIBC_BEGIN_EXTERN_C
 
 /* Function definition */
 
+#if defined(_MODERN_C)
 int	fmtmsg(long, const char *, int, const char *, const char *, const char *);
-#if _SGIAPI
 int	addseverity(int, const char *);
+
+#else
+int	fmtmsg();
+int	addseverity();
 #endif
 
-__SGI_LIBC_END_EXTERN_C
+#ifdef __cplusplus
+}
+#endif
 #endif /* !__FMTMSG_H__ */

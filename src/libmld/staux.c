@@ -1,4 +1,4 @@
-#ifdef BLAH
+#if 0
 __asm__(R""(
 .macro glabel label
     .global \label

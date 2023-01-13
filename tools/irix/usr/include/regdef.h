@@ -1,5 +1,8 @@
 #ifndef __REGDEF_H__
 #define __REGDEF_H__
+#ifdef __cplusplus
+extern "C" {
+#endif
 /*
 *
 * Copyright 1992, Silicon Graphics, Inc.
@@ -24,7 +27,7 @@
 /* | reproduction is prohibited without the prior express written   | */
 /* | consent of MIPS.                                               | */
 /* ------------------------------------------------------------------ */
-#ident "$Revision: 1.10 $"
+#ident "$Revision: 1.9 $"
 /*  regdef.h 1.2 */
 
 /*
@@ -36,4 +39,7 @@
 #include <sys/fpregdef.h>
 #endif /* mips */
 
+#ifdef __cplusplus
+}
+#endif
 #endif /* !__REGDEF_H__ */

@@ -1,8 +1,5 @@
 #ifndef __net_raw_cb__
 #define __net_raw_cb__
-#ifdef __cplusplus
-extern "C" { 
-#endif
 /*
  * Copyright (c) 1980, 1986 Regents of the University of California.
  * All rights reserved.
@@ -18,11 +15,11 @@ extern "C" {
  *	plus portions of 7.6 (Berkeley) 6/28/90
  */
 
+#ifdef sgi
 #include <sys/socket.h>
 #include <sys/socketvar.h>
 #include <net/route.h>
-#include <netinet/in.h>   /* for sockaddr_in6 */
-#include <netinet/in_pcb.h>   /* for route_6 */
+#endif
 
 struct mac_label;
 
@@ -34,18 +31,29 @@ struct rawcb {
 	struct	rawcb *rcb_next;	/* doubly linked list */
 	struct	rawcb *rcb_prev;
 	struct	socket *rcb_socket;	/* back pointer to socket */
-	struct	sockaddr *rcb_faddr;	/* destination address */
-	struct	sockaddr *rcb_laddr;	/* socket's address */
+	struct	sockaddr rcb_faddr;	/* destination address */
+	struct	sockaddr rcb_laddr;	/* socket's address */
 	struct	sockproto rcb_proto;	/* protocol family, protocol */
 	caddr_t	rcb_pcb;		/* protocol specific stuff */
 	struct	mbuf *rcb_options;	/* protocol specific options */
 	struct	route rcb_route;	/* routing information */
 	int	rcb_refcnt;		/* for race bet. detach/rawintr */
 	short	rcb_flags;
+#ifdef sgi /* MULTICAST */
 	struct	mbuf *rcb_moptions;	/* proto specific multicast options */
+#endif
 };
 
+/*
+ * Since we can't interpret canonical addresses,
+ * we mark an address present in the flags field.
+ */
+#define	RAW_LADDR	01
+#define	RAW_FADDR	02
+#define	RAW_DONTROUTE	04		/* no routing, default */
+#ifdef sgi  /* reno */
 #define	RAW_HDRINCL	0x8000		/* XXX user supplies IP header. */
+#endif
 
 #define	sotorawcb(so)		((struct rawcb *)(so)->so_pcb)
 
@@ -61,7 +69,6 @@ struct rawcb {
  * input routine.
  */
 struct raw_header {
-	struct ifheader raw_ifh;	/* needed for all net input */
 	struct	sockproto raw_proto;	/* format of packet */
 	struct	sockaddr raw_dst;	/* dst address for rawintr */
 	struct	sockaddr raw_src;	/* src address for sbappendaddr */
@@ -73,21 +80,24 @@ struct raw_header {
 #ifndef _IO_TPI_TPISOCKET_H_		/* only declare once */
 
 struct rawcb rawcb;			/* head of list */
-extern int rawcb_rele(struct rawcb *, int);
+
+#ifdef _MP_NETLOCKS
 extern void rawcb_free(struct rawcb *);
+extern lock_t rawrefcnt_lock;
 
-#define RAWCB_FREE		0
-#define RAWCB_NOFREE		1
-
-extern int rawcb_hold(struct rawcb *);
+#define RAWREFCNT_MPSPLOCK(s)	s = splock(rawrefcnt_lock)
+#define RAWREFCNT_MPSPUNLOCK(s)	spunlock(rawrefcnt_lock, s)
 
 #define RAWCB_HOLD(rp)  	rawcb_hold(rp)
-#define RAWCB_RELEASE(rp, flag)	rawcb_rele(rp, flag) 
+#define RAWCB_RELEASE(rp)	rawcb_rele(rp) 
 
+#else
+#define RAWREFCNT_MPSPLOCK(s)
+#define RAWREFCNT_MPSPUNLOCK(s)
+#define RAWCB_HOLD(rp) 
+#define RAWCB_RELEASE(rp)
+#endif /* _MP_NETLOCKS */
 
 #endif 	/* _IO_TPI_TPISOCKET_H_ */
 #endif	/* _KERNEL */
-#ifdef __cplusplus
-}
-#endif 
 #endif	/* __net_raw_cb__ */

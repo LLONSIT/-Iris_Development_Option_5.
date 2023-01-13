@@ -13,13 +13,11 @@
 #ifndef	__EFS_SB_
 #define	__EFS_SB_
 
-#ident "$Revision: 3.30 $"
+#ident "$Revision: 3.22 $"
 
 /*
  * Structure of the extent filesystem superblock
  */
-
-#include <sys/sema.h>
 
 /*
  * Software summary structure per cylinder group.  When a filesystem is
@@ -27,9 +25,9 @@
  * allocation information.
  */
 struct	cg {
-	efs_daddr_t cg_firstbn;		/* first bn in cg */
-	efs_daddr_t cg_firstdbn;	/* first data block bn */
-	efs_ino_t cg_firsti;		/* first inode # in cg */
+	daddr_t	cg_firstbn;		/* first bn in cg */
+	daddr_t	cg_firstdbn;		/* first data block bn */
+	ino_t	cg_firsti;		/* first inode # in cg */
 
 	/*
 	 * Inode allocation summary information.  We keep a simple rotor
@@ -39,7 +37,7 @@ struct	cg {
 	 * the fs_semlock, our info is no longer up to date so we should
 	 * not advance it.
 	 */
-	efs_ino_t cg_lowi;		/* lowest inode # that's free */
+	ino_t	cg_lowi;		/* lowest inode # that's free */
 	unsigned cg_gen;
 
 	/*
@@ -48,7 +46,7 @@ struct	cg {
 	 * blocks, as well the first free data block.
 	 */
 	long	cg_dfree;		/* count of free data blocks */
-	efs_daddr_t cg_firstdfree;	/* first free data bn */
+	daddr_t	cg_firstdfree;		/* first free data bn */
 };
 
 /* structure of the super-block for the extent filesystem */
@@ -83,28 +81,23 @@ struct efs {
 	 * these fields will be written to disk.  It is assumed when
 	 * the super-block is read in that these fields contain trash,
 	 * and are accordingly initialized.
-	 *
-	 * WARNING:  Do not change the first field in the volatile portion
-	 * of this structure.  It is used in efs_mountfs() to determine
-	 * how much of the structure to copy in to the copy kept in the
-	 * mount structure.
 	 */
 	char	fs_readonly;	/* device is read-only */
 	char	fs_fmod;	/* filesystem has been modified */
 	char	fs_corrupted;	/* fs is corrupted; no more write's */
 	struct cg *fs_cgrotor;	/* free-block rotor */
-	long	fs_diskfull;	/* disk is fragmented, do quick allocs */
+	long	fs_diskfull;	/* disk is framented, do quick allocs */
 	long	fs_freedblock;	/* freed a block since going diskfull */
 	dev_t	fs_dev;		/* device fs is mounted on */
 	short	fs_inopchunk;	/* # of inodes in an inode chunk */
-	efs_daddr_t fs_inopchunkbb; /* # of bb's in an inode chunk, rounded up */
+	daddr_t	fs_inopchunkbb;	/* # of bb's in an inode chunk, rounded up */
 	short	fs_minfree;	/* min # of free blocks for file placement */
 	short	fs_mindirfree;	/* min # of free blocks for dir placement */
-	efs_ino_t fs_ipcg;	/* # of inodes per cg */
-	efs_ino_t fs_lastinum;	/* last inum in fs */
+	ino_t	fs_ipcg;	/* # of inodes per cg */
+	ino_t	fs_lastinum;	/* last inum in fs */
 	ushort	fs_lbshift;	/* logical block shift */
 	ushort	fs_bmbbsize;	/* size of bit map in bbs */
-	mutex_t *fs_lock;	/* file system mutex lock */
+	struct	sema_s *fs_semlock;	/* file system semaphore */
 
 	/*
 	 * An array of cg structs is managed here.  During mounting
@@ -115,6 +108,16 @@ struct efs {
 	 */
 	struct	cg fs_cgs[1];	/* actually, there are more here */
 };
+
+/*
+ * dfs_lastialloc is the disk version of the fs_lastialloc field.  It is
+ * stored on disk in the area following the on-disk superblock, because
+ * that area is cleared by prior kernels everytime the superblock is
+ * written out.  This allows a non-zero dfs_lastialloc to be relied on,
+ * regardless of what kernel ran the file system previously.
+ */
+/* overlays the cg structure on disk */
+#define dfs_lastialloc(fs) (((ino_t *)(fs + 1))[0])
 
 #define	EFS_MAGIC	0x072959L
 
@@ -145,10 +148,12 @@ struct efs {
 
 #if defined _KERNEL || defined _KMEMUSER
 
+#include <sys/sema.h>
+
 struct mount {
-	bhv_desc_t	m_bhv;		/* vfs efs behavior */
+	struct vfs	*m_vfsp;	/* back-pointer to vfs */
 	struct vnode	*m_devvp;	/* open block device vnode pointer */
-	mutex_t		m_lock;		/* mount table entry lock */
+	sema_t		m_lock;		/* mount table entry lock */
 	u_long		m_flags;	/* flags -- see below */
 	u_long		m_ireclaims;	/* count of inodes reclaimed */
 	struct inode	*m_inodes;	/* list of all inodes */
@@ -167,18 +172,16 @@ struct mount {
 /*
  * Uni- and multi-processor locking macros.
  */
-#define	mlock(mp)	mutex_lock(&(mp)->m_lock, PINOD)
-#define	munlock(mp)	mutex_unlock(&(mp)->m_lock);
-#define	mlock_mp(mp)	mp_mutex_lock(&(mp)->m_lock, PINOD)
-#define	munlock_mp(mp)	mp_mutex_unlock(&(mp)->m_lock);
+#define	mlock(mp)	psema(&(mp)->m_lock, PINOD)
+#define	munlock(mp)	vsema(&(mp)->m_lock);
+#define	mlock_mp(mp)	appsema(&(mp)->m_lock, PINOD)
+#define	munlock_mp(mp)	apvsema(&(mp)->m_lock);
 
-#define bhvtom(bdp)	((struct mount *)BHV_PDATA(bdp))
+#define	vfstom(vfsp)	((struct mount *) (vfsp)->vfs_data)
+#define	vfstoefs(vfsp)	mtoefs(vfstom(vfsp))
 #define	mtoefs(mp)	(&(mp)->m_efs)
-#define	mtovfs(mp)	((struct vfs *)BHV_VOBJ(&(mp)->m_bhv))
-#define bhvtoefs(bdp)	mtoefs(bhvtom(bdp))
 
-extern void efs_setcorrupt(struct mount *);
-extern struct vfsops efs_vfsops;
+extern void efs_setcorrupt(struct vfs *);
 
 #endif	/* _KERNEL */
 #endif	/* _KERNEL || _KMEMUSER */

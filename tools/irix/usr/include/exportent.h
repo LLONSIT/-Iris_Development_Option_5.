@@ -1,6 +1,6 @@
 #ifndef __EXPORTENT_H__
 #define __EXPORTENT_H__
-#ident "$Revision: 1.16 $"
+#ident "$Revision: 1.7 $"
 /*
 *
 * Copyright 1992, Silicon Graphics, Inc.
@@ -41,30 +41,24 @@
 #define ANON_OPT	"anon"		/* uid for anonymous requests */
 #define	NOHIDE_OPT	"nohide"	/* visible from upper exported fs */
 #define	WSYNC_OPT	"wsync"		/* write synchronously to disk */
-#define	B32CLNT_OPT	"32bitclients"	/* mask off high 32 bits in cookie3 */
-#define	NOXATTR_OPT	"noxattr"	/* only trusted clients may access
-					   extended attributes */
-#define FSID_OPT	"fsid"		/* fsid value assignment */
-#define OFFLINE_OPT	"offline"	/* filesystem is offline */
-#define ASYNC_OPT	"async"		/* v3 write asynchronously to disk */
-#define NOMKNOD_OPT	"nomknod"	/* reject mknod calls */
-#define DIO_OPT		"directio"	/* support direct io */
 
 struct exportent {
 	char *xent_dirname;	/* directory (or file) to export */
 	char *xent_options;	/* options, as above */
 };
 
-#include <internal/sgimacros.h>
-
-__SGI_LIBC_BEGIN_EXTERN_C
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 extern FILE *setexportent(void);
 extern void endexportent(FILE *);
 extern int remexportent(FILE *, char *);
 extern int addexportent(FILE *, char *, char *);
-extern char *getexportopt(const struct exportent *, char *);
+extern char *getexportopt(struct exportent *, char *);
 extern struct exportent *getexportent(FILE *);
 
-__SGI_LIBC_END_EXTERN_C
+#ifdef __cplusplus
+}
+#endif
 #endif /* !__EXPORTENT_H__ */

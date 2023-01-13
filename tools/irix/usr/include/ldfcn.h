@@ -22,7 +22,7 @@ extern "C" {
  * |         Sunnyvale, California 94088-3650, USA             |
  * |-----------------------------------------------------------|
  */
-/* $Header: /isms/cmplrs.src/v7.4/include/RCS/ldfcn.h,v 7.14 1995/03/07 23:11:52 davea Exp $ */
+/* $Header: /proj/irix5.3/isms/cmplrs/include/RCS/ldfcn.h,v 7.12 1993/06/09 18:59:10 bettina Exp $ */
 
 /*	Copyright (c) 1984 AT&T	*/
 /*	  All Rights Reserved  	*/
@@ -192,9 +192,6 @@ typedef struct {
 extern int ldfseek(elf32_LDFILE *,int /*offset*/,int/*whence*/);
 extern int ldfread(char */*buffer*/,int /*size*/,int/*count*/,elf32_LDFILE *);
 extern char *	ldgetname (LDFILE *, SYMR *);	/* should be elf32_LDFILE */
-extern long     ldgetpd( LDFILE * , int /*ipd*/, PDR * /*ppd*/);
-extern int      ldreadst(elf32_LDFILE * /*ldptr*/, int /*flags*/);
-AUXU *          ldgetaux(LDFILE * /*ldptr*/, int    /*iaux*/);
 extern long 	__sgi_ldftell(elf32_LDFILE *);
 extern elf32_LDFILE *	ldopen (const char *, elf32_LDFILE *);
 extern elf32_LDFILE *	ldaopen (const char *, elf32_LDFILE *);

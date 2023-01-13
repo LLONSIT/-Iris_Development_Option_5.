@@ -1,5 +1,8 @@
 #ifndef __USTAT_H__
 #define __USTAT_H__
+#ifdef __cplusplus
+extern "C" {
+#endif
 /* Copyright (C) 1989 Silicon Graphics, Inc. All rights reserved.  */
 /* ------------------------------------------------------------------ */
 /* | Copyright Unpublished, MIPS Computer Systems, Inc.  All Rights | */
@@ -15,16 +18,15 @@
 /*	The copyright notice above does not evidence any   	*/
 /*	actual or intended publication of such source code.	*/
 
-#ident "$Revision: 1.10 $"
+#ident "$Revision: 1.9 $"
 
 #include <sys/types.h>
 #include <sys/ustat.h>	/* for ustat struct */
-#include <internal/sgimacros.h>
-
-__SGI_LIBC_BEGIN_EXTERN_C
 
 extern int ustat(dev_t, struct ustat *);
 
-__SGI_LIBC_END_EXTERN_C
+#ifdef __cplusplus
+}
+#endif
 #endif /* !__USTAT_H__ */
 

@@ -1,6 +1,9 @@
 #ifndef __PKGINFO_H__
 #define __PKGINFO_H__
-#ident "$Revision: 1.5 $"
+#ifdef __cplusplus
+extern "C" {
+#endif
+#ident "$Revision: 1.4 $"
 /*
 *
 * Copyright 1992, Silicon Graphics, Inc.
@@ -28,9 +31,6 @@
 /*	actual or intended publication of such source code.	*/
 
 #include <stdarg.h>
-#include <internal/sgimacros.h>
-
-__SGI_LIBC_BEGIN_EXTERN_C
 
 #define PI_INSTALLED 	0
 #define PI_PARTIAL	1
@@ -58,5 +58,7 @@ extern char	*pkgparam(char *, char *),
 extern int	pkginfo(struct pkginfo *, char *, ...),
 		pkgnmchk(char *, char *, int),
 		fpkginfo(struct pkginfo *, char *);
-__SGI_LIBC_END_EXTERN_C
+#ifdef __cplusplus
+}
+#endif
 #endif /* !__PKGINFO_H__ */

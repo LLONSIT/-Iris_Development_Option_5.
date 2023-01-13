@@ -1,6 +1,9 @@
 #ifndef __PKGSTRCT_H__
 #define __PKGSTRCT_H__
-#ident "$Revision: 1.5 $"
+#ifdef __cplusplus
+extern "C" {
+#endif
+#ident "$Revision: 1.4 $"
 /*
 *
 * Copyright 1992, Silicon Graphics, Inc.
@@ -27,9 +30,6 @@
 /*	The copyright notice above does not evidence any   	*/
 /*	actual or intended publication of such source code.	*/
 
-#include <internal/sgimacros.h>
-
-__SGI_LIBC_BEGIN_EXTERN_C
 
 #define CLSSIZ	12
 #define PKGSIZ	14
@@ -95,6 +95,7 @@ struct cfent {
 #define	VE_CONT		0x0008
 #define	VE_FAIL		0x0010
 #define VE_TIME		0x0020
-
-__SGI_LIBC_END_EXTERN_C
+#ifdef __cplusplus
+}
+#endif
 #endif /* !__PKGSTRCT_H__ */

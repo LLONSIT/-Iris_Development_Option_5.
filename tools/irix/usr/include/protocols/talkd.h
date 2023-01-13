@@ -1,6 +1,9 @@
 #ifndef __PROTOCOLS_TALKD_H__
 #define __PROTOCOLS_TALKD_H__
-#ident "$Revision: 1.5 $"
+#ifdef __cplusplus
+extern "C" {
+#endif
+#ident "$Revision: 1.4 $"
 /*
 *
 * Copyright 1992, Silicon Graphics, Inc.
@@ -39,8 +42,6 @@
 
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <internal/sgimacros.h>
-
 /*
  * This describes the protocol used by the talk server and clients.
  *
@@ -58,8 +59,6 @@
  * address and the caller and callee client programs establish a
  * stream connection through which the conversation takes place.
  */
-
-__SGI_LIBC_BEGIN_EXTERN_C
 
 /*
  * Client->server request message format.
@@ -117,5 +116,7 @@ typedef struct {
 #define MAX_LIFE	60	/* max time daemon saves invitations */
 /* RING_WAIT should be 10's of seconds less than MAX_LIFE */
 #define RING_WAIT	30	/* time to wait before resending invitation */
-__SGI_LIBC_END_EXTERN_C
+#ifdef __cplusplus
+}
+#endif
 #endif /* !__PROTOCOLS_TALKD_H__ */

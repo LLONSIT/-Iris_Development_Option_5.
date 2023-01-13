@@ -1,6 +1,9 @@
 #ifndef __LANGINFO_H__
 #define __LANGINFO_H__
-#ident "$Revision: 1.7 $"
+#ifdef __cplusplus
+extern "C" {
+#endif
+#ident "$Revision: 1.3 $"
 /*
 *
 * Copyright 1992, Silicon Graphics, Inc.
@@ -27,9 +30,6 @@
 /*	The copyright notice above does not evidence any   	*/
 /*	actual or intended publication of such source code.	*/
 
-#include <internal/sgimacros.h>
-
-__SGI_LIBC_BEGIN_EXTERN_C
 
 /*
  * The seven days of the week in their full beauty
@@ -110,26 +110,18 @@ __SGI_LIBC_BEGIN_EXTERN_C
 #define AM_STR	  47	/* am string */
 #define PM_STR	  48	/* pm string */
 
-/*
- * expanded codes per X/Open rel4, ver 2
- */
-
-#define CODESET         49      /* code set name */
-#define T_FMT_AMPM      50      /* a.m. or p.m. time format string */
-#define ERA             51      /* era description segments */
-#define ERA_D_FMT       52      /* era date format string */
-#define ERA_D_T_FMT     53      /* era date and time format string */
-#define ERA_T_FMT       54      /* era time format string */
-#define ALT_DIGITS      55      /* alternative symbols for digits */
-#define YESEXPR         56      /* affirmative response expression */
-#define NOEXPR          57      /* negative response expression */
-
-#define	_MAXSTRMSG	57 /* Maximum number of strings in langinfo */ 
+#define	MAXSTRMSG	48 /* Maximum number of strings in langinfo */ 
 /*
  * and the definitions of functions langinfo(3C)
  */
+#if defined(_MODERN_C)
 #include <nl_types.h>
 char   *nl_langinfo(nl_item);	/* get a string from the database	*/
+#else 
+char   *nl_langinfo();		/* get a string from the database	*/
+#endif
 
-__SGI_LIBC_END_EXTERN_C
+#ifdef __cplusplus
+}
+#endif
 #endif /* !__LANGINFO_H__ */

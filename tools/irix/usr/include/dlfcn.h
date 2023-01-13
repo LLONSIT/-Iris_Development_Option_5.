@@ -1,6 +1,9 @@
 #ifndef __DLFCN_H__
 #define __DLFCN_H__
-#ident "$Revision: 1.13 $"
+#ifdef __cplusplus
+extern "C" {
+#endif
+#ident "$Revision: 1.9 $"
 /*
 *
 * Copyright 1992, Silicon Graphics, Inc.
@@ -26,46 +29,24 @@
 /*	UNIX System Laboratories, Inc.                     	*/
 /*	The copyright notice above does not evidence any   	*/
 /*	actual or intended publication of such source code.	*/
-#include <standards.h>
-#include <internal/sgimacros.h>
-
-__SGI_LIBC_BEGIN_EXTERN_C
 
 /* declarations used for dynamic linking support routines */
 extern void *dlopen(const char *, int);
 extern void *dlsym(void *, const char *);
 extern int dlclose(void *);
 extern char *dlerror(void);
-#if _SGIAPI
+#if defined(_SGI_SOURCE) && !defined(_POSIX_SOURCE) && !defined(_XOPEN_SOURCE)
 extern void *sgidladd(const char *, int);
 extern void *sgidlopen_version(const char *, int, const char *, int);
 extern char *sgigetdsoversion(const char *);
-#endif /* _SGIAPI */
+#endif
 
 /* valid values for mode argument to dlopen/sgidladd/sgidlopen_version */
 #define RTLD_LAZY	1	/* lazy function call binding */
 #define RTLD_NOW	2	/* immediate function call binding */
-#define RTLD_GLOBAL	4	/* symbols in this dlopen'ed obj */
-				/* are visible to other dlopen'ed objs */
+#define RTLD_GLOBAL	4	/* symbols in this dlopen'ed obj are visible to other dlopen'ed objs */
 
-#define RTLD_NOW_REPORT_ERROR	8	/* this is for sgidladd only -- */
-					/* RTLD_NOW treated like 
-					 *   RTLD_LAZY in sgidladd and
-					 * RTLD_NOW_REPORT_ERROR
-					 *   reports  all unresolved 
-					 *   symbols including TEXT
-					 */
-
-#define RTLD_LOCAL      0       /* RTLD_LOCAL is the opposite of */
-				/* RTLD_GLOBAL, and RTLD_LOCAL
-			 	 * is the default in case 
-				 * neither is specified.
-			         * RTLD_LOCAL means that the symbols
-			         * in the dlopen()ed DSO are not
-				 * made globally visible.
-			         */
-
-
-__SGI_LIBC_END_EXTERN_C
-
+#ifdef __cplusplus
+}
+#endif
 #endif /* !__DLFCN_H__ */

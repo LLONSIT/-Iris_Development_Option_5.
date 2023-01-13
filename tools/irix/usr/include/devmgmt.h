@@ -1,5 +1,9 @@
 #ifndef __DEVMGMT_H__
 #define __DEVMGMT_H__
+#ifdef __cplusplus
+extern "C" {
+#endif
+#ident "$Revision: 1.6 $"
 /*
 *
 * Copyright 1992, Silicon Graphics, Inc.
@@ -26,12 +30,8 @@
 /*	The copyright notice above does not evidence any   	*/
 /*	actual or intended publication of such source code.	*/
 
-#include <internal/sgimacros.h>
 
 #ifndef __SVR4_1__	/* svr4 flavor */
-
-__SGI_LIBC_BEGIN_EXTERN_C
-
 /*
  * devmgmt.h
  *
@@ -174,9 +174,6 @@ struct reservdev{
 
 #else /* __SVR4_1__ */		/* svr4.1 flavor */
 #include <sys/types.h>
-
-__SGI_LIBC_BEGIN_EXTERN_C
-
 /*
  * devmgmt.h
  *
@@ -341,6 +338,7 @@ int			getvol(char *, char *, int, char *);
 
 #endif /* __SVR4_1__ */
 
-__SGI_LIBC_END_EXTERN_C
-
+#ifdef __cplusplus
+}
+#endif
 #endif /* !__DEVMGMT_H__ */

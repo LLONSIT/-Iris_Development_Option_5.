@@ -11,9 +11,6 @@
  *
  *      @(#)spp_debug.h	7.2 (Berkeley) 1/20/88
  */
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 struct	spp_debug {
 	u_long	sd_time;
@@ -39,6 +36,3 @@ char	*sanames[] =
 #define	SPP_NDEBUG 100
 struct	spp_debug spp_debug[SPP_NDEBUG];
 int	spp_debx;
-#ifdef __cplusplus
-}
-#endif

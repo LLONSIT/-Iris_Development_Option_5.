@@ -1,6 +1,9 @@
 #ifndef __TTYMAP_H__
 #define __TTYMAP_H__
-#ident "$Revision: 1.5 $"
+#ifdef __cplusplus
+extern "C" {
+#endif
+#ident "$Revision: 1.3 $"
 /*
 *
 * Copyright 1992, Silicon Graphics, Inc.
@@ -31,9 +34,6 @@
  * ttymap.h - header for ttymap cmd and ttyname libcfunction
  */
 
-#include <internal/sgimacros.h>
-
-__SGI_LIBC_BEGIN_EXTERN_C
 
 #define MAP	"/etc/ttymap"
 #define DEV	"/dev"
@@ -111,7 +111,7 @@ struct entry {
 #define MSG_2	"' in /etc/ttysrch ignored.\n"
 
 #ifndef NULL
-#define NULL	((char *)0L)
+#define NULL	(char *)0
 #endif
 
 #ifndef S_ISCHR
@@ -134,5 +134,7 @@ static const struct entry def_srch_dirs[] = {	/* default search list */
 	{ NULL, 	0,	0	 	}
 };
 #endif
-__SGI_LIBC_END_EXTERN_C
+#ifdef __cplusplus
+}
+#endif
 #endif /* !__TTYMAP_H__ */

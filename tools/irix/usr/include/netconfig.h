@@ -1,6 +1,9 @@
 #ifndef __NETCONFIG_H__
 #define __NETCONFIG_H__
-#ident "$Revision: 1.4 $"
+#ifdef __cplusplus
+extern "C" {
+#endif
+#ident "$Revision: 1.3 $"
 /*
 *
 * Copyright 1992, Silicon Graphics, Inc.
@@ -32,4 +35,7 @@
 
 #include <sys/netconfig.h>
 
+#ifdef __cplusplus
+}
+#endif
 #endif /* !__NETCONFIG_H__ */

@@ -9,14 +9,14 @@
 
 #ifndef __LIBW_H__
 #define __LIBW_H__
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #ident	"@(#)libw:inc/libw.h	1.1.1.1"
 
 #include	<stdlib.h>
 #include	<sys/euc.h>
-#include	<internal/sgimacros.h>
-
-__SGI_LIBC_BEGIN_EXTERN_C
 
 #if defined(_MODERN_C)
 void getwidth(eucwidth_t *);
@@ -30,5 +30,7 @@ int scrwidth();
 int wisprint();
 #endif /* __STDC__ */
 
-__SGI_LIBC_END_EXTERN_C
+#ifdef __cplusplus
+}
+#endif
 #endif /* !__LIBW_H__ */

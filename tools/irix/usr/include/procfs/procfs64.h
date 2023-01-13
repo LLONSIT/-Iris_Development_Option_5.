@@ -22,7 +22,7 @@
 #ifndef _FS_PROCFS_PROCFS64_H	/* wrapper symbol for kernel use */
 #define _FS_PROCFS_PROCFS64_H	/* subject to change without notice */
 
-#ident	"$Id: procfs64.h,v 1.17 1997/10/03 20:56:16 jph Exp $"
+#ident	"$Id: procfs64.h,v 1.3 1994/06/21 18:37:06 rdb Exp $"
 
 #include <sys/fault.h>
 #include <sys/siginfo.h>
@@ -31,7 +31,8 @@
 #include <sys/time.h>
 #include <sys/ucontext.h>
 #include <sys/procfs.h>
-#include <sys/ktime.h>
+#include <sys/ktime.h> 
+#include <sys/ksignal.h>
 #include <sys/kucontext.h>
 
 #if _KMEMUSER
@@ -95,14 +96,15 @@
 /* SGI calls */
 #define IRIX5_64_PIOCPGD_SGI	(PIOC64|248)	/* (SGI) get page tbl information */
 #define IRIX5_64_PIOCMAP_SGI	(PIOC64|249)	/* (SGI) get region map information */
+#if !STAT_TIME
 #define IRIX5_64_PIOCGETPTIMER	(PIOC64|250)	/* get process timers */
+#endif
 
 typedef struct irix5_64_prstatus {
 	app64_ulong_t	pr_flags;	/* Process flags */
 	short		pr_why;		/* Reason for process stop */
 	short		pr_what;	/* More detailed reason */
 	short		pr_cursig;	/* Current signal */
-	short		pr_nthreads;	/* Number of kernel threads */
 	sigset_t	pr_sigpend;	/* Set of pending signals */
 	sigset_t	pr_sighold;	/* Set of held signals */
 	struct irix5_64_siginfo	pr_info;/* info assoc. with signal or fault */
@@ -118,25 +120,16 @@ typedef struct irix5_64_prstatus {
 	pid_t		pr_ppid;	/* Parent process id */
 	pid_t		pr_pgrp;	/* Process group id */
 	pid_t		pr_sid;		/* Session id */
-	irix5_64_timespec_t	pr_utime;/* Process user cpu time */
-	irix5_64_timespec_t	pr_stime;/* Process system cpu time */
-	irix5_64_timespec_t	pr_cutime;/* Sum of children's user times */
-	irix5_64_timespec_t	pr_cstime;/* Sum of children's system times */
+	irix5_64_timestruc_t	pr_utime;/* Process user cpu time */
+	irix5_64_timestruc_t	pr_stime;/* Process system cpu time */
+	irix5_64_timestruc_t	pr_cutime;/* Sum of children's user times */
+	irix5_64_timestruc_t	pr_cstime;/* Sum of children's system times */
 	char		pr_clname[8];	/* Scheduling class name */
-	union {
-		app64_long_t	pr_filler[20];	/* Filler area */
-		struct {
-			sigset_t sigpnd;/* Set of signals pending on thread */
-			id_t	 who;	/* Which kernel thread */
-		} pr_st;
-	} pr_un;
+	app64_long_t	pr_filler[20];	/* Filler area for future expansion */
 	inst_t		pr_instr;	/* Current instruction */
 	irix5_64_gregset_t	pr_reg;	/* General registers */
 } irix5_64_prstatus_t;
   
-#define	pr_thsigpend	pr_un.pr_st.sigpnd
-#define	pr_who		pr_un.pr_st.who
-
 typedef struct irix5_64_prrun {
 	app64_ulong_t	pr_flags;	/* Flags */
 	sigset_t	pr_trace;	/* Set of signals to be traced */
@@ -162,8 +155,8 @@ typedef struct irix5_64_prpsinfo {
 	app64_long_t pr_size;	/* process image size in pages */
 	app64_long_t pr_rssize;	/* resident set size in pages */
 	app64_ptr_t	pr_wchan;/* wait addr for sleeping process */
-	irix5_64_timespec_t	pr_start;/* process start time */
-	irix5_64_timespec_t	pr_time;/* usr+sys cpu time for this process */
+	irix5_64_timestruc_t	pr_start;/* process start time */
+	irix5_64_timestruc_t	pr_time;/* usr+sys cpu time for this process */
 	app64_long_t pr_pri;		/* priority */
 	app64_long_t pr_oldpri;	/* pre-svr4 priority */
 	char	pr_cpu;		/* pre-svr4 cpu usage */
@@ -171,14 +164,10 @@ typedef struct irix5_64_prpsinfo {
 	char	pr_clname[8];	/* scheduling class name */
 	char	pr_fname[PRCOMSIZ];	/* basename of exec()'d pathname */
 	char	pr_psargs[PRARGSZ];	/* initial chars of arg list */
-	uint_t	pr_spare1;	/* spare */
+	uint_t	pr_pset;	/* associated processor set name */
 	cpuid_t	pr_sonproc;	/* processor running on */
-	irix5_64_timespec_t    pr_ctime; /* usr+sys time for all children */
-	uid_t	pr_shareuid;	/* uid of ShareII Lnode */
-	app64_int_t pr_spid;	/* threads */
-	irix5_64_timespec_t	pr_qtime;/* cumulative cpu time process */
-	app64_int_t pr_fill2;	/* spare */
-	app64_long_t pr_fill[14];	/* spares */
+	irix5_64_timestruc_t    pr_ctime; /* usr+sys time for all children */
+	app64_long_t pr_fill[17];	/* spares */
 } irix5_64_prpsinfo_t;
 
 typedef struct irix5_64_prmap {
@@ -226,13 +215,13 @@ typedef struct irix5_64_prwatch {
 
 /* prusage structure */
 typedef struct irix5_64_prusage {
-	irix5_64_timespec_t pu_tstamp;	/* time stamp */ 
-	irix5_64_timespec_t pu_starttime;	/* time process was started */ 
-	irix5_64_timespec_t pu_utime;	/* user CPU time */ 
-	irix5_64_timespec_t pu_stime;	/* system CPU time */ 
+	irix5_64_timestruc_t pu_tstamp;	/* time stamp */ 
+	irix5_64_timestruc_t pu_starttime;	/* time process was started */ 
+	irix5_64_timestruc_t pu_utime;	/* user CPU time */ 
+	irix5_64_timestruc_t pu_stime;	/* system CPU time */ 
 	app64_ulong_t pu_minf;		/* minor (mapping) page faults */
 	app64_ulong_t pu_majf;		/* major (disk) page faults */
-	app64_ulong_t pu_utlb;		/* user TLB misses */
+	app64_ulong_t pu_utlb;		/* User TLB misses - always zero */
 	app64_ulong_t pu_nswap;		/* swaps (process only) */
 	app64_ulong_t pu_gbread;	/* gigabytes ... */ 
 	app64_ulong_t pu_bread;		/* and bytes read */
@@ -254,7 +243,7 @@ typedef struct irix5_64_prusage {
 	app64_ulong_t pu_inblock;	/* block input operations */
 	app64_ulong_t pu_oublock;	/* block output operations */
 	app64_ulong_t pu_vfault;	/* total number of vfaults */
-	app64_ulong_t pu_ktlb;		/* kernel TLB misses */
+	app64_ulong_t pu_unused[1];	/* currently unused */
 } irix5_64_prusage_t; 
 #endif /* _KMEMUSER */
 #endif	/* _FS_PROCFS_PROCFS64_H */

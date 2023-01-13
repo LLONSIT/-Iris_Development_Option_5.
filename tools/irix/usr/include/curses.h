@@ -13,9 +13,6 @@
  * curses.h - this file is automatically made from caps and
  *	curses.ed. Don't make changes directly to curses.h!
  */
-#include <sgidefs.h>
-#include <internal/sgimacros.h>
-
 #ifdef BSDCURSES
 /*
 ** Use BSD curses library and header instead of AT&T curses header and library
@@ -25,38 +22,61 @@
 #include <cursesBSD.h>
 #else /* BSDCURSES */
 
-#ifndef _CURSES_H
+#ifndef CURSES_H
 
-#define _CURSES_H	/* define prevents multiple includes */
-__SGI_LIBC_BEGIN_EXTERN_C
+#define CURSES_H	/* define prevents multiple includes */
 
 #ifndef _WCHAR_T
 #define _WCHAR_T
-typedef __int32_t	wchar_t;
+typedef long	wchar_t;
 #endif
 
 #define	CSMAX	4
 
-#include <stdio.h>
+#include  <stdio.h>
 
+  /*
+   * This trick is used to distinguish between SYSV and V7 systems.
+   * We assume that L_ctermid is only defined in stdio.h in SYSV
+   * systems, but not in V7 or Berkeley UNIX.
+   */
+#ifdef L_ctermid
 # define SYSV
+#endif
+   /* Some V7 systems define L_ctermid - we list those here */
+#ifdef BSD
+# undef SYSV
+#endif
 
+#ifdef SYSV
 # ifndef VINTR
-#  if _ABIAPI
+#  ifdef _ABI_SOURCE
 #  include <termios.h>
-#  else /* ! _ABIAPI */
+#  else /* ! _ABI_SOURCE */
 #  include <termio.h>
-#  endif /* _ABIAPI */
+#  endif /* _ABI_SOURCE */
 # endif /* VINTR */
-#  if _ABIAPI
+#  ifdef _ABI_SOURCE
     typedef struct termios SGTTY;
-#  else /* ! _ABIAPI */
+#  else /* ! _ABI_SOURCE */
     typedef struct termio SGTTY;
-#  endif /* _ABIAPI */
+#  endif /* _ABI_SOURCE */
+#else /* !SYSV */
+# ifndef _SGTTYB_
+#  include <sgtty.h>
+# endif /* _SGTTYB_ */
+    typedef struct sgttyb SGTTY;
+/*
+ * Here we attempt to improve portability by providing some #defines
+ * for SYSV functions on non-SYSV systems.
+ */
 
-#if !defined(__cplusplus) || !defined(_BOOL)
-typedef char bool;
-#endif /* _BOOL */
+# define memcpy(dst, src, len)	bcopy((src), (dst), (len))
+# define strchr			index
+# define strrchr		rindex
+#endif /* SYSV */
+
+typedef	char bool;
 
 #define _VR3_COMPAT_CODE
 /*
@@ -66,7 +86,7 @@ typedef char bool;
 #ifdef	CHTYPE
 	typedef	CHTYPE chtype;
 #else
-	typedef __uint32_t chtype;
+	typedef unsigned long chtype;
 #endif /* CHTYPE */
 
 /*
@@ -210,7 +230,7 @@ extern	chtype		*acs32map;
 #define box		box32
 
 #ifdef	__STDC__
-extern	WINDOW	*initscr(void);
+extern	WINDOW	*initscr();
 extern	SCREEN	*newterm(char *, FILE *, FILE *);
 #else
 extern	WINDOW	*initscr();
@@ -277,7 +297,7 @@ extern	int	cbreak(void), nocbreak(void),
 		reset_prog_mode(void), reset_shell_mode(void),
 		def_prog_mode(void), _setecho(int), _setnonl(int),
 		def_shell_mode(void), raw(void),
-		savetty(void), traceon(void), _meta(bool), 
+		savetty(void), traceon(void), _meta(int), 
 		traceoff(void), noraw(void), flushinp(void),
 		_getsyx(int *, int *),
 		_ring(int), resetty(void),
@@ -293,20 +313,14 @@ extern	int	copywin(WINDOW *, WINDOW *, int, int, int, int, int, int, int),
 		curs_set(int), delay_output(int), delwin(WINDOW *),
 		doupdate(void), drainio(int), endwin(void), isendwin(void),
 		baudrate(void), has_ic(void), has_il(void),
-		keypad(WINDOW *, bool),
+		keypad(WINDOW *, int),
 		mvcur(int, int, int, int);
 
-extern	int	mvprintw(int, int, char*, ...), mvscanw(int, int, char *, ...),
-		mvwprintw(WINDOW *, int, int, char *, ...),
-		mvwscanw(WINDOW *, int, int, char *, ...),
+extern	int	mvprintw(int, int, ...), mvscanw(int, int, ...),
+		mvwprintw(WINDOW *, int, int, ...),
+		mvwscanw(WINDOW *, int, int, ...),
 		printw(char *, ...), scanw(char *, ...),
-		wprintw(WINDOW *, char *, ...), wscanw(WINDOW *, char *, ...);
-
-#ifdef __INLINE_INTRINSICS
-#if (defined(_COMPILER_VERSION) && (_COMPILER_VERSION >= 400))
-#pragma intrinsic (printw)
-#endif /* COMPILER_VERSION >= 400 */
-#endif
+		wprintw(WINDOW *, ...), wscanw(WINDOW *, ...);
 
 		/* in the following 2 functions 'char *' is really va_list */
 		/* however, we cannot include <stdarg.h> in curses.h,      */
@@ -376,13 +390,13 @@ extern unsigned long getmouse(void), getbmap(void);
 		/* save anything by passing short or bool, since compiler*/
 		/* expands them to integers any way			 */
 
-extern	int	pair_content(short, short *, short *),
-		color_content(short, short *, short *, short *),
-		init_color(short, short, short, short),
-		init_pair(short, short, short),
-		idlok(WINDOW *, bool);
+extern	int	pair_content(int /*short*/, short *, short *),
+		color_content(int /*short*/, short *, short *, short *),
+		init_color(int, int, int, int /*all 4 ints */),
+		init_pair(int, int, int /*all 3 ints */),
+		idlok(WINDOW *, int /*bool*/);
 
-extern	void	immedok(WINDOW *, bool); 
+extern	void	immedok(WINDOW *, int /*bool*/); 
 
 extern chtype	winwch(WINDOW *);
 
@@ -550,7 +564,7 @@ extern int	addch(chtype), addchnstr(chtype *, int), addchstr(chtype *),
 		border(chtype, chtype, chtype, chtype,
 		       chtype, chtype, chtype, chtype),
 		box(WINDOW *, chtype, chtype),
-		clear(void), clearok(WINDOW *, bool),
+		clear(void), clearok(WINDOW *, int /*bool*/),
 		clrtobot(void), clrtoeol(void),
 		crmode(void), delch(void), deleteln(void),
 		echo(void), echochar(chtype), erase(void),
@@ -562,9 +576,9 @@ extern int	addch(chtype), addchnstr(chtype *, int), addchstr(chtype *),
 		inchnstr(chtype *, int), inchstr(chtype *),
 		innstr(char *, int), insch(chtype),
 		insdelln(int), insertln(void), insnstr(char *, int),
-		insstr(char *), instr(char *), intrflush(WINDOW *, bool),
+		insstr(char *), instr(char *), intrflush(WINDOW *, int),
 		is_linetouched(WINDOW *, int), is_wintouched(WINDOW *),
-		leaveok(WINDOW *, bool), meta(WINDOW *, bool),
+		leaveok(WINDOW *, int /*bool*/), meta(WINDOW *, int),
 		move(int, int), mvaddch(int, int, chtype),
 		mvaddchnstr(int, int, chtype *, int),
 		mvaddchstr(int, int, chtype *),
@@ -599,16 +613,16 @@ extern int	addch(chtype), addchnstr(chtype *, int), addchstr(chtype *),
 		mvwinsstr(WINDOW *, int, int, char *),
 		mvwinstr(WINDOW *, int, int, char *),
 		mvwvline(WINDOW *, int, int, chtype, int),
-		nl(void), nocrmode(void), nodelay(WINDOW *, bool),
-		noecho(void), nonl(void), notimeout(WINDOW *, bool),
+		nl(void), nocrmode(void), nodelay(WINDOW *, int /*bool*/),
+		noecho(void), nonl(void), notimeout(WINDOW *, int /*bool*/),
 		overlay(WINDOW *, WINDOW *), overwrite(WINDOW *, WINDOW *),
 		redrawwin(WINDOW *), refresh(void),
 		resetterm(void), saveterm(void), scr_init(char *),
 		scr_restore(char *), scr_set(char *), scrl(int),
-		scroll(WINDOW *), scrollok(WINDOW *, bool),
+		scroll(WINDOW *), scrollok(WINDOW *, int /*bool*/),
 		setscrreg(int, int), setterm(char *),
 		slk_init(int), standend(void), standout(void),
-		syncok(WINDOW *, int bool),
+		syncok(WINDOW *, int /*bool*/),
 		touchline(WINDOW *, int, int), touchwin(WINDOW *),
 		untouchwin(WINDOW *), vline(chtype, int),
 		waddchstr(WINDOW *, chtype *), waddstr(WINDOW *, char *),
@@ -618,7 +632,7 @@ extern int	addch(chtype), addchnstr(chtype *, int), addchstr(chtype *),
 		winsstr(WINDOW *, char *), winstr(WINDOW *, char *),
 		wstandend(WINDOW *), wstandout(WINDOW *);
 
-extern	void	bkgdset(chtype), idcok(WINDOW *, bool),
+extern	void	bkgdset(chtype), idcok(WINDOW *, int /*bool*/),
 		noqiflush(void),
 		wbkgdset(WINDOW *, chtype),
 		qiflush(void), timeout(int), wtimeout(WINDOW *, int),
@@ -848,15 +862,15 @@ extern int	addnwstr(), addwch(), addwchnstr(), addwchstr(),
 #ifdef __STDC__
 
 extern	void	wbkgdset(WINDOW *, chtype),
-		idcok(WINDOW *, bool),
-		wtimeout(WINDOW *, int), use_env(char);
+		idcok(WINDOW *, int /*bool*/),
+		wtimeout(WINDOW *, int), use_env(int /*char*/);
 
-extern	int	syncok(WINDOW *, bool),
-		notimeout(WINDOW *, bool),
-		clearok(WINDOW *, bool),
-		leaveok(WINDOW *, bool),
-		scrollok(WINDOW *, bool),
-		nodelay(WINDOW *, bool),
+extern	int	syncok(WINDOW *, int /*bool*/),
+		notimeout(WINDOW *, int /*bool*/),
+		clearok(WINDOW *, int /*bool*/),
+		leaveok(WINDOW *, int /*bool*/),
+		scrollok(WINDOW *, int /*bool*/),
+		nodelay(WINDOW *, int /*bool*/),
 		is_linetouched(WINDOW *, int), is_wintouched(WINDOW *),
 		touchwin(WINDOW *), redrawwin(WINDOW *), 
 		winchstr(WINDOW *, chtype *), winstr(WINDOW *, char *),
@@ -1007,7 +1021,7 @@ extern	int	overlay(WINDOW *, WINDOW *), overwrite(WINDOW *, WINDOW *),
 		box(WINDOW *, chtype, chtype), touchline(WINDOW *, int, int),
 		waddstr(WINDOW *, char *), werase(WINDOW *),
 		wclear(WINDOW *), intrflush(WINDOW *, int),
-		meta(WINDOW *, bool), setterm(char *), gettmode(void),
+		meta(WINDOW *, int), setterm(char *), gettmode(void),
 		halfdelay(int), echo(void), noecho(void), nl(void), nonl(void);
 
 extern	WINDOW *subpad(WINDOW *, int, int, int, int);
@@ -1215,22 +1229,23 @@ extern  SCREEN  *newterm();
 #define	reg	register
 
 /* Various video attributes */
-#define A_STANDOUT	000000200000
+#define A_STANDOUT	000000200000L
 #define	_STANDOUT	A_STANDOUT    /* for compatability with old curses */
-#define A_UNDERLINE	000000400000
-#define A_REVERSE	000001000000
-#define A_BLINK		000002000000
-#define A_DIM		000004000000
-#define A_BOLD		000010000000
-#define A_ALTCHARSET	000100000000
+#define A_UNDERLINE	000000400000L
+#define A_REVERSE	000001000000L
+#define A_BLINK		000002000000L
+#define A_DIM		000004000000L
+#define A_BOLD		000010000000L
+#define A_ALTCHARSET	000100000000L
 
 /* The next two are subject to change so don't depend on them */
-#define A_INVIS		000020000000
-#define A_PROTECT	000040000000
-#define A_NORMAL	000000000000
-#define A_ATTRIBUTES	037777600000	/* 0xFFFF0000 */
-#define A_CHARTEXT	000000177777	/* 0x0000FFFF */
-#define A_COLOR		017600000000
+#define A_INVIS		000020000000L
+#define A_PROTECT	000040000000L
+
+#define A_NORMAL	000000000000L
+#define A_ATTRIBUTES	037777600000L	/* 0xFFFF0000 */
+#define A_CHARTEXT	000000177777L	/* 0x0000FFFF */
+#define A_COLOR		017600000000L
 
 #define COLOR_PAIR(n)	((n) << 25)
 #define PAIR_NUMBER(n)	(((n) & A_COLOR) >> 25)
@@ -1280,6 +1295,5 @@ extern  SCREEN  *newterm();
 #define ALL_MOUSE_EVENTS	000000077777L
 #define REPORT_MOUSE_POSITION	000000100000L
 
-__SGI_LIBC_END_EXTERN_C
-#endif /* _CURSES_H */
+#endif /* CURSES_H */
 #endif /* BSDCURSES */

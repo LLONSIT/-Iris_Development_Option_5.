@@ -12,14 +12,14 @@
  *  in part, without the prior written consent of Silicon Graphics, Inc.  *
  *									  *
  **************************************************************************/
-#ident "$Revision: 1.3 $"
+#ident "$Revision: 1.2 $"
 
 /*
  * EFS arguments to the mount system call.
  */
 struct efs_args {
 	int	flags;		/* flags */
-	u_int	lbsize;		/* logical block size in bytes */
+	int	lbsize;		/* logical block size in bytes */
 };
 
 /*

@@ -1,7 +1,9 @@
 #ifndef __MEMORY_H__
 #define __MEMORY_H__
-
-#ident "$Revision: 1.10 $"
+#ifdef __cplusplus
+extern "C" {
+#endif
+#ident "$Revision: 1.5 $"
 /*
 *
 * Copyright 1992, Silicon Graphics, Inc.
@@ -28,60 +30,25 @@
 /*	The copyright notice above does not evidence any   	*/
 /*	actual or intended publication of such source code.	*/
 
-#include <internal/sgimacros.h>
 
 /* from stddef.h */
 #if !defined(_SIZE_T) && !defined(_SIZE_T_)
 #define _SIZE_T
-__SGI_LIBC_BEGIN_NAMESPACE_STD
 #if (_MIPS_SZLONG == 32)
 typedef unsigned int	size_t;
 #endif
 #if (_MIPS_SZLONG == 64)
 typedef unsigned long	size_t;
 #endif
-__SGI_LIBC_END_NAMESPACE_STD
-__SGI_LIBC_USING_FROM_STD(size_t)
 #endif
 
-__SGI_LIBC_BEGIN_NAMESPACE_STD
-__SGI_LIBC_BEGIN_EXTERN_C
 extern void *memccpy(void *, const void *, int, size_t);
-#ifndef __SGI_LIBC_USE_STRING_OVERLOADS
 extern void *memchr(const void *, int, size_t);
-#endif /* __SGI_LIBC_USE_STRING_OVERLOADS */
 extern void *memcpy(void *, const void *, size_t);
 extern void *memset(void *, int, size_t);
 extern int memcmp(const void *, const void *, size_t);
-__SGI_LIBC_END_EXTERN_C
-__SGI_LIBC_END_NAMESPACE_STD
 
-#ifdef __SGI_LIBC_USE_STRING_OVERLOADS
-#ifndef __sgi_cpp_memchr_defined
-#define __sgi_cpp_memchr_defined
-
-namespace __sgilib {
-__SGI_LIBC_BEGIN_EXTERN_C
-extern void *memchr(const void *, int, size_t);
-__SGI_LIBC_END_EXTERN_C
-} /* Close namespace __sgilib */
-
-__SGI_LIBC_BEGIN_NAMESPACE_STD
-inline const void* memchr(const void* s, int c, size_t n) {
-  return __sgilib::memchr(s, c, n);
+#ifdef __cplusplus
 }
-
-inline void* memchr(void* s, int c, size_t n) {
-  return __sgilib::memchr(s, c, n);
-}
-__SGI_LIBC_END_NAMESPACE_STD
-#endif /* __sgi_cpp_memchr_defined */
-#endif /* __SGI_LIBC_USE_STRING_OVERLOADS */
-
-__SGI_LIBC_USING_FROM_STD(memccpy)
-__SGI_LIBC_USING_FROM_STD(memchr)
-__SGI_LIBC_USING_FROM_STD(memcpy)
-__SGI_LIBC_USING_FROM_STD(memset)
-__SGI_LIBC_USING_FROM_STD(memcmp)
-
+#endif
 #endif /* !__MEMORY_H__ */

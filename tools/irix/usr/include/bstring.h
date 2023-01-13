@@ -1,5 +1,8 @@
 #ifndef __BSTRING_H__
 #define __BSTRING_H__
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*
  * bstring(3C) -- byte string operations
@@ -20,43 +23,14 @@
  * rights reserved under the Copyright Laws of the United States.
  */
 
-#ident "$Revision: 1.8 $"
+#ident "$Revision: 1.4 $"
 
-#include <internal/sgimacros.h>
-__SGI_LIBC_BEGIN_EXTERN_C
+extern void	bcopy(const void *, void *, int);
+extern int	bcmp(const void *, const void *, int);
+extern void	bzero(void *, int);
+extern void	blkclr(void *, int);
 
-__SGI_LIBC_BEGIN_NAMESPACE_STD
-
-#if !defined(_SIZE_T) && !defined(_SIZE_T_)
-#define _SIZE_T
-#if (_MIPS_SZLONG == 32)
-typedef unsigned int	size_t;
+#ifdef __cplusplus
+}
 #endif
-#if (_MIPS_SZLONG == 64)
-typedef unsigned long	size_t;
-#endif
-#endif
-
-__SGI_LIBC_END_NAMESPACE_STD
-
-__SGI_LIBC_USING_FROM_STD(size_t)
-
-extern void	bcopy(const void *, void *, size_t);
-extern int	bcmp(const void *, const void *, size_t);
-extern void	bzero(void *, size_t);
-extern void	blkclr(void *, size_t);
-
-#ifdef __INLINE_INTRINSICS
-/* The functions made intrinsic here can be activated by adding the
-** option -D__INLINE_INTRINSICS
-*/
-#if (defined(_COMPILER_VERSION) && (_COMPILER_VERSION >= 721))
-#pragma intrinsic (bcopy)
-#pragma intrinsic (bzero)
-#pragma intrinsic (blkclr)
-#endif /* COMPILER_VERSION >= 721 */
-#endif /* __INLINE_INTRINSICS */
-
-__SGI_LIBC_END_EXTERN_C
-
 #endif /* !__BSTRING_H__ */

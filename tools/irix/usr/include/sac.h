@@ -1,6 +1,9 @@
 #ifndef __SAC_H__
 #define __SAC_H__
-#ident "$Revision: 1.4 $"
+#ifdef __cplusplus
+extern "C" {
+#endif
+#ident "$Revision: 1.3 $"
 /*
 *
 * Copyright 1992, Silicon Graphics, Inc.
@@ -33,9 +36,6 @@
 # ident	"@(#)head.usr:sac.h	1.4.2.1"
 
 # include <sys/types.h>
-#include <internal/sgimacros.h>
-
-__SGI_LIBC_BEGIN_EXTERN_C
 
 # define IDLEN		4	/* length in bytes of a utmp id */
 # define SC_WILDC	0xff	/* wild character for utmp ids */
@@ -140,5 +140,7 @@ struct	sacmsg {
 # define E_NOCONTACT	10	/* _pmtab updated, but notification failure */
 
 # endif /* _SAC_H */
-__SGI_LIBC_END_EXTERN_C
+#ifdef __cplusplus
+}
+#endif
 #endif /* !__SAC_H__ */

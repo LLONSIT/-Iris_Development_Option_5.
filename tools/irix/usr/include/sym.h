@@ -14,7 +14,7 @@
  * |         Sunnyvale, California 94088-3650, USA             |
  * |-----------------------------------------------------------|
  */
-/* $Header: /isms/cmplrs.src/v7.4/include/RCS/sym.h,v 7.23 1997/04/03 00:25:03 bean Exp $ */
+/* $Header: /proj/irix5.3/isms/cmplrs/include/RCS/sym.h,v 7.20 1994/08/02 18:07:30 rdahl Exp $ */
 #ifndef __SYM_H__
 #define __SYM_H__
 
@@ -81,17 +81,9 @@ typedef unsigned long ulong_i;
 typedef struct __sgi_hdrr_s  {
 	short	magic;		/* to verify validity of the table */
 	short	vstamp;		/* version stamp */
-	long_i	ilineMax;	/* number of line number entries in the
-				** virtual table of uncompressed lines
-				** (ie, the number
-				** of 32-bit words of text, which is
-				** by definition identical to the size
-				** of the virtual (uncompressed) line table).
-				*/
-	long_i	cbLine;		/* number of bytes for compressed
-				** line number entries */
-	long_i	cbLineOffset;	/* offset to start of compressed
-				** line number table */
+	long_i	ilineMax;	/* number of line number entries */
+	long_i	cbLine;		/* number of bytes for line number entries */
+	long_i	cbLineOffset;	/* offset to start of line number entries*/
 	long_i	idnMax;		/* max index into dense number table */
 	long_i	cbDnOffset;	/* offset to start dense number table */
 	long_i	ipdMax;		/* number of procedures */
@@ -135,28 +127,14 @@ typedef struct __sgi_hdrr_s  {
  * setup at runtime.
  */
 typedef struct fdr {
-	ulong_i	adr;	/* memory address of beginning of file.
-			** For a cord-ed a.out or dso, this is
-			** meaningless, since the procedures are no
-			** longer in a contiguous clump. Hence
-			** this can be 0.
-			*/
+	ulong_i	adr;	/* memory address of beginning of file */
 	long_i	rss;		/* file name (of source, if known) */
 	long_i	issBase;	/* file's string space */
 	long_i	cbSs;		/* number of bytes in the ss */
 	long_i	isymBase;	/* beginning of symbols */
 	long_i	csym;		/* count file's of symbols */
-	long_i	ilineBase;	/* index into virtual table of 32-bit
-				** integers containing line number for
-				** each word in text. 
-				** Table not on disk: constructed by libmld.
-				** table same size as text.
-				*/
-	long_i	cline;		/* size (number of 32 bit words) in 
-				** virtual table for this FDR.
-				** cline+ilineBase for this FDR give
-				** ilineBase for next FDR having text
-				*/
+	long_i	ilineBase;	/* file's line symbols */
+	long_i	cline;		/* count of file's line symbols */
 	long_i	ioptBase;	/* file's optimization entries */
 	long_i	copt;		/* count of file's optimization entries */
 				/* the following MUST be unsigned: still
@@ -183,19 +161,12 @@ typedef struct fdr {
                          (These are the most significant bits of what is, 
 			 after concatenating the bits, a 20 bit number) */
 	unsigned reserved : 13;  /* reserved for future use */
-	long_i	cbLineOffset;	/* byte offset from beginning of compressed
-				** line table: gives offset of start of
-				** compressed line table for this FDR.
-				*/
-	long_i	cbLine;		/* size in bytes of the compressed line
-				** table for this FDR.
-				** cbLineOffset +cbLIne for this FDR give
-				** cbLineOffset of next FDR having text
-				*/
+	long_i	cbLineOffset;	/* byte offset from header for this file ln's */
+	long_i	cbLine;		/* size of lines for this file */
 	} FDR, *pFDR;
 #define cbFDR sizeof(FDR)
 #define fdNil ((pFDR)0)
-#define ifdNil 0xffff 
+#define ifdNil -1
 #define ifdTemp 0
 #define ilnNil -1
 #define __sgi_mld_set_cpd(__fdr,__val)  \
@@ -229,16 +200,9 @@ typedef struct pdr {
 	long_i	frameoffset;	/* frame size */
 	short	framereg;	/* frame pointer register */
 	short	pcreg;		/* offset or reg of return pc */
-	long_i	lnLow;		/* lowest line number in the procedure 
-				** or -1
-				*/
-	long_i	lnHigh;		/* highest line number  in the procedure 
-				** or -1
-				*/
-	long_i	cbLineOffset;	/* offset in the compressed line
-				** table for this procedure within the
-                                ** table for this FDR (file) 
-				*/
+	long_i	lnLow;		/* lowest line in the procedure */
+	long_i	lnHigh;		/* highest line in the procedure */
+	long_i	cbLineOffset;	/* byte offset for this procedure from the fd base */
 	} PDR, *pPDR;
 #define cbPDR sizeof(PDR)
 #define pdNil ((pPDR) 0)
@@ -320,15 +284,10 @@ typedef struct __sgi_extr__ {
 	unsigned weakext:1;	/* symbol is weak external */
 	unsigned deltacplus:1;	/* symbol is delta C++ symbol */
 	unsigned multiext:1;	/* symbol may be defined multiple times */
-	unsigned optionalext:1;	/* symbol is optional external */
-	unsigned reserved:10;	/* reserved for future use */
-	unsigned short	ifd;	/* where the iss and index fields point into */
+	unsigned reserved:11;	/* reserved for future use */
+	short	ifd;		/* where the iss and index fields point into */
 	SYMR	asym;		/* symbol for the external */
 	} EXTR, *pEXTR;
-/* ifd is now unsigned short to allow 65534 as the maximum IFD that
-   can be referenced here.
-*/
-
 #define extNil ((pEXTR)0)
 #define cbEXTR sizeof(EXTR)
 
@@ -527,7 +486,7 @@ extern char _rt_symbol_table_size[];
 #endif /* defined(_LANGUAGE_C) || defined(_LANGUAGE_C_PLUS_PLUS) */
 
 #ifdef _LANGUAGE_PASCAL
-#define ifdNil 16#fffff
+#define ifdNil -1
 #define ilnNil -1
 #define ipdNil -1
 #define ilineNil -1

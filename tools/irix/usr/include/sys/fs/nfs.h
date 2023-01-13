@@ -1,6 +1,3 @@
-/*
- * $Revision: 1.83 $
- */
 /*	@(#)nfs.h	2.2 88/05/20 NFSSRC4.0 from  2.36 88/02/08 SMI 	*/
 
 #ifndef __NFS_HEADER__
@@ -12,11 +9,21 @@
  */
 #include <sys/errno.h>
 #include <sys/time.h>
-#include <sys/uio.h>
+#ifdef NOTDEF /* _KERNEL XXXbe we would like to get xdr.h from fs/nfs */
+#include "xdr.h"
+#else
 #include <rpc/xdr.h>
+#endif
+#ifndef NBPP
+#include <sys/immu.h>
+#endif
 
 /* Maximum size of data portion of a remote request */
+#if	NBPP == 4096
 #define	NFS_MAXDATA	8192
+#else
+#define	NFS_MAXDATA	NBPP	/* must be page aligned */
+#endif
 #define	NFS_MAXNAMLEN	255
 #define	NFS_MAXPATHLEN	1024
 
@@ -46,13 +53,11 @@ enum nfsstat {
 	NFSERR_NOENT=ENOENT,		/* No such file or directory */
 	NFSERR_IO=EIO,			/* I/O error */
 	NFSERR_NXIO=ENXIO,		/* No such device or address */
-	NFSERR_JUKEBOX=EAGAIN,		/* Resource temporarily unavailable */
 	NFSERR_ACCES=EACCES,		/* Permission denied */
 	NFSERR_EXIST=EEXIST,		/* File exists */
 	NFSERR_NODEV=ENODEV,		/* No such device */
 	NFSERR_NOTDIR=ENOTDIR,		/* Not a directory */
 	NFSERR_ISDIR=EISDIR,		/* Is a directory */
-	NFSERR_INVAL=EINVAL,		/* Is a directory */
 	NFSERR_FBIG=EFBIG,		/* File too large */
 	NFSERR_NOSPC=ENOSPC,		/* No space left on device */
 	NFSERR_ROFS=EROFS,		/* Read-only file system */
@@ -91,6 +96,8 @@ extern short		nfs_errmap[];
 	((u_short)(status) > (u_short)NFSERR_WFLUSH ? (short) EIO \
 	    : nfs_errmap[(short)status])
 
+#define OLDENFSREMOTE 135		/* for backward compatibility */
+
 /*
  * File types
  */
@@ -108,13 +115,14 @@ enum nfsftype {
  * Special kludge for fifos (named pipes)  [to adhere to NFS Protocol Spec]
  *
  * VFIFO is not in the protocol spec (VNON will be replaced by VFIFO)
- * so the over-the-wire representation is VCHR with a 32 bit '-1' device number.
- * For 64-bit compatibility, we merely call this 0xFFFFFFFF and cast to the
- * appropriate type for na_rdev.
+ * so the over-the-wire representation is VCHR with a '-1' device number.
+ *
+ * NOTE: This kludge becomes unnecessary with the Protocol Revision,
+ *       but it may be necessary to support it (backwards compatibility).
  */
 #define NFS_FIFO_TYPE	NFCHR
 #define NFS_FIFO_MODE	S_IFCHR
-#define NFS_FIFO_DEV	((u_int)0xFFFFFFFF)
+#define NFS_FIFO_DEV	(~0)
 
 /* identify fifo in nfs attributes */
 #define NA_ISFIFO(NA)	(((NA)->na_type == NFS_FIFO_TYPE) && \
@@ -133,12 +141,26 @@ enum nfsftype {
  */
 #define	NFS_FHSIZE	32
 
+/*
+ * File access handle
+ * This structure is the Sun server representation of a file.
+ * It is handed out by a server for the client to use in further
+ * file transactions.
+ */
+
+struct nfs_fid {
+	u_short nf_len;
+	u_short nf_pad;
+	char    nf_data[NFS_FHSIZE];
+};
+
 #if defined NFSSERVER || defined SVCFH
 
 /*
  * This struct is only used to find the size of the data field in the
  * fhandle structure below.
  */
+static
 struct fhsize {
 	fsid_t	f0;
 	u_short	f1;
@@ -165,7 +187,7 @@ typedef struct svcfh fhandle_t;
  */
 typedef union {
 	char	fh_data[NFS_FHSIZE];			/* opaque data */
-	u_int	fh_hash[NFS_FHSIZE/sizeof(u_int)];	/* hash key */
+	u_long	fh_hash[NFS_FHSIZE/sizeof(u_long)];	/* hash key */
 } fhandle_t;
 #endif
 
@@ -175,15 +197,12 @@ typedef union {
  */
 struct nfswriteargs {
 	fhandle_t	wa_fhandle;	/* handle for file */
-	u_int		wa_begoff;	/* beginning byte offset in file */
-	u_int		wa_offset;	/* current byte offset in file */
-	u_int		wa_totcount;	/* total write cnt (to this offset) */
-	u_int		wa_count;	/* size of this write */
+	u_long		wa_begoff;	/* beginning byte offset in file */
+	u_long		wa_offset;	/* current byte offset in file */
+	u_long		wa_totcount;	/* total write cnt (to this offset) */
+	u_long		wa_count;	/* size of this write */
 	char		*wa_data;	/* data to write (up to NFS_MAXDATA) */
-#ifdef _KERNEL
-	struct uio	wa_uio;		/* uio to mimic mbuf chain */
-#endif
-	char		wa_putbuf_ok;	/* can we use xdrmbuf_putbuf? */
+	struct mbuf	*wa_mbuf;	/* mbuf(s) containing data */
 };
 
 
@@ -192,81 +211,19 @@ struct nfswriteargs {
  */
 struct nfsfattr {
 	enum nfsftype	na_type;	/* file type */
-	u_int		na_mode;	/* protection mode bits */
-	u_int		na_nlink;	/* # hard links */
-	u_int		na_uid;		/* owner user id */
-	u_int		na_gid;		/* owner group id */
-	u_int		na_size;	/* file size in bytes */
-	u_int		na_blocksize;	/* prefered block size */
-	u_int		na_rdev;	/* special device # */
-	u_int		na_blocks;	/* Kb of disk used by file */
-	u_int		na_fsid;	/* device # */
-	u_int		na_nodeid;	/* inode # */
-	struct irix5_timeval	na_atime;	/* time of last access */
-	struct irix5_timeval	na_mtime;	/* time of last modification */
-	struct irix5_timeval	na_ctime;	/* time of last change */
-};
-
-/*
- * NFS generic interface. syssgi(SGI_NFS_GENERIC, NFSGI_...);
- */
-#define NFSGI_NULL            0 /* NOP */
-#define NFSGI_TEST_CMD        1 /* Test command */
-#define NFSGI_CHK_EXP_PATH    2 /* Check exported path */
-#define NFSGI_LISTEN	      3 /* listen on the given transport for kernel RPC */
-#define NFSGI_MANAGER	      4 /* Be an RPC manager thread (blocks) */
-#define NFSGI_PRIME_AUTHCACHE 5 /* Prime the nfsauth cache */
-#define NFSGI_DROP_CONNECTION 6 /* Drop connections at specificed address */
-#define NFSGI_GETTHREADSTATS  99 /* read array of per-thread stats */
-#define NFSGI_GETOPSTATS      100 /* read of per-client stats */
-#define NFSGI_GETEXISTATS     101 /* read of per-export stats */
-
-/* Opstats extraction interface for user space apps.
- *
- * generation, cookie and cookie must be zero for first call.
- * these must not be touched until last set of stats (eof = 1)
- * is extracted, at which time they should be zero'd and collection
- * can start again from scratch.
- *
- * eof is set to 1 when last set of stats is extracted.
- *
- * If an EIRDM is received when getting the stats, it means that
- * the tree has changed and we have lost our position in the list.
- * Hence we need to bzero generation, cookie and len, and restart
- * the gathering from the start. */
-typedef struct nfs_getopstats_args {
-#if (_MIPS_SZLONG == 32)
-       	char		*nga_pad;	/* MUST BE ZERO */
-       	char		*nga_buf;
-#endif
-#if (_MIPS_SZLONG == 64)
-	char		*nga_buf;
-#endif
-	uint32_t	nga_tree_generation; /* persistent */
-	uint32_t	nga_int_generation;  /* internal */
-	int64_t		nga_buflen;
-	int64_t		nga_cookielen;
-	int64_t		nga_eof;
-#define NGA_MAXCOOKIELEN	16
-	char		nga_cookie[NGA_MAXCOOKIELEN];
-} nfs_getopstats_args_t;
-
-/* A pointer to one of these is passed as the argument to NFSGI_PRIME_AUTHCACHE */
-struct nfs_primeauth_args {
-        int             npa_access;     /* access bitmask */
-	char		npa_netid[28];	/* transport name, e.g. "udp", "tcp6" */
-	int		npa_addrlen;	/* address length */
-	char	    	npa_addr[128];	/* sizeof(struct sockaddr_storage) */
-        char            npa_path[1024]; /* MAXPATHLEN */
-};
-
-/* A pointer to one of these is passed as the argument to NFSGI_LISTEN */
-struct nfs_listen_args {
-	int		nla_fd; 	/* optional file descriptor (BSD socket) or -1 */
-	int		nla_nconns;	/* optional maximal number of connections or 0 */
-	char		nla_netid[28];	/* transport name, e.g. "udp", "tcp6" */
-	int		nla_addrlen;	/* optional bind address or addrlen=0 */
-	char	    	nla_addr[128];	/* sizeof(struct sockaddr_storage) */
+	u_long		na_mode;	/* protection mode bits */
+	u_long		na_nlink;	/* # hard links */
+	u_long		na_uid;		/* owner user id */
+	u_long		na_gid;		/* owner group id */
+	u_long		na_size;	/* file size in bytes */
+	u_long		na_blocksize;	/* prefered block size */
+	u_long		na_rdev;	/* special device # */
+	u_long		na_blocks;	/* Kb of disk used by file */
+	u_long		na_fsid;	/* device # */
+	u_long		na_nodeid;	/* inode # */
+	struct timeval	na_atime;	/* time of last access */
+	struct timeval	na_mtime;	/* time of last modification */
+	struct timeval	na_ctime;	/* time of last change */
 };
 
 #ifdef _KERNEL
@@ -287,9 +244,9 @@ extern enum vtype	ntype_to_vtype(enum nfsftype);
  */
 struct nfsreadargs {
 	fhandle_t	ra_fhandle;	/* handle for file */
-	u_int		ra_offset;	/* byte offset in file */
-	u_int		ra_count;	/* immediate read count */
-	u_int		ra_totcount;	/* total read cnt (from this offset) */
+	u_long		ra_offset;	/* byte offset in file */
+	u_long		ra_count;	/* immediate read count */
+	u_long		ra_totcount;	/* total read cnt (from this offset) */
 };
 
 /*
@@ -297,12 +254,11 @@ struct nfsreadargs {
  */
 struct nfsrrok {
 	struct nfsfattr	rrok_attr;	/* attributes, need for pagin */
-	u_int		rrok_count;	/* bytes of data */
-	u_int		rrok_bsize;	/* buffer memory size */
+	u_long		rrok_count;	/* bytes of data */
 	char		*rrok_data;	/* data (up to NFS_MAXDATA bytes) */
-#ifdef _KERNEL
-	struct buf	*rrok_bp;	/* buffer for copy avoidance */
-#endif /* _KERNEL */
+	struct buf	*rrok_bp;	/* buffer pointer for bread */
+	u_long		rrok_bsize;	/* buffer memory size */
+	struct vnode	*rrok_vp;	/* vnode assoc. with mapping */
 };
 
 /*
@@ -318,20 +274,21 @@ struct nfsrdresult {
 #define	rr_attr		rr_u.rr_ok_u.rrok_attr
 #define	rr_count	rr_u.rr_ok_u.rrok_count
 #define	rr_data		rr_u.rr_ok_u.rrok_data
-#define	rr_bsize	rr_u.rr_ok_u.rrok_bsize
 #define rr_bp		rr_u.rr_ok_u.rrok_bp
+#define	rr_bsize	rr_u.rr_ok_u.rrok_bsize
+#define rr_vp		rr_u.rr_ok_u.rrok_vp
 
 
 /*
  * File attributes which can be set
  */
 struct nfssattr {
-	u_int		sa_mode;	/* protection mode bits */
-	u_int		sa_uid;		/* owner user id */
-	u_int		sa_gid;		/* owner group id */
-	u_int		sa_size;	/* file size in bytes */
-	struct irix5_timeval	sa_atime;	/* time of last access */
-	struct irix5_timeval	sa_mtime;	/* time of last modification */
+	u_long		sa_mode;	/* protection mode bits */
+	u_long		sa_uid;		/* owner user id */
+	u_long		sa_gid;		/* owner group id */
+	u_long		sa_size;	/* file size in bytes */
+	struct timeval	sa_atime;	/* time of last access */
+	struct timeval	sa_mtime;	/* time of last modification */
 };
 
 
@@ -374,8 +331,8 @@ struct nfsrdlnres {
  */
 struct nfsrddirargs {
 	fhandle_t rda_fh;	/* directory handle */
-	u_int rda_offset;	/* offset in directory (opaque) */
-	u_int rda_count;	/* number of directory bytes to read */
+	u_long rda_offset;	/* offset in directory (opaque) */
+	u_long rda_count;	/* number of directory bytes to read */
 };
 
 /*
@@ -386,7 +343,7 @@ struct nfsrdok {
 	u_long	rdok_size;		/* size in bytes of entries */
 	bool_t	rdok_eof;		/* true if last entry is in result */
 	struct dirent *rdok_entries;	/* variable number of entries */
-	short	rdok_segflg;		/* transaction is to go to user space */
+	struct buf *rdok_bp;		/* buffer containing entries */
 	u_char	rdok_abi;		/* Abi of calling process - */
 					/* valid if segflg == userspace */
 };
@@ -407,7 +364,6 @@ struct nfsrddirres {
 #define	rd_eof		rd_u.rd_rdok_u.rdok_eof
 #define	rd_entries	rd_u.rd_rdok_u.rdok_entries
 #define	rd_abi		rd_u.rd_rdok_u.rdok_abi
-#define	rd_segflg	rd_u.rd_rdok_u.rdok_segflg
 
 /*
  * Arguments for directory operations
@@ -510,41 +466,47 @@ struct nfsstatfs {
  * XDR routines for handling structures defined above
  */
 #ifdef _KERNEL
-struct __kxdr_s;
-struct export;
-extern bool_t xdr_attrstat(struct __kxdr_s *, struct nfsattrstat *);
-extern bool_t xdr_creatargs(struct __kxdr_s *, struct nfscreatargs *);
-extern bool_t xdr_diropargs(struct __kxdr_s *, struct nfsdiropargs *);
-extern bool_t xdr_diropres(struct __kxdr_s *, struct nfsdiropres *);
-extern bool_t xdr_drok(struct __kxdr_s *, struct nfsdrok *);
-extern bool_t xdr_fattr(struct __kxdr_s *, struct nfsfattr *);
-extern bool_t xdr_fhandle(struct __kxdr_s *, fhandle_t *);
-extern bool_t xdr_fsok(struct __kxdr_s *, struct nfsstatfsok *);
-extern bool_t xdr_linkargs(struct __kxdr_s *, struct nfslinkargs *);
-extern bool_t xdr_rddirargs(struct __kxdr_s *, struct nfsrddirargs *);
-extern bool_t xdr_putrddirres(struct __kxdr_s *, struct nfsrddirres *);
-extern bool_t xdr_getrddirres(struct __kxdr_s *, struct nfsrddirres *);
-extern bool_t xdr_rdlnres(struct __kxdr_s *, struct nfsrdlnres *);
-extern bool_t xdr_rdresult(struct __kxdr_s *, struct nfsrdresult *);
-extern bool_t xdr_readargs(struct __kxdr_s *, struct nfsreadargs *);
-extern bool_t xdr_rnmargs(struct __kxdr_s *, struct nfsrnmargs *);
-extern bool_t xdr_rrok(struct __kxdr_s *, struct nfsrrok *);
-extern bool_t xdr_saargs(struct __kxdr_s *, struct nfssaargs *);
-extern bool_t xdr_sattr(struct __kxdr_s *, struct nfssattr *);
-extern bool_t xdr_slargs(struct __kxdr_s *, struct nfsslargs *);
-extern bool_t xdr_srok(struct __kxdr_s *, struct nfssrok *);
-extern bool_t xdr_irix5_timeval(struct __kxdr_s *, struct irix5_timeval *);
-extern bool_t xdr_writeargs(struct __kxdr_s *, struct nfswriteargs *);
-extern bool_t xdr_statfs(struct __kxdr_s *, struct nfsstatfs *);
+struct __xdr_s;
+extern bool_t xdr_attrstat(struct __xdr_s *, struct nfsattrstat *);
+extern bool_t xdr_creatargs(struct __xdr_s *, struct nfscreatargs *);
+extern bool_t xdr_diropargs(struct __xdr_s *, struct nfsdiropargs *);
+extern bool_t xdr_diropres(struct __xdr_s *, struct nfsdiropres *);
+extern bool_t xdr_drok(struct __xdr_s *, struct nfsdrok *);
+extern bool_t xdr_fattr(struct __xdr_s *, struct nfsfattr *);
+extern bool_t xdr_fhandle(struct __xdr_s *, fhandle_t *);
+extern bool_t xdr_fsok(struct __xdr_s *, struct nfsstatfsok *);
+extern bool_t xdr_linkargs(struct __xdr_s *, struct nfslinkargs *);
+extern bool_t xdr_rddirargs(struct __xdr_s *, struct nfsrddirargs *);
+extern bool_t xdr_putrddirres(struct __xdr_s *, struct nfsrddirres *);
+extern bool_t xdr_getrddirres(struct __xdr_s *, struct nfsrddirres *);
+extern bool_t xdr_rdlnres(struct __xdr_s *, struct nfsrdlnres *);
+extern bool_t xdr_rdresult(struct __xdr_s *, struct nfsrdresult *);
+extern bool_t xdr_readargs(struct __xdr_s *, struct nfsreadargs *);
+extern bool_t xdr_rnmargs(struct __xdr_s *, struct nfsrnmargs *);
+extern bool_t xdr_rrok(struct __xdr_s *, struct nfsrrok *);
+extern bool_t xdr_saargs(struct __xdr_s *, struct nfssaargs *);
+extern bool_t xdr_sattr(struct __xdr_s *, struct nfssattr *);
+extern bool_t xdr_slargs(struct __xdr_s *, struct nfsslargs *);
+extern bool_t xdr_srok(struct __xdr_s *, struct nfssrok *);
+extern bool_t xdr_timeval(struct __xdr_s *, struct timeval *);
+extern bool_t xdr_writeargs(struct __xdr_s *, struct nfswriteargs *);
+extern bool_t xdr_statfs(struct __xdr_s *, struct nfsstatfs *);
 
-extern void	sattr_to_vattr(struct nfssattr *, struct vattr *);
-extern int	vattr_to_nattr(struct vattr *, struct nfsfattr *,
-			struct export *);
+extern int	sattr_to_vattr(struct nfssattr *, struct vattr *);
+extern int	vattr_to_nattr(struct vattr *, struct nfsfattr *);
+
+#if NBPP == 4096
+#define NFS_RW_ZONES
+extern struct zone *nfsreadargs_zone;
+extern struct zone *nfsrdresult_zone;
+extern struct zone *nfswriteargs_zone;
+extern struct zone *nfsattrstat_zone;
+#endif
 
 #endif
 
 /*
- * Remote file service routines for NFS v2
+ * Remote file service routines
  */
 #define	RFS_NULL	0
 #define	RFS_GETATTR	1
@@ -571,7 +533,6 @@ extern int	vattr_to_nattr(struct vattr *, struct nfsfattr *,
  */
 #define	NFS_PROGRAM	((u_long)100003)
 #define	NFS_VERSION	((u_long)2)
-#define	NFS3_VERSION	((u_long)3)
 #define	NFS_PORT	2049
 
 /*
@@ -612,27 +573,63 @@ typedef char createverf3[NFS3_CREATEVERFSIZE];
 
 typedef char writeverf3[NFS3_WRITEVERFSIZE];
 
-/*
- * Maximum file size. This is a direct plagerism of xfs header files. 
- * and the XFS_BIG_FILES stuff.
- * for files > 2^40-1, we need pgno_t to be 64 bits.
- * if bits(pgno_t == 64 max is 2^63 - 1 
- * else 2^40 - 1 (40=31+9) 
- * Note, we allow seeks to this offset, although you can't read or write.
- */
+/* VERY DUBIOUS */
 
-#if _MIPS_SIM != _ABI64
-#define NFS3_MAX_FILE_OFFSET     ((1LL<<40)-1LL)
-#else
-#define NFS3_MAX_FILE_OFFSET     ((long long)((1ULL<<63)-1ULL))
-#endif
+#define uio_loffset	uio_offset
+typedef __uint32_t offset_t;
+typedef caddr_t page_t;			/* strictly temporary */
+struct page {				/* strictly temporary */
+    struct page	*fill;
+};
+struct seg {				/* strictly temporary */
+    struct seg	*fill;
+};
+struct as {				/* strictly temporary */
+    struct as	*fill;
+};
+enum seg_rw	{BOGUS1, BOGUS2};
+typedef struct {
+    char	*kstat_named_string;
+    int		kstat_named_int;
+} kstat_named_t;
+#define	KSTAT_DATA_ULONG	1	/* not even defined in sun code! */
 
-#define	MAXOFF_T	NFS3_MAX_FILE_OFFSET
+typedef struct {
+    struct {
+	int     _l;
+    } _p;
+    int _f;
+} lloff_t;
+
+
+#define	MAXOFF_T	0x40000000
+
+
+#define	RW_DEFAULT	1
+#define	DEFAULT_WT	2
+
+
+#if _IRIX5
+#define	MAXBMASK	0x1fff
+#define	MAXBOFFSET	0x1fff
+#endif /* _IRIX5  */
+#if _SUN
+#define	MAXBMASK	0xffff
+#define	MAXBOFFSET	0xffff
+#endif /* _SUN  */
 
 #define	PAGESIZE	NBPC
 #define PAGEOFFSET	(PAGESIZE - 1)
+#define	PAGEMASK	(~PAGEOFFSET)
 
 #define IS_SWAPVP(vp)	(vp->v_flag & VISSWAP)
+
+#define mutex_tryenter(sp)	cpsema(sp)
+
+#define TS_RUN			0
+
+/* END DUBIOUS */
+
 
 struct nfs_fh3 {
 	u_int fh3_length;
@@ -690,7 +687,6 @@ enum nfsstat3 {
         NFS3ERR_DQUOT = 69,
         NFS3ERR_STALE = 70,
         NFS3ERR_REMOTE = 71,
-	NFS3ERR_NOATTR = 1009,
         NFS3ERR_BADHANDLE = 10001,
         NFS3ERR_NOT_SYNC = 10002,
         NFS3ERR_BAD_COOKIE = 10003,
@@ -703,7 +699,6 @@ enum nfsstat3 {
 typedef enum nfsstat3 nfsstat3;
 
 enum ftype3 {
-	NF3NONE = 0,
         NF3REG = 1,
         NF3DIR = 2,
         NF3BLK = 3,
@@ -970,10 +965,7 @@ struct READ3resok {
 		u_int data_len;
 		char *data_val;
 	} data;
-#ifdef _KERNEL
-	struct buf	*bp;	/* buffer for copy avoidance */
-	u_int		pboff;	/* buffer page offset */
-#endif /* _KERNEL */
+	u_int size;
 };
 typedef struct READ3resok READ3resok;
 
@@ -1006,11 +998,7 @@ struct WRITE3args {
 	struct {
 		u_int data_len;
 		char *data_val;
-		char  putbuf_ok;	/* can we use xdrmbuf_putbuf? */
 	} data;
-#ifdef _KERNEL
-	struct uio uio;
-#endif /* _KERNEL */
 };
 typedef struct WRITE3args WRITE3args;
 
@@ -1312,7 +1300,6 @@ struct READDIR3resok {
 	u_int size;
 	u_int count;
 	cookie3 cookie;
-	u_char rddir_abi;
 };
 typedef struct READDIR3resok READDIR3resok;
 
@@ -1361,10 +1348,9 @@ struct READDIRPLUS3resok {
 	dirlistplus3 reply;
 	u_int size;
 	u_int count;
-	u_int unused_left_for_bc_1;
-	void *unused_left_for_bc_2;
-	void *unused_left_for_bc_3;
-	u_char unused_left_for_bc_4;
+	u_int maxcount;
+	post_op_attr *attributes;
+	post_op_fh3 *handles;
 };
 typedef struct READDIRPLUS3resok READDIRPLUS3resok;
 
@@ -1508,7 +1494,6 @@ struct COMMIT3res {
 };
 typedef struct COMMIT3res COMMIT3res;
 
-
 #define NFSPROC3_NULL ((u_long)0)
 extern  void * nfsproc3_null_3();
 #define NFSPROC3_GETATTR ((u_long)1)
@@ -1557,179 +1542,208 @@ extern  COMMIT3res * nfsproc3_commit_3();
 #ifdef _KERNEL
 /* the xdr functions */
 
-#define xdr_nfsstat3(xdrs, objp) kxdr_enum(xdrs, (enum_t *)objp)
-
-extern bool_t xdr_GETATTR3args(struct __kxdr_s *, GETATTR3args *);
-extern bool_t xdr_GETATTR3resok(struct __kxdr_s *, GETATTR3resok *);
-extern bool_t xdr_GETATTR3res(struct __kxdr_s *, GETATTR3res *);
-extern bool_t xdr_sattrguard3(struct __kxdr_s *, sattrguard3 *);
-extern bool_t xdr_SETATTR3args(struct __kxdr_s *, SETATTR3args *);
-extern bool_t xdr_SETATTR3resok(struct __kxdr_s *, SETATTR3resok *);
-extern bool_t xdr_SETATTR3resfail(struct __kxdr_s *, SETATTR3resfail *);
-extern bool_t xdr_SETATTR3res(struct __kxdr_s *, SETATTR3res *);
-extern bool_t xdr_LOOKUP3args(struct __kxdr_s *, LOOKUP3args *);
-extern bool_t xdr_LOOKUP3resok(struct __kxdr_s *, LOOKUP3resok *);
-extern bool_t xdr_LOOKUP3resfail(struct __kxdr_s *, LOOKUP3resfail *);
-extern bool_t xdr_LOOKUP3res(struct __kxdr_s *, LOOKUP3res *);
-extern bool_t xdr_ACCESS3args(struct __kxdr_s *, ACCESS3args *);
-extern bool_t xdr_ACCESS3resok(struct __kxdr_s *, ACCESS3resok *);
-extern bool_t xdr_ACCESS3resfail(struct __kxdr_s *, ACCESS3resfail *);
-extern bool_t xdr_ACCESS3res(struct __kxdr_s *, ACCESS3res *);
-extern bool_t xdr_READLINK3args(struct __kxdr_s *, READLINK3args *);
-extern bool_t xdr_READLINK3resok(struct __kxdr_s *, READLINK3resok *);
-extern bool_t xdr_READLINK3resfail(struct __kxdr_s *, READLINK3resfail *);
-extern bool_t xdr_READLINK3res(struct __kxdr_s *, READLINK3res *);
-extern bool_t xdr_READ3args(struct __kxdr_s *, READ3args *);
-extern bool_t xdr_READ3resok(struct __kxdr_s *, READ3resok *);
-extern bool_t xdr_READ3resfail(struct __kxdr_s *, READ3resfail *);
-extern bool_t xdr_READ3res(struct __kxdr_s *, READ3res *);
-extern bool_t xdr_stable_how(struct __kxdr_s *, stable_how *);
-extern bool_t xdr_WRITE3args(struct __kxdr_s *, WRITE3args *);
-extern bool_t xdr_WRITE3resok(struct __kxdr_s *, WRITE3resok *);
-extern bool_t xdr_WRITE3resfail(struct __kxdr_s *, WRITE3resfail *);
-extern bool_t xdr_WRITE3res(struct __kxdr_s *, WRITE3res *);
-extern bool_t xdr_createmode3(struct __kxdr_s *, createmode3 *);
-extern bool_t xdr_createhow3(struct __kxdr_s *, createhow3 *);
-extern bool_t xdr_CREATE3args(struct __kxdr_s *, CREATE3args *);
-extern bool_t xdr_CREATE3resok(struct __kxdr_s *, CREATE3resok *);
-extern bool_t xdr_CREATE3resfail(struct __kxdr_s *, CREATE3resfail *);
-extern bool_t xdr_CREATE3res(struct __kxdr_s *, CREATE3res *);
-extern bool_t xdr_MKDIR3args(struct __kxdr_s *, MKDIR3args *);
-extern bool_t xdr_MKDIR3resok(struct __kxdr_s *, MKDIR3resok *);
-extern bool_t xdr_MKDIR3resfail(struct __kxdr_s *, MKDIR3resfail *);
-extern bool_t xdr_MKDIR3res(struct __kxdr_s *, MKDIR3res *);
-extern bool_t xdr_symlinkdata3(struct __kxdr_s *, symlinkdata3 *);
-extern bool_t xdr_SYMLINK3args(struct __kxdr_s *, SYMLINK3args *);
-extern bool_t xdr_SYMLINK3resok(struct __kxdr_s *, SYMLINK3resok *);
-extern bool_t xdr_SYMLINK3resfail(struct __kxdr_s *, SYMLINK3resfail *);
-extern bool_t xdr_SYMLINK3res(struct __kxdr_s *, SYMLINK3res *);
-extern bool_t xdr_devicedata3(struct __kxdr_s *, devicedata3 *);
-extern bool_t xdr_mknoddata3(struct __kxdr_s *, mknoddata3 *);
-extern bool_t xdr_MKNOD3args(struct __kxdr_s *, MKNOD3args *);
-extern bool_t xdr_MKNOD3resok(struct __kxdr_s *, MKNOD3resok *);
-extern bool_t xdr_MKNOD3resfail(struct __kxdr_s *, MKNOD3resfail *);
-extern bool_t xdr_MKNOD3res(struct __kxdr_s *, MKNOD3res *);
-extern bool_t xdr_REMOVE3args(struct __kxdr_s *, REMOVE3args *);
-extern bool_t xdr_REMOVE3resok(struct __kxdr_s *, REMOVE3resok *);
-extern bool_t xdr_REMOVE3resfail(struct __kxdr_s *, REMOVE3resfail *);
-extern bool_t xdr_REMOVE3res(struct __kxdr_s *, REMOVE3res *);
-extern bool_t xdr_RMDIR3args(struct __kxdr_s *, RMDIR3args *);
-extern bool_t xdr_RMDIR3resok(struct __kxdr_s *, RMDIR3resok *);
-extern bool_t xdr_RMDIR3resfail(struct __kxdr_s *, RMDIR3resfail *);
-extern bool_t xdr_RMDIR3res(struct __kxdr_s *, RMDIR3res *);
-extern bool_t xdr_RENAME3args(struct __kxdr_s *, RENAME3args *);
-extern bool_t xdr_RENAME3resok(struct __kxdr_s *, RENAME3resok *);
-extern bool_t xdr_RENAME3resfail(struct __kxdr_s *, RENAME3resfail *);
-extern bool_t xdr_RENAME3res(struct __kxdr_s *, RENAME3res *);
-extern bool_t xdr_LINK3args(struct __kxdr_s *, LINK3args *);
-extern bool_t xdr_LINK3resok(struct __kxdr_s *, LINK3resok *);
-extern bool_t xdr_LINK3resfail(struct __kxdr_s *, LINK3resfail *);
-extern bool_t xdr_LINK3res(struct __kxdr_s *, LINK3res *);
-extern bool_t xdr_READDIR3args(struct __kxdr_s *, READDIR3args *);
-extern bool_t xdr_putdirlist(struct __kxdr_s *, READDIR3resok *);
-extern bool_t xdr_getdirlist(struct __kxdr_s *, READDIR3resok *);
-extern bool_t xdr_READDIR3resok(struct __kxdr_s *, READDIR3resok *);
-extern bool_t xdr_READDIR3resfail(struct __kxdr_s *, READDIR3resfail *);
-extern bool_t xdr_READDIR3res(struct __kxdr_s *, READDIR3res *);
-extern bool_t xdr_READDIRPLUS3args(struct __kxdr_s *, READDIRPLUS3args *);
-extern int kxdr_encode_rdplus(struct __kxdr_s *, struct dirent *, post_op_attr *, post_op_fh3 *);
-extern bool_t xdr_getdirpluslist(struct __kxdr_s *, READDIRPLUS3resok *);
-extern bool_t xdr_READDIRPLUS3resok(struct __kxdr_s *, READDIRPLUS3resok *);
-extern bool_t xdr_READDIRPLUS3resfail(struct __kxdr_s *, READDIRPLUS3resfail *);
-extern bool_t xdr_READDIRPLUS3res(struct __kxdr_s *, READDIRPLUS3res *);
-extern bool_t xdr_FSSTAT3args(struct __kxdr_s *, FSSTAT3args *);
-extern bool_t xdr_FSSTAT3resok(struct __kxdr_s *, FSSTAT3resok *);
-extern bool_t xdr_FSSTAT3resfail(struct __kxdr_s *, FSSTAT3resfail *);
-extern bool_t xdr_FSSTAT3res(struct __kxdr_s *, FSSTAT3res *);
-extern bool_t xdr_FSINFO3args(struct __kxdr_s *, FSINFO3args *);
-extern bool_t xdr_FSINFO3resok(struct __kxdr_s *, FSINFO3resok *);
-extern bool_t xdr_FSINFO3resfail(struct __kxdr_s *, FSINFO3resfail *);
-extern bool_t xdr_FSINFO3res(struct __kxdr_s *, FSINFO3res *);
-extern bool_t xdr_PATHCONF3args(struct __kxdr_s *, PATHCONF3args *);
-extern bool_t xdr_PATHCONF3resok(struct __kxdr_s *, PATHCONF3resok *);
-extern bool_t xdr_PATHCONF3resfail(struct __kxdr_s *, PATHCONF3resfail *);
-extern bool_t xdr_PATHCONF3res(struct __kxdr_s *, PATHCONF3res *);
-extern bool_t xdr_COMMIT3args(struct __kxdr_s *, COMMIT3args *);
-extern bool_t xdr_COMMIT3resok(struct __kxdr_s *, COMMIT3resok *);
-extern bool_t xdr_COMMIT3resfail(struct __kxdr_s *, COMMIT3resfail *);
-extern bool_t xdr_COMMIT3res(struct __kxdr_s *, COMMIT3res *);
+#ifdef __STDC__
+extern bool_t xdr_nfsstat3(XDR *, nfsstat3 *);
+extern bool_t xdr_GETATTR3args(XDR *, GETATTR3args *);
+extern bool_t xdr_GETATTR3resok(XDR *, GETATTR3resok *);
+extern bool_t xdr_GETATTR3res(XDR *, GETATTR3res *);
+extern bool_t xdr_sattrguard3(XDR *, sattrguard3 *);
+extern bool_t xdr_SETATTR3args(XDR *, SETATTR3args *);
+extern bool_t xdr_SETATTR3resok(XDR *, SETATTR3resok *);
+extern bool_t xdr_SETATTR3resfail(XDR *, SETATTR3resfail *);
+extern bool_t xdr_SETATTR3res(XDR *, SETATTR3res *);
+extern bool_t xdr_LOOKUP3args(XDR *, LOOKUP3args *);
+extern bool_t xdr_LOOKUP3resok(XDR *, LOOKUP3resok *);
+extern bool_t xdr_LOOKUP3resfail(XDR *, LOOKUP3resfail *);
+extern bool_t xdr_LOOKUP3res(XDR *, LOOKUP3res *);
+extern bool_t xdr_ACCESS3args(XDR *, ACCESS3args *);
+extern bool_t xdr_ACCESS3resok(XDR *, ACCESS3resok *);
+extern bool_t xdr_ACCESS3resfail(XDR *, ACCESS3resfail *);
+extern bool_t xdr_ACCESS3res(XDR *, ACCESS3res *);
+extern bool_t xdr_READLINK3args(XDR *, READLINK3args *);
+extern bool_t xdr_READLINK3resok(XDR *, READLINK3resok *);
+extern bool_t xdr_READLINK3resfail(XDR *, READLINK3resfail *);
+extern bool_t xdr_READLINK3res(XDR *, READLINK3res *);
+extern bool_t xdr_READ3args(XDR *, READ3args *);
+extern bool_t xdr_READ3resok(XDR *, READ3resok *);
+extern bool_t xdr_READ3resfail(XDR *, READ3resfail *);
+extern bool_t xdr_READ3res(XDR *, READ3res *);
+extern bool_t xdr_stable_how(XDR *, stable_how *);
+extern bool_t xdr_WRITE3args(XDR *, WRITE3args *);
+extern bool_t xdr_WRITE3resok(XDR *, WRITE3resok *);
+extern bool_t xdr_WRITE3resfail(XDR *, WRITE3resfail *);
+extern bool_t xdr_WRITE3res(XDR *, WRITE3res *);
+extern bool_t xdr_createmode3(XDR *, createmode3 *);
+extern bool_t xdr_createhow3(XDR *, createhow3 *);
+extern bool_t xdr_CREATE3args(XDR *, CREATE3args *);
+extern bool_t xdr_CREATE3resok(XDR *, CREATE3resok *);
+extern bool_t xdr_CREATE3resfail(XDR *, CREATE3resfail *);
+extern bool_t xdr_CREATE3res(XDR *, CREATE3res *);
+extern bool_t xdr_MKDIR3args(XDR *, MKDIR3args *);
+extern bool_t xdr_MKDIR3resok(XDR *, MKDIR3resok *);
+extern bool_t xdr_MKDIR3resfail(XDR *, MKDIR3resfail *);
+extern bool_t xdr_MKDIR3res(XDR *, MKDIR3res *);
+extern bool_t xdr_symlinkdata3(XDR *, symlinkdata3 *);
+extern bool_t xdr_SYMLINK3args(XDR *, SYMLINK3args *);
+extern bool_t xdr_SYMLINK3resok(XDR *, SYMLINK3resok *);
+extern bool_t xdr_SYMLINK3resfail(XDR *, SYMLINK3resfail *);
+extern bool_t xdr_SYMLINK3res(XDR *, SYMLINK3res *);
+extern bool_t xdr_devicedata3(XDR *, devicedata3 *);
+extern bool_t xdr_mknoddata3(XDR *, mknoddata3 *);
+extern bool_t xdr_MKNOD3args(XDR *, MKNOD3args *);
+extern bool_t xdr_MKNOD3resok(XDR *, MKNOD3resok *);
+extern bool_t xdr_MKNOD3resfail(XDR *, MKNOD3resfail *);
+extern bool_t xdr_MKNOD3res(XDR *, MKNOD3res *);
+extern bool_t xdr_REMOVE3args(XDR *, REMOVE3args *);
+extern bool_t xdr_REMOVE3resok(XDR *, REMOVE3resok *);
+extern bool_t xdr_REMOVE3resfail(XDR *, REMOVE3resfail *);
+extern bool_t xdr_REMOVE3res(XDR *, REMOVE3res *);
+extern bool_t xdr_RMDIR3args(XDR *, RMDIR3args *);
+extern bool_t xdr_RMDIR3resok(XDR *, RMDIR3resok *);
+extern bool_t xdr_RMDIR3resfail(XDR *, RMDIR3resfail *);
+extern bool_t xdr_RMDIR3res(XDR *, RMDIR3res *);
+extern bool_t xdr_RENAME3args(XDR *, RENAME3args *);
+extern bool_t xdr_RENAME3resok(XDR *, RENAME3resok *);
+extern bool_t xdr_RENAME3resfail(XDR *, RENAME3resfail *);
+extern bool_t xdr_RENAME3res(XDR *, RENAME3res *);
+extern bool_t xdr_LINK3args(XDR *, LINK3args *);
+extern bool_t xdr_LINK3resok(XDR *, LINK3resok *);
+extern bool_t xdr_LINK3resfail(XDR *, LINK3resfail *);
+extern bool_t xdr_LINK3res(XDR *, LINK3res *);
+extern bool_t xdr_READDIR3args(XDR *, READDIR3args *);
+extern bool_t xdr_putdirlist(XDR *, READDIR3resok *);
+extern bool_t xdr_getdirlist(XDR *, READDIR3resok *);
+extern bool_t xdr_READDIR3resok(XDR *, READDIR3resok *);
+extern bool_t xdr_READDIR3resfail(XDR *, READDIR3resfail *);
+extern bool_t xdr_READDIR3res(XDR *, READDIR3res *);
+extern bool_t xdr_READDIRPLUS3args(XDR *, READDIRPLUS3args *);
+extern bool_t xdr_putdirpluslist(XDR *, READDIRPLUS3resok *);
+extern bool_t xdr_getdirpluslist(XDR *, READDIRPLUS3resok *);
+extern bool_t xdr_READDIRPLUS3resok(XDR *, READDIRPLUS3resok *);
+extern bool_t xdr_READDIRPLUS3resfail(XDR *, READDIRPLUS3resfail *);
+extern bool_t xdr_READDIRPLUS3res(XDR *, READDIRPLUS3res *);
+extern bool_t xdr_FSSTAT3args(XDR *, FSSTAT3args *);
+extern bool_t xdr_FSSTAT3resok(XDR *, FSSTAT3resok *);
+extern bool_t xdr_FSSTAT3resfail(XDR *, FSSTAT3resfail *);
+extern bool_t xdr_FSSTAT3res(XDR *, FSSTAT3res *);
+extern bool_t xdr_FSINFO3args(XDR *, FSINFO3args *);
+extern bool_t xdr_FSINFO3resok(XDR *, FSINFO3resok *);
+extern bool_t xdr_FSINFO3resfail(XDR *, FSINFO3resfail *);
+extern bool_t xdr_FSINFO3res(XDR *, FSINFO3res *);
+extern bool_t xdr_PATHCONF3args(XDR *, PATHCONF3args *);
+extern bool_t xdr_PATHCONF3resok(XDR *, PATHCONF3resok *);
+extern bool_t xdr_PATHCONF3resfail(XDR *, PATHCONF3resfail *);
+extern bool_t xdr_PATHCONF3res(XDR *, PATHCONF3res *);
+extern bool_t xdr_COMMIT3args(XDR *, COMMIT3args *);
+extern bool_t xdr_COMMIT3resok(XDR *, COMMIT3resok *);
+extern bool_t xdr_COMMIT3resfail(XDR *, COMMIT3resfail *);
+extern bool_t xdr_COMMIT3res(XDR *, COMMIT3res *);
+#else
+extern bool_t xdr_uint32();
+extern bool_t xdr_nfsstat3();
+extern bool_t xdr_GETATTR3args();
+extern bool_t xdr_GETATTR3resok();
+extern bool_t xdr_GETATTR3res();
+extern bool_t xdr_sattrguard3();
+extern bool_t xdr_SETATTR3args();
+extern bool_t xdr_SETATTR3resok();
+extern bool_t xdr_SETATTR3resfail();
+extern bool_t xdr_SETATTR3res();
+extern bool_t xdr_LOOKUP3args();
+extern bool_t xdr_LOOKUP3resok();
+extern bool_t xdr_LOOKUP3resfail();
+extern bool_t xdr_LOOKUP3res();
+extern bool_t xdr_ACCESS3args();
+extern bool_t xdr_ACCESS3resok();
+extern bool_t xdr_ACCESS3resfail();
+extern bool_t xdr_ACCESS3res();
+extern bool_t xdr_READLINK3args();
+extern bool_t xdr_READLINK3resok();
+extern bool_t xdr_READLINK3resfail();
+extern bool_t xdr_READLINK3res();
+extern bool_t xdr_READ3args();
+extern bool_t xdr_READ3resok();
+extern bool_t xdr_READ3resfail();
+extern bool_t xdr_READ3res();
+extern bool_t xdr_stable_how();
+extern bool_t xdr_WRITE3args();
+extern bool_t xdr_WRITE3resok();
+extern bool_t xdr_WRITE3resfail();
+extern bool_t xdr_WRITE3res();
+extern bool_t xdr_createmode3();
+extern bool_t xdr_createhow3();
+extern bool_t xdr_CREATE3args();
+extern bool_t xdr_CREATE3resok();
+extern bool_t xdr_CREATE3resfail();
+extern bool_t xdr_CREATE3res();
+extern bool_t xdr_MKDIR3args();
+extern bool_t xdr_MKDIR3resok();
+extern bool_t xdr_MKDIR3resfail();
+extern bool_t xdr_MKDIR3res();
+extern bool_t xdr_symlinkdata3();
+extern bool_t xdr_SYMLINK3args();
+extern bool_t xdr_SYMLINK3resok();
+extern bool_t xdr_SYMLINK3resfail();
+extern bool_t xdr_SYMLINK3res();
+extern bool_t xdr_devicedata3();
+extern bool_t xdr_mknoddata3();
+extern bool_t xdr_MKNOD3args();
+extern bool_t xdr_MKNOD3resok();
+extern bool_t xdr_MKNOD3resfail();
+extern bool_t xdr_MKNOD3res();
+extern bool_t xdr_REMOVE3args();
+extern bool_t xdr_REMOVE3resok();
+extern bool_t xdr_REMOVE3resfail();
+extern bool_t xdr_REMOVE3res();
+extern bool_t xdr_RMDIR3args();
+extern bool_t xdr_RMDIR3resok();
+extern bool_t xdr_RMDIR3resfail();
+extern bool_t xdr_RMDIR3res();
+extern bool_t xdr_RENAME3args();
+extern bool_t xdr_RENAME3resok();
+extern bool_t xdr_RENAME3resfail();
+extern bool_t xdr_RENAME3res();
+extern bool_t xdr_LINK3args();
+extern bool_t xdr_LINK3resok();
+extern bool_t xdr_LINK3resfail();
+extern bool_t xdr_LINK3res();
+extern bool_t xdr_READDIR3args();
+extern bool_t xdr_putdirlist();
+extern bool_t xdr_getdirlist();
+extern bool_t xdr_READDIR3resok();
+extern bool_t xdr_READDIR3resfail();
+extern bool_t xdr_READDIR3res();
+extern bool_t xdr_READDIRPLUS3args();
+extern bool_t xdr_putdirpluslist();
+extern bool_t xdr_getdirpluslist();
+extern bool_t xdr_READDIRPLUS3resok();
+extern bool_t xdr_READDIRPLUS3resfail();
+extern bool_t xdr_READDIRPLUS3res();
+extern bool_t xdr_FSSTAT3args();
+extern bool_t xdr_FSSTAT3resok();
+extern bool_t xdr_FSSTAT3resfail();
+extern bool_t xdr_FSSTAT3res();
+extern bool_t xdr_FSINFO3args();
+extern bool_t xdr_FSINFO3resok();
+extern bool_t xdr_FSINFO3resfail();
+extern bool_t xdr_FSINFO3res();
+extern bool_t xdr_PATHCONF3args();
+extern bool_t xdr_PATHCONF3resok();
+extern bool_t xdr_PATHCONF3resfail();
+extern bool_t xdr_PATHCONF3res();
+extern bool_t xdr_COMMIT3args();
+extern bool_t xdr_COMMIT3resok();
+extern bool_t xdr_COMMIT3resfail();
+extern bool_t xdr_COMMIT3res();
+#endif
+#endif
 
 extern void	vattr_to_wcc_attr(struct vattr *, struct wcc_attr *);
 extern void	vattr_to_wcc_data(struct vattr *, struct vattr *,
-				struct wcc_data *, struct export *);
-extern nfsstat3	puterrno3(int);
+				struct wcc_data *);
+extern int	puterrno3(int);
 extern int	geterrno3(enum nfsstat3);
-extern int	nfs3getattr(struct bhv_desc *, struct vattr *, int, struct cred *);
-extern void	nfs3_cache_post_op_attr(struct bhv_desc *, post_op_attr *, struct cred *, int *);
+extern int	nfs3getattr(struct vnode *, struct vattr *, struct cred *);
+extern void	nfs3_cache_post_op_attr(struct vnode *, post_op_attr *, struct cred *);
 
-typedef union nfs_args_u {
-	union {
-		struct nfswriteargs v_nfswriteargs;
-		struct nfsreadargs v_nfsreadargs;
-		struct nfsrddirargs v_nfsrddirargs;
-		struct nfsdiropargs v_nfsdiropargs;
-		struct nfssaargs v_nfssaargs;
-		struct nfscreatargs v_nfscreatargs;
-		struct nfslinkargs v_nfslinkargs;
-		struct nfsrnmargs v_nfsrnmargs;
-		struct nfsslargs v_nfsslargs;
-	} v2;
-	union {
-		struct GETATTR3args v_GETATTR3args;
-		struct SETATTR3args v_SETATTR3args;
-		struct LOOKUP3args v_LOOKUP3args;
-		struct ACCESS3args v_ACCESS3args;
-		struct READLINK3args v_READLINK3args;
-		struct READ3args v_READ3args;
-		struct WRITE3args v_WRITE3args;
-		struct CREATE3args v_CREATE3args;
-		struct MKDIR3args v_MKDIR3args;
-		struct SYMLINK3args v_SYMLINK3args;
-		struct MKNOD3args v_MKNOD3args;
-		struct REMOVE3args v_REMOVE3args;
-		struct RMDIR3args v_RMDIR3args;
-		struct RENAME3args v_RENAME3args;
-		struct LINK3args v_LINK3args;
-		struct READDIR3args v_READDIR3args;
-		struct READDIRPLUS3args v_READDIRPLUS3args;
-		struct FSSTAT3args v_FSSTAT3args;
-		struct FSINFO3args v_FSINFO3args;
-		struct PATHCONF3args v_PATHCONF3args;
-		struct COMMIT3args v_COMMIT3args;
-	} v3;
-} nfs_args_t;
-
-typedef union nfs_res_u {
-	union {
-		enum nfsstat st;
-		struct nfsrdlnres v_nfsrdlnres;
-		struct nfsrddirres v_nfsrddirres;
-		struct nfsdiropres v_nfsdiropres;
-	} v2;
-	union {
-		struct GETATTR3res v_GETATTR3res;
-		struct SETATTR3res v_SETATTR3res;
-		struct LOOKUP3res v_LOOKUP3res;
-		struct ACCESS3res v_ACCESS3res;
-		struct READLINK3res v_READLINK3res;
-		struct READ3res v_READ3res;
-		struct WRITE3res v_WRITE3res;
-		struct CREATE3res v_CREATE3res;
-		struct MKDIR3res v_MKDIR3res;
-		struct SYMLINK3res v_SYMLINK3res;
-		struct MKNOD3res v_MKNOD3res;
-		struct REMOVE3res v_REMOVE3res;
-		struct RMDIR3res v_RMDIR3res;
-		struct RENAME3res v_RENAME3res;
-		struct LINK3res v_LINK3res;
-		struct READDIR3res v_READDIR3res;
-		struct READDIRPLUS3res v_READDIRPLUS3res;
-		struct FSSTAT3res v_FSSTAT3res;
-		struct FSINFO3res v_FSINFO3res;
-		struct PATHCONF3res v_PATHCONF3res;
-		struct COMMIT3res v_COMMIT3res;
-	} v3;
-} nfs_res_t;
-
-#endif /* _KERNEL */
 #endif /* !__NFS_HEADER__ */

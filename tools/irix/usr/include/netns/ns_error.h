@@ -11,9 +11,6 @@
  *
  *      @(#)ns_error.h	7.3 (Berkeley) 1/28/88
  */
-#ifdef __cplusplus
-extern "C" {
-#endif
 #ifdef sgi
 # ifdef _KERNEL
 #  define KERNEL
@@ -74,7 +71,4 @@ struct	ns_errstat {
 
 #ifdef KERNEL
 struct	ns_errstat ns_errstat;
-#endif
-#ifdef __cplusplus
-}
 #endif

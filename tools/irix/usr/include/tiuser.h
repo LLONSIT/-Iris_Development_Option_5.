@@ -1,6 +1,9 @@
 #ifndef __TIUSER_H__
 #define __TIUSER_H__
-#ident "$Revision: 1.5 $"
+#ifdef __cplusplus
+extern "C" {
+#endif
+#ident "$Revision: 1.4 $"
 /*
 *
 * Copyright 1992, Silicon Graphics, Inc.
@@ -35,4 +38,7 @@
 
 #include <sys/tiuser.h>
 
+#ifdef __cplusplus
+}
+#endif
 #endif /* !__TIUSER_H__ */

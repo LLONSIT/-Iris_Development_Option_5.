@@ -1,6 +1,9 @@
 #ifndef __PROTOCOLS_RWHOD_H__
 #define __PROTOCOLS_RWHOD_H__
-#ident "$Revision: 1.8 $"
+#ifdef __cplusplus
+extern "C" {
+#endif
+#ident "$Revision: 1.7 $"
 /*
 *
 * Copyright 1992, Silicon Graphics, Inc.
@@ -37,9 +40,6 @@
  * @(#)rwhod.h	5.2 (Berkeley) 8/25/88
  */
 
-#include <internal/sgimacros.h>
-
-__SGI_LIBC_BEGIN_EXTERN_C
 
 /*
  * rwho protocol packet format.
@@ -73,6 +73,7 @@ struct	whod {
 #ifdef __sgi
 #define INADDR_WHOD_GROUP	(u_long)0xe0000103	/* 224.0.1.3 */
 #endif
-
-__SGI_LIBC_END_EXTERN_C
+#ifdef __cplusplus
+}
+#endif
 #endif /* !__PROTOCOLS_RWHOD_H__ */

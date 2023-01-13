@@ -1,10 +1,8 @@
 #ifndef __ARCHIVES_H__
 #define __ARCHIVES_H__
-
-#include <internal/sgimacros.h>
-
-__SGI_LIBC_BEGIN_EXTERN_C
-
+#ifdef __cplusplus
+extern "C" {
+#endif
 /*
 *
 * Copyright 1992, Silicon Graphics, Inc.
@@ -34,9 +32,8 @@ __SGI_LIBC_BEGIN_EXTERN_C
 /*	Portions Copyright (c) 1988, Sun Microsystems, Inc.	*/
 /*	All Rights Reserved.					*/
 
-#ident	"$Revision: 1.5 $"
+#ident	"$Revision: 1.3 $"
 
-#include <sys/types.h>
 #include <tar.h>
 
 /* Magic numbers */
@@ -68,7 +65,7 @@ __SGI_LIBC_BEGIN_EXTERN_C
 struct hdr_cpio {
 	short	h_magic,		/* magic number field */
 		h_dev;			/* file system of file */
-	ushort_t	h_ino,			/* inode of file */
+	ushort	h_ino,			/* inode of file */
 		h_mode,			/* modes of file */
 		h_uid,			/* uid of file */
 		h_gid;			/* gid of file */
@@ -173,7 +170,7 @@ struct volcopy_label {
 	long	v_offset;	/* used with -e and -reel options */
 	int	v_type;		/* does tape have nblocks field? */
 } ;
-
-__SGI_LIBC_END_EXTERN_C
-
+#ifdef __cplusplus
+}
+#endif
 #endif /* !__ARCHIVES_H__ */

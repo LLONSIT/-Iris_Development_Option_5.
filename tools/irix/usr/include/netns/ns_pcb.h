@@ -11,9 +11,6 @@
  *
  *      @(#)ns_pcb.h	7.2 (Berkeley) 1/20/88
  */
-#ifdef __cplusplus
-extern "C" {
-#endif
 #ifdef sgi
 # ifdef _KERNEL
 #  define KERNEL
@@ -64,7 +61,4 @@ struct nspcb {
 #ifdef KERNEL
 struct	nspcb nspcb;			/* head of list */
 struct	nspcb *ns_pcblookup();
-#endif
-#ifdef __cplusplus
-}
 #endif

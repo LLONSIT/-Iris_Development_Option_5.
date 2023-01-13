@@ -9,9 +9,6 @@
 
 #ifndef _SYS_TIHDR_H		/* wrapper symbol for kernel use */
 #define _SYS_TIHDR_H		/* subject to change without notice */
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #ident	"@(#)uts-comm:net/ktli/tihdr.h	1.4"
 
@@ -65,11 +62,6 @@ extern "C" {
 #define T_UDERROR_IND	21	/* unitdata error indication  */
 #define T_OPTMGMT_ACK   22      /* manage options ack         */
 #define T_ORDREL_IND    23      /* orderly release ind 	      */
-#if _XOPEN4 || _XOPEN5 || defined(_BUILDING_LIBXNET)
-#define T_ADDR_REQ      24      /* get protocol addr req      */
-#define T_ADDR_ACK      25      /* get protocol addr ack      */
-#define _XTI_T_OPTMGMT_REQ   26	/* manage XTI options req     */
-#endif /* _XOPEN4 || _XOPEN5 || _BUILDING_LIBXNET */
 
 /*
  * The following are the events that drive the state machine
@@ -139,10 +131,8 @@ extern "C" {
  * the transport provider to set in the PROVIDER_flag
  * field of the T_info_ack structure.
  */
-#define SENDZERO	0x0001	/* provider can handle 0-length TSDU's */
-#define EXPINLINE	0x0002	/* provider wants ETSDU's in band 0 */
-#define XPG4_1		0x0004	/* provider conforms to XTI in XPG/4 and *
-				 * supports T_ADDR_REQ & T_ADDR_ACK */
+#define TP_SNDZERO	0x0001	/* provider can handle 0-length TSDU's */
+#define TP_EXPINLINE	0x0002	/* provider wants ETSDU's in band 0 */
 
 /* 
  * The following structure definitions define the format of the
@@ -154,246 +144,216 @@ extern "C" {
 /* connection request */
 
 struct T_conn_req {
-	int 	PRIM_type;	/* always T_CONN_REQ  */
-	int 	DEST_length;	/* dest addr length   */
-	int 	DEST_offset;	/* dest addr offset   */
-	int 	OPT_length;	/* options length     */
-	int 	OPT_offset;	/* options offset     */
+	long	PRIM_type;	/* always T_CONN_REQ  */
+	long	DEST_length;	/* dest addr length   */
+	long	DEST_offset;	/* dest addr offset   */
+	long	OPT_length;	/* options length     */
+	long	OPT_offset;	/* options offset     */
 };
 
 /* connect response */
 
-/*
- * Note that the size of the QUEUE_ptr field can change when running
- * 32-bit binaries on a 64-bit kernel.  The code that handles I_FDINSERT
- * will adjust the structure accordingly.  This field is not directly
- * capable of being passed from the application to the kernel, but since
- * that was never the intent it should not be a problem.
- */
 struct T_conn_res {
-	int     PRIM_type;	/* always T_CONN_RES       */
-#if _MIPS_SIM == _ABI64
-	int	XX_pad;		/* get QUEUE_ptr aligned   */
-#endif
+	long    PRIM_type;	/* always T_CONN_RES       */
 	queue_t *QUEUE_ptr;	/* responding queue ptr    */
-	int     OPT_length;	/* options length          */
-	int 	OPT_offset;	/* options offset          */
-	int     SEQ_number;	/* sequence number         */
+	long    OPT_length;	/* options length          */
+	long	OPT_offset;	/* options offset          */
+	long    SEQ_number;	/* sequence number          */
 };
 
 /* disconnect request */
 
 struct T_discon_req {
-	int     PRIM_type;	/* always T_DISCON_REQ */
-	int     SEQ_number;	/* sequnce number      */
+	long    PRIM_type;	/* always T_DISCON_REQ */
+	long    SEQ_number;	/* sequnce number      */
 };
 
 /* data request */
 
 struct T_data_req {
-	int 	PRIM_type;	/* always T_DATA_REQ */
-	int 	MORE_flag;	/* more data	     */
+	long	PRIM_type;	/* always T_DATA_REQ */
+	long	MORE_flag;	/* more data	     */
 #define MORE_type       MORE_flag       /* 3.2 source compatibility */
 };
 
 /* expedited data request */
 
 struct T_exdata_req {
-	int 	PRIM_type;	/* always T_EXDATA_REQ */
-	int 	MORE_flag;	/* more data	       */
+	long	PRIM_type;	/* always T_EXDATA_REQ */
+	long	MORE_flag;	/* more data	       */
 };
 
 /* information request */
 
 struct T_info_req {
-	int 	PRIM_type;	/* always T_INFO_REQ */
+	long	PRIM_type;	/* always T_INFO_REQ */
 };
 
 /* bind request */
 
 struct T_bind_req {
-	int 		PRIM_type;	/* always T_BIND_REQ            */
-	int 		ADDR_length;	/* addr length	                */
-	int 		ADDR_offset;	/* addr offset	                */
-	unsigned int 	CONIND_number;	/*connect indications requested */
+	long		PRIM_type;	/* always T_BIND_REQ            */
+	long		ADDR_length;	/* addr length	                */
+	long		ADDR_offset;	/* addr offset	                */
+	unsigned long	CONIND_number;	/*connect indications requested */
 };
 
 /* unbind request */
 
 struct T_unbind_req {
-	int 	PRIM_type;	/* always T_UNBIND_REQ */
+	long	PRIM_type;	/* always T_UNBIND_REQ */
 };
 
 /* unitdata request */
 
 struct T_unitdata_req {
-	int 	PRIM_type;	/* always T_UNITDATA_REQ  */
-	int 	DEST_length;	/* dest addr length       */
-	int 	DEST_offset;	/* dest addr offset       */
-	int 	OPT_length;	/* options length         */
-	int 	OPT_offset;	/* options offset         */
+	long	PRIM_type;	/* always T_UNITDATA_REQ  */
+	long	DEST_length;	/* dest addr length       */
+	long	DEST_offset;	/* dest addr offset       */
+	long	OPT_length;	/* options length         */
+	long	OPT_offset;	/* options offset         */
 };
 
 /* manage options request */
 
 struct T_optmgmt_req {
-	int 	PRIM_type;	/* T_OPTMGMT_REQ or _XTI_T_OPTMGMT_REQ  */
-	int 	OPT_length;	/* options length         */
-	int 	OPT_offset;	/* options offset         */
-	int     MGMT_flags;	/* options flags          */
+	long	PRIM_type;	/* always T_OPTMGMT_REQ   */
+	long	OPT_length;	/* options length         */
+	long	OPT_offset;	/* options offset         */
+	long    MGMT_flags;	/* options flags          */
 };
 
 /* orderly release request */
 
 struct T_ordrel_req {
-	int 	PRIM_type;	/* always T_ORDREL_REQ */
+	long	PRIM_type;	/* always T_ORDREL_REQ */
 };
-
-#if _XOPEN4 || _XOPEN5 || defined(_BUILDING_LIBXNET)
-/*
- *  get protocol address request
- */
-struct T_addr_req {
-	int	PRIM_type;	/* always T_ADDR_REQ    */
-};	
-
-/*
- *  get protocol address request  ack
- */
-struct T_addr_ack {
-	int	PRIM_type;	/* always T_ADDR_ACK    */
-	int	LOCADDR_length;	/* length of local addr */
-	int	LOCADDR_offset;	/* offset of local addr */
-	int	REMADDR_length;	/* length of remote addr*/
-	int	REMADDR_offset;	/* offset of remote addr*/
-};
-#endif /* _XOPEN4 || _XOPEN5 || _BUILDING_LIBXNET */
 
 /* connect indication */
 
 struct T_conn_ind {
-	int 	PRIM_type;	/* always T_CONN_IND */
-	int 	SRC_length;	/* src addr length   */
-	int 	SRC_offset;	/* src addr offset   */
-	int 	OPT_length;	/* option length     */
-	int     OPT_offset;	/* option offset     */
-	int     SEQ_number;	/* sequnce number    */
+	long	PRIM_type;	/* always T_CONN_IND */
+	long	SRC_length;	/* src addr length   */
+	long	SRC_offset;	/* src addr offset   */
+	long	OPT_length;	/* option length     */
+	long    OPT_offset;	/* option offset     */
+	long    SEQ_number;	/* sequnce number    */
 };
 
 /* connect confirmation */
 
 struct T_conn_con {
-	int 	PRIM_type;	/* always T_CONN_CON      */
-	int 	RES_length;	/* responding addr length */
-	int 	RES_offset;	/* responding addr offset */
-	int 	OPT_length;	/* option length          */
-	int     OPT_offset;	/* option offset          */
+	long	PRIM_type;	/* always T_CONN_CON      */
+	long	RES_length;	/* responding addr length */
+	long	RES_offset;	/* responding addr offset */
+	long	OPT_length;	/* option length          */
+	long    OPT_offset;	/* option offset          */
 };
 
 /* disconnect indication */
 
 struct T_discon_ind {
-	int 	PRIM_type;	/* always T_DISCON_IND 	*/
-	int 	DISCON_reason;	/* disconnect reason	*/
-	int     SEQ_number;	/* sequnce number       */
+	long	PRIM_type;	/* always T_DISCON_IND 	*/
+	long	DISCON_reason;	/* disconnect reason	*/
+	long    SEQ_number;	/* sequnce number       */
 };
 
 /* data indication */
 
 struct T_data_ind {
-	int  	PRIM_type;	/* always T_DATA_IND */
-	int 	MORE_flag;	/* more data 	     */
+	long 	PRIM_type;	/* always T_DATA_IND */
+	long	MORE_flag;	/* more data 	     */
 };
 
 /* expedited data indication */
 
 struct T_exdata_ind {
-	int 	PRIM_type;	/* always T_EXDATA_IND */
-	int 	MORE_flag;	/* more data           */
+	long	PRIM_type;	/* always T_EXDATA_IND */
+	long	MORE_flag;	/* more data           */
 };
 
 /* information acknowledgment */
 
 struct T_info_ack {
-	int	PRIM_type;	/* always T_INFO_ACK     */
-	int	TSDU_size;	/* max TSDU size         */
-	int	ETSDU_size;	/* max ETSDU size        */
-	int	CDATA_size;	/* max connect data size */
-	int	DDATA_size;	/* max discon data size  */
-	int	ADDR_size;	/* address size		 */
-	int	OPT_size;	/* options size		 */
-	int     TIDU_size;	/* max TIDU size         */
-	int     SERV_type;	/* provider service type */
-	int     CURRENT_state;  /* current state         */
-	int     PROVIDER_flag;  /* provider flags        */
+	long	PRIM_type;	/* always T_INFO_ACK     */
+	long	TSDU_size;	/* max TSDU size         */
+	long	ETSDU_size;	/* max ETSDU size        */
+	long	CDATA_size;	/* max connect data size */
+	long	DDATA_size;	/* max discon data size  */
+	long	ADDR_size;	/* address size		 */
+	long	OPT_size;	/* options size		 */
+	long    TIDU_size;	/* max TIDU size         */
+	long    SERV_type;	/* provider service type */
+	long    CURRENT_state;  /* current state         */
+	long    PROVIDER_flag;  /* provider flags        */
 };
 
 /* bind acknowledgment */
 
 struct T_bind_ack {
-	int 		PRIM_type;	/* always T_BIND_ACK        */
-	int 		ADDR_length;	/* addr length              */
-	int 		ADDR_offset;	/* addr offset              */
-	unsigned int 	CONIND_number;	/* connect ind to be queued */
+	long		PRIM_type;	/* always T_BIND_ACK        */
+	long		ADDR_length;	/* addr length              */
+	long		ADDR_offset;	/* addr offset              */
+	unsigned long	CONIND_number;	/* connect ind to be queued */
 };
 
 /* error acknowledgment */
 
 struct T_error_ack { 
-	int  	PRIM_type;	/* always T_ERROR_ACK  */
-	int 	ERROR_prim;	/* primitive in error  */
-	int 	TLI_error;	/* TLI error code      */
-	int 	UNIX_error;	/* UNIX error code     */
+	long 	PRIM_type;	/* always T_ERROR_ACK  */
+	long	ERROR_prim;	/* primitive in error  */
+	long	TLI_error;	/* TLI error code      */
+	long	UNIX_error;	/* UNIX error code     */
 };
 
 /* ok acknowledgment */
 
 struct T_ok_ack {
-	int  	PRIM_type;	/* always T_OK_ACK   */
-	int 	CORRECT_prim;	/* correct primitive */
+	long 	PRIM_type;	/* always T_OK_ACK   */
+	long	CORRECT_prim;	/* correct primitive */
 };
 
 /* unitdata indication */
 
 struct T_unitdata_ind {
-	int 	PRIM_type;	/* always T_UNITDATA_IND  */
-	int 	SRC_length;	/* source addr length     */
-	int 	SRC_offset;	/* source addr offset     */
-	int 	OPT_length;	/* options length         */
-	int 	OPT_offset;	/* options offset         */
+	long	PRIM_type;	/* always T_UNITDATA_IND  */
+	long	SRC_length;	/* source addr length     */
+	long	SRC_offset;	/* source addr offset     */
+	long	OPT_length;	/* options length         */
+	long	OPT_offset;	/* options offset         */
 };
 
 /* unitdata error indication */
 
 struct T_uderror_ind {
-	int 	PRIM_type;	/* always T_UDERROR_IND   */
-	int 	DEST_length;	/* dest addr length       */
-	int 	DEST_offset;	/* dest addr offset       */
-	int 	OPT_length;	/* options length         */
-	int 	OPT_offset;	/* options offset         */
-	int 	ERROR_type;	/* error type	          */
+	long	PRIM_type;	/* always T_UDERROR_IND   */
+	long	DEST_length;	/* dest addr length       */
+	long	DEST_offset;	/* dest addr offset       */
+	long	OPT_length;	/* options length         */
+	long	OPT_offset;	/* options offset         */
+	long	ERROR_type;	/* error type	          */
 };
 
 /* manage options ack */
 
 struct T_optmgmt_ack {
-	int 	PRIM_type;	/* always T_OPTMGMT_ACK   */
-	int 	OPT_length;	/* options length         */
-	int 	OPT_offset;	/* options offset         */
-	int     MGMT_flags;	/* managment flags        */
+	long	PRIM_type;	/* always T_OPTMGMT_ACK   */
+	long	OPT_length;	/* options length         */
+	long	OPT_offset;	/* options offset         */
+	long    MGMT_flags;	/* managment flags        */
 };
 
 /* orderly release indication */
 
 struct T_ordrel_ind {
-	int 	PRIM_type;	/* always T_ORDREL_IND */
+	long	PRIM_type;	/* always T_ORDREL_IND */
 };
 
 /*
  * The following is a union of the primitives
  */
 union T_primitives {
-	int 			type;		/* primitive type     */
+	long			type;		/* primitive type     */
 	struct T_conn_req	conn_req;	/* connect request    */
 	struct T_conn_res	conn_res;	/* connect response   */
 	struct T_discon_req	discon_req;	/* disconnect request */
@@ -418,15 +378,7 @@ union T_primitives {
 	struct T_uderror_ind	uderror_ind;	/* unitdata error ind */
 	struct T_optmgmt_ack	optmgmt_ack;	/* manage opt ack     */
 	struct T_ordrel_ind	ordrel_ind;	/* orderly rel ind    */
-#if _XOPEN4 || _XOPEN5 || defined(_BUILDING_LIBXNET)
-	struct T_addr_req	addr_req;	/* address req        */
-	struct T_addr_ack	addr_ack;	/* address response   */
-	struct T_optmgmt_req	xti_optmgmt_req; /* manage XTI opt req */
-#endif /* _XOPEN4 || _XOPEN5 || _BUILDING_LIBXNET */
 };
 
 
-#ifdef __cplusplus
-}
-#endif
 #endif	/* _SYS_TIHDR_H */

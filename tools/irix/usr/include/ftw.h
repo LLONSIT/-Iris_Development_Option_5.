@@ -25,12 +25,12 @@
 /*	actual or intended publication of such source code.	*/
 #ifndef __FTW_H__
 #define __FTW_H__
-#ident "$Revision: 1.29 $"
+#ident "$Revision: 1.13 $"
 
-#include <standards.h>
-#include <internal/sgimacros.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-__SGI_LIBC_BEGIN_EXTERN_C
 
 /*
  *	Codes for the third argument to the user-supplied function
@@ -46,7 +46,7 @@ __SGI_LIBC_BEGIN_EXTERN_C
 #define FTW_SLN	7	/* symbolic link that points to nonexistent file */
 
 /*
- *	Codes for the fourth argument to nftw.  You can specify the
+ *	Codes for the fourth argument to ftwalk.  You can specify the
  *	union of these flags.
  */
 
@@ -55,64 +55,38 @@ __SGI_LIBC_BEGIN_EXTERN_C
 #define FTW_CHDIR	04  /* chdir to each directory before reading */
 #define FTW_DEPTH	010 /* call descendents before calling the parent */
 
-#if _XOPEN4UX || _XOPEN5 || _LFAPI
 struct FTW
 {
-#if _SGIAPI
 	int	quit;
-#else
-	int	__quit;
-#endif
 	int	base;
 	int	level;
 };
-#endif /* _XOPEN4UX || _XOPEN5 || _LFAPI */
 
-#if _SGIAPI || _ABIAPI
 /*
  * legal values for quit
  */
+
 #define FTW_SKD		1
 #define FTW_FOLLOW	2
 #define FTW_PRUNE	4
-#endif	/* _SGIAPI || _ABIAPI */
+
+#if defined(_MODERN_C)
 
 #include <sys/types.h>
 #include <sys/stat.h>
+extern int ftw(const char *, int (*)(const char *, const struct stat *, int), int);
+extern int _xftw(int, const char *, int (*)(const char *, const struct stat *, int), int);
+extern int nftw(const char *, int (*)(const char *, const struct stat *, int, struct FTW *), int, int);
 
-extern int ftw(const char *,
-		int (*)(const char *, const struct stat *, int), int);
+#else
 
-#if _XOPEN4UX || _XOPEN5
-extern int nftw(const char *,
-		int (*)(const char *, const struct stat *, int, struct FTW *),
-		int, int);
-#endif	/* _XOPEN4UX || _XOPEN5 */
+extern int ftw(), nftw();
 
-#if _SGIAPI
-extern int _xftw(int, const char *, int (*)(const char *, const struct stat *,
-		int), int);
-
-#if !(((_MIPS_SIM == _MIPS_SIM_NABI32) || \
-	(_MIPS_SIM == _MIPS_SIM_ABI64)) && defined(_FTW_INTERNAL))
-extern int _xftw64(int, const char *, int (*)(const char *,
-		const struct stat64 *, int), int);
-#endif
-#endif /* _SGIAPI */
-
-#if _LFAPI
-#if !(((_MIPS_SIM == _MIPS_SIM_NABI32) || \
-	(_MIPS_SIM == _MIPS_SIM_ABI64)) && defined(_FTW_INTERNAL))
-extern int ftw64(const char *,
-		int (*)(const char *, const struct stat64 *,
-		int), int);
-extern int nftw64(const char *,
-		int (*)(const char *, const struct stat64 *,
-		int, struct FTW *), int, int);
 #endif
 
-#define XFTWVER		2	/* version of file tree walk */
-#endif	/* _LFAPI */
+#define XFTWVER	2	/* version of file tree walk */
 
-__SGI_LIBC_END_EXTERN_C
+#ifdef __cplusplus
+}
+#endif
 #endif /* !__FTW_H__ */

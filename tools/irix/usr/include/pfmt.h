@@ -1,6 +1,9 @@
 #ifndef __PFMT_H__
 #define __PFMT_H__
-#ident "$Revision: 1.5 $"
+#ifdef __cplusplus
+extern "C" {
+#endif
+#ident "$Revision: 1.3 $"
 /*
 *
 * Copyright 1992, Silicon Graphics, Inc.
@@ -27,9 +30,6 @@
 /*	The copyright notice above does not evidence any   	*/
 /*	actual or intended publication of such source code.	*/
 
-#include <internal/sgimacros.h>
-
-__SGI_LIBC_BEGIN_EXTERN_C
 
 #define MM_STD		0
 #define MM_NOSTD	0x100
@@ -67,9 +67,14 @@ struct sev_tab {
 #include <stdio.h>
 #endif
 #ifndef _VARARGS_H
+#ifdef _MODERN_C
 #include <stdarg.h>
+#else 
+#include <varargs.h>
+#endif /* _MODERN_C */
 #endif /* var_args */
 
+#if defined(_MODERN_C)
 int pfmt(FILE *, long, const char *, ...);
 int lfmt(FILE *, long, const char *, ...);
 int __pfmt_print(FILE *, long, const char *, const char **, const char **, va_list);
@@ -81,9 +86,16 @@ int setlabel(const char *);
 int addsev(int, const char *);
 const char *__gtxt(const char *, int, const char *);
 char *gettxt(const char *, const char *);
+#else
+char *setcat();
+char *__gtxt();
+char *gettxt();
+#endif
 
 #define DB_NAME_LEN		15
 #define MAXLABEL		25
 
-__SGI_LIBC_END_EXTERN_C
+#ifdef __cplusplus
+}
+#endif
 #endif /* !__PFMT_H__ */

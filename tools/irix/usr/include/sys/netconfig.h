@@ -70,7 +70,6 @@ typedef struct {
 #define NC_NOPROTOFMLY	"-"
 #define NC_LOOPBACK	"loopback"
 #define NC_INET		"inet"
-#define NC_INET6	"inet6"
 #define NC_IMPLINK	"implink"
 #define NC_PUP		"pup"
 #define NC_CHAOS	"chaos"
@@ -101,6 +100,7 @@ typedef struct {
 #define NC_UDP		"udp"
 #define NC_ICMP		"icmp"
 
+#if defined(_MODERN_C)
 
 extern void 		 *setnetconfig(void);
 extern int   		  endnetconfig(void *);
@@ -110,27 +110,8 @@ extern void  		  freenetconfigent(struct netconfig *);
 extern void 		 *setnetpath(void);
 extern int   		  endnetpath(void *);
 extern struct netconfig  *getnetpath(void *);
-extern char 	    	 *nc_sperror(void);
-extern void 	    	  nc_perror(const char *);
 
-/*
- * As of 6.5.20, these functions are available in libc versions
- * as well as libnsl versions, to support BSD-style TIRPC.  The
- * IRIX Binary Compatibilty policy means they have to be marked
- * as optional symbols.   
- */
-#if !defined(_SGI_COMPILING_LIBC) && defined(_BSD_TIRPC)
-#pragma optional endnetconfig
-#pragma optional endnetpath
-#pragma optional freenetconfigent
-#pragma optional getnetconfig
-#pragma optional getnetconfigent
-#pragma optional getnetpath
-#pragma optional nc_perror
-#pragma optional nc_sperror
-#pragma optional setnetconfig
-#pragma optional setnetpath
-#endif
+#endif	/* _MODERN_C */
 
 #ifdef __cplusplus
 }

@@ -1,6 +1,9 @@
 #ifndef __PROTOCOLS_DUMPRESTORE_H__
 #define __PROTOCOLS_DUMPRESTORE_H__
-#ident "$Revision: 1.8 $"
+#ifdef __cplusplus
+extern "C" {
+#endif
+#ident "$Revision: 1.5 $"
 /*
 *
 * Copyright 1992, Silicon Graphics, Inc.
@@ -24,52 +27,7 @@
  * specifies the terms and conditions for redistribution.
  *
  *	@(#)dumprestore.h	5.3 (Berkeley) 1/28/87
- *	@(#)inode.h 2.28 88/02/08 SMI; from UCB 4.24 83/07/01
  */
-
-/*
- * The I node is the focus of all local file activity in UNIX.
- * There is a unique inode allocated for each active file,
- * each current directory, each mounted-on file, each mapping,
- * and the root.  An inode is `named' by its dev/inumber pair.
- * Data in icommon is read in from permanent inode on volume.
- */
-
-#include <internal/sgimacros.h>
-
-__SGI_LIBC_BEGIN_EXTERN_C
-
-#define	NDADDR	12		/* direct addresses in inode */
-#define	NIADDR	3		/* indirect addresses in inode */
-
-typedef int32_t baddr_t;	/* BSD-compatible daddr_t (32 bits) */
-
-struct 	icommon {
-	u_short	ic_mode;	/*  0: mode and type of file */
-	short	ic_nlink;	/*  2: number of links to file */
-	u_short	ic_uid;		/*  4: owner's user id */
-	u_short	ic_gid;		/*  6: owner's group id */
-	quad	ic_size;	/*  8: number of bytes in file */
-	time_t	ic_atime;	/* 16: time last accessed */
-	long	ic_atspare;
-	time_t	ic_mtime;	/* 24: time last modified */
-	long	ic_mtspare;
-	time_t	ic_ctime;	/* 32: last time inode changed */
-	long	ic_ctspare;
-	baddr_t	ic_db[NDADDR];	/* 40: disk block addresses */
-	baddr_t	ic_ib[NIADDR];	/* 88: indirect blocks */
-	long	ic_flags;	/* 100: status, currently unused */
-	long	ic_blocks;	/* 104: blocks actually held */
-	long	ic_gen;		/* 108: generation number */
-	long	ic_spare[4];	/* 112: reserved, currently unused */
-};
-
-struct sun_dinode {
-	union {
-		struct	icommon di_icom;
-		char	di_size[128];
-	} di_un;
-};
 
 /*
  * TP_BSIZE is the size of file blocks on the dump tapes.
@@ -111,8 +69,8 @@ union u_spcl {
 		time_t	c_date;		    /* date of previous dump */
 		time_t	c_ddate;	    /* date of this dump */
 		long	c_volume;	    /* dump volume number */
-		baddr_t	c_tapea;	    /* logical block of this record */
-		efs_ino_t c_inumber;	    /* number of inode */
+		daddr_t	c_tapea;	    /* logical block of this record */
+		ino_t	c_inumber;	    /* number of inode */
 		long	c_magic;	    /* magic number (see above) */
 		long	c_checksum;	    /* record checksum */
 		struct	sun_dinode c_dinode;   /* ownership and mode of inode */
@@ -136,6 +94,7 @@ union u_spcl {
 #define	DUMPOUTFMT	"%-16s %c %s"		/* for printf */
 						/* name, incno, ctime(date) */
 #define	DUMPINFMT	"%[^ ] %c %[^\n]\n"	/* inverse for scanf */
-
-__SGI_LIBC_END_EXTERN_C
+#ifdef __cplusplus
+}
+#endif
 #endif /* !__PROTOCOLS_DUMPRESTORE_H__ */
