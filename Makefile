@@ -70,7 +70,7 @@ DEP_FILES := $(O_FILES:.o=.d)
 # Ensure build directories exist before compiling anything
 DUMMY != mkdir -p $(ALL_DIRS)
 
-TARGET := $(BUILD_DIR)/usplit
+TARGET := $(BUILD_DIR)/usplit $(BUILD_DIR)/as0
 
 all: $(TARGET)
 
