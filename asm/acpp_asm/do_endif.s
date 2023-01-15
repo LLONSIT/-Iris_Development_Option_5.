@@ -13,7 +13,7 @@ glabel STR_100017DC
 
 glabel do_endif # 37
 # _gp_disp: 0xFBFF52C
-.set noreorder; .cpload $t9; # .set reorder
+#.set noreorder; .cpload $t9; # .set reorder
 /* 00B300 0040B300 8F8E8324 */  lw          $t6, %got(pedantic)($gp)
 /* 00B304 0040B304 27BDFFE0 */  addiu       $sp, $sp, -0x20
 /* 00B308 0040B308 8DCE0000 */  lw          $t6, 0x0($t6)
