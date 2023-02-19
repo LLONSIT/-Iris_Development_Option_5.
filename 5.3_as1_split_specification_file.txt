@@ -1,0 +1,60 @@
+[split]
+#.text            .data             .rodata           .bss              COMMON variables
+
+/src/as1/first_file.c
+0040B8B0-0040BB8C         -                 -                 -          -
+
+/src/as1/second_file.c
+0040BB90-0040DD40         -                 -                 -          -
+
+/src/as1/as1elfst.c
+0040DD44-00414F08
+
+/src/as1/as1peep.c
+00414F0C-0041C130
+
+/src/as1/as1preopt.c
+0041C134-004229E4
+
+/src/as1/as1swpipe.c
+004229E8-00428754
+
+/src/as1/as1xbb.c
+00428758-0042D3A8
+
+/src/as1/reorganize.c
+0042D3AC-004350E8
+
+/src/as1/unk_file.c
+004350EC-0043753C
+
+/src/as1/unk_file1.c
+0043753C-004390EC
+
+/src/as1/unk_file2.c
+004390F0-0043A9B8
+
+/src/as1/as1float.p
+0043A9C0-004421E4
+
+/src/as1/unk_file3.p
+004421F0-0044BA78
+
+/src/as1/as1parse.p
+0044BA80-0045B478
+
+#Maybe?
+
+/src/as1/unk_file4.c 
+0045B480-0045DE34
+
+/src/as1/unk_file5.c
+0045DE40-00465CB0
+
+/src/as1/unk_file6.c
+00465CB4-0046E2A4
+
+#end of the as1 code
+
+#TODO: Classify libp and libmld files
+
