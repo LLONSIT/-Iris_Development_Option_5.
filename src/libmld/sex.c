@@ -2,10 +2,11 @@
 
 int gethostsex(void) {
     union {
-        int i;
-        char b;
-    } u;
+        int word;
+        char byte;
+    } sex;
 
-    u.i = 1;
-    return u.b == 1 ? LITTLEENDIAN : BIGENDIAN;
+    sex.word = 1;
+    return sex.byte == 1 ? LITTLEENDIAN : BIGENDIAN;
 }
+

@@ -600,6 +600,22 @@ int st_iextmax(void) {
 }
 
 // unused
+
+#ifdef AVOID_UB
+void st_setmsgname(const char *name) {
+    if (name == NULL) {
+        fprintf(stderr, "Error: st_setmsgname received a NULL pointer as name argument\n");
+        exit(1);
+    }
+    st_errname = malloc(strlen(name) + 1);
+    if (st_errname == NULL) {
+        fprintf(stderr, "Error: unable to allocate memory for st_errname\n");
+        exit(1);
+    }
+    strcpy(st_errname, name);
+}
+
+#else
 void st_setmsgname(const char *name) {
     st_errname = malloc(strlen(name) + 1);
     if (st_errname == NULL) {
@@ -608,3 +624,4 @@ void st_setmsgname(const char *name) {
     }
     strcpy(st_errname, name);
 }
+#endif

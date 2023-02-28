@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+ #include <fcntl.h>
 
 // SGI headers
 #ifdef __sgi
@@ -50,7 +52,6 @@ Variables
 
 u8 myname;
 
-#ifdef NONE_COMPLETELY_MATCH
 s32 main(s32 argc, u8** argv) {
     s32 outputFd;
     s32 tfileFd;
@@ -149,7 +150,6 @@ s32 main(s32 argc, u8** argv) {
     close(inputFd);
     return 0;
 }
-#endif
 
 /*
  Match by: Taggerung (decomp.me: tcmg2)

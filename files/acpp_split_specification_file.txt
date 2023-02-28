@@ -1,5 +1,14 @@
 [split]
 #.text            .data             .rodata           .bss              COMMON variables
 
-/src/acpp/error.c
-0040D720-0040DAAC   -                -                    -              indepth-instack #struct?
+/src/acpp/alloca.c
+00402E20-00402FE0   -                -                    -              -
+
+/src/acpp/cccp.c
+00402FE4-0040F144
+
+/src/acpp/cexp.y
+0040F148-0040FB5C
+
+/src/acpp/IDO_generated.c
+0040FB60-0041192C
